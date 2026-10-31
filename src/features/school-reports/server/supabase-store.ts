@@ -56,6 +56,23 @@ export function createSupabaseSchoolReportStore(admin: SupabaseClient): SchoolRe
       return (count ?? 0) > 0;
     },
 
+    async activeClassId(schoolId, studentId) {
+      const { data, error } = await admin.from("enrollments").select("classroom_id")
+        .eq("school_id", schoolId).eq("student_id", studentId).eq("status", "active").maybeSingle();
+      if (error) unavailable("conferir a turma", error);
+      return (data as { classroom_id: string } | null)?.classroom_id ?? null;
+    },
+
+    async listClassStudents(schoolId, classId) {
+      const enrolled = await admin.from("enrollments").select("student_id").eq("school_id", schoolId).eq("classroom_id", classId).eq("status", "active");
+      if (enrolled.error) unavailable("listar os alunos", enrolled.error);
+      const ids = (enrolled.data as { student_id: string }[]).map((row) => row.student_id);
+      if (!ids.length) return [];
+      const { data, error } = await admin.from("profiles").select("id, full_name").eq("school_id", schoolId).in("id", ids).order("full_name");
+      if (error) unavailable("listar os alunos", error);
+      return (data as { id: string; full_name: string }[]).map((row) => ({ id: row.id, fullName: row.full_name }));
+    },
+
     async list(schoolId, studentId) {
       return (await objects(schoolId, studentId)).flatMap((item) => toReport(item) ?? []);
     },

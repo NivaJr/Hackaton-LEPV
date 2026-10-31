@@ -84,7 +84,7 @@ O workflow `.github/workflows/checks.yml` executa esses comandos com Node 24. A 
 - Base de 100 pontos e limites anuais das patentes são propostas identificadas em `src/config/scoring.ts`, não regras aprovadas.
 - XP ativo e pontos anuais são separados. A Tarefa 03 implementa persistência de tentativas, livro de pontos e rotação, com migrações aplicadas no Supabase LEPV. Integrar as telas às APIs existentes.
 - Saúde e apoio: leitura por perfis vinculados e edição pelo responsável confirmado. Histórico: professor edita somente sua matéria/turma; coordenador edita na instituição.
-- A ficha é editada pelo próprio aluno. Consulta por outros perfis segue pendente e está restrita na base.
+- A ficha é consultada e editada somente pelo próprio aluno.
 
 ## O que falta implementar
 

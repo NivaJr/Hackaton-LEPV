@@ -16,6 +16,13 @@ export function ReportLinks({ studentId, reports }: { studentId: string; reports
   </ul>;
 }
 
+export function OwnReportsSection({ studentId }: { studentId: string }) {
+  return <section className="panel" id="boletins">
+    <div className="panel-heading"><div><span className="eyebrow">SOMENTE CONSULTA</span><h2>Histórico escolar</h2></div><FileText size={21} /></div>
+    <FamilyReportsList studentId={studentId} />
+  </section>;
+}
+
 export function FamilyReportsList({ studentId }: { studentId: string }) {
   const [reports, setReports] = useState<SchoolReportFile[] | null>(null);
   const [failed, setFailed] = useState(false);
