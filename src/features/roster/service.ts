@@ -2,7 +2,7 @@ import type { SessionContext } from "@/contracts";
 import { parseImportRows, markDuplicates, validateRow, type ParsedRow } from "./import/rows";
 import { readSpreadsheet } from "./import/spreadsheet";
 import {
-  AssignmentInputSchema, ClassroomInputSchema, ClassroomPatchSchema, EnrollmentInputSchema, ImportConfirmSchema, ImportKindSchema, RosterError,
+  AssignmentInputSchema, ClassroomInputSchema, ClassroomPatchSchema, EnrollmentInputSchema, GuardianLinkInputSchema, GuardianLinkStatusSchema, ImportConfirmSchema, ImportKindSchema, RosterError,
   type AccountRecord, type AssignmentRecord, type ClassroomRecord, type ConfirmRowResult, type ConfirmStatus, type EnrollmentRecord,
   type ImportConfirmRow, type ImportKind, type ImportPreview, type ImportResult, type PreviewRow, type PreviewStatus, type RowIssue,
 } from "./model";
@@ -96,12 +96,13 @@ export class RosterService {
 
   async overview(actor: SessionContext) {
     const schoolId = this.schoolOf(actor);
-    const [classrooms, enrollments, assignments, students, teachers] = await Promise.all([
+    const [classrooms, enrollments, assignments, students, teachers, guardians, guardianLinks] = await Promise.all([
       this.repository.listClassrooms(schoolId), this.repository.listEnrollments(schoolId), this.repository.listAssignments(schoolId),
       this.repository.listPeople(schoolId, "aluno"), this.repository.listPeople(schoolId, "professor"),
+      this.repository.listPeople(schoolId, "responsavel"), this.repository.listGuardianLinks(schoolId),
     ]);
     const metrics = await this.dependencies.metrics.classMetrics(schoolId, classrooms.map((classroom) => classroom.id));
-    return { classrooms, enrollments, assignments, students, teachers, metrics };
+    return { classrooms, enrollments, assignments, students, teachers, guardians, guardianLinks, metrics };
   }
 
   async createClassroom(actor: SessionContext, input: unknown) {
@@ -133,6 +134,36 @@ export class RosterService {
       throw new RosterError("NOT_FOUND", "Atribuição não encontrada nesta escola.", 404);
     }
     return { deleted: true };
+  }
+
+  /** New links start pending: only an explicit coordinator confirmation grants access to the student. */
+  async createGuardianLink(actor: SessionContext, input: unknown) {
+    const schoolId = this.schoolOf(actor);
+    const { studentId, fullName, email } = GuardianLinkInputSchema.parse(input);
+    const row = validateRow("students", { line: 1, fullName, email });
+    if (row.issues.length) throw new RosterError(row.issues[0].code, row.issues[0].message, 422);
+    const students = await this.repository.listPeople(schoolId, "aluno");
+    if (!students.some((student) => student.id === studentId)) throw new RosterError("NOT_FOUND", "Aluno não encontrado nesta escola.", 404);
+    const account = (await this.directory.findByEmails([row.email])).get(row.email);
+    if (account?.schoolId && account.schoolId !== schoolId) {
+      throw new RosterError("OTHER_SCHOOL", "Este email pertence a outra escola.", 409);
+    }
+    const known = provisioned(account);
+    if (known && !known.roles.includes("responsavel")) {
+      throw new RosterError("ROLE_CONFLICT", "Esta conta já existe sem o papel de responsável.", 409);
+    }
+    const guardianId = known?.userId ?? await this.directory.ensureAccount({
+      email: row.email, fullName: row.fullName, role: "responsavel", schoolId, ...(account ? { userId: account.userId } : {}),
+    });
+    return this.repository.createGuardianLink(schoolId, guardianId, studentId);
+  }
+
+  async setGuardianLinkStatus(actor: SessionContext, linkId: string, input: unknown) {
+    const schoolId = this.schoolOf(actor);
+    const { status } = GuardianLinkStatusSchema.parse(input);
+    const link = await this.repository.setGuardianLinkStatus(schoolId, linkId, status);
+    if (!link) throw new RosterError("NOT_FOUND", "Vínculo não encontrado nesta escola.", 404);
+    return link;
   }
 
   /** Moves a student only when expectedEnrollmentId proves the coordinator saw the current class. */

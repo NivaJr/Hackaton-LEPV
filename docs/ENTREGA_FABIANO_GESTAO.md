@@ -35,6 +35,8 @@ Todos usam a sessão por cookie e respondem `{ error: { code, message } }` em fa
 | DELETE `/api/roster/enrollments/:id` | coordenador | — | `{ removed }` |
 | POST `/api/roster/imports/preview` | coordenador | multipart `kind, classroomId, file` | `ImportPreview`, sem gravar |
 | POST `/api/roster/imports/confirm` | coordenador | `ImportConfirm` | `ImportResult` por linha |
+| POST `/api/roster/guardian-links` | coordenador | `studentId, fullName, email` | vínculo `pending`; convida se a conta não existir |
+| PATCH `/api/roster/guardian-links/:id` | coordenador | `status: confirmed` ou `revoked` | vínculo |
 | GET `/api/roster/templates/:arquivo` | coordenador | `modelo-alunos.csv`, `modelo-professores.csv` | CSV |
 | GET `/api/family/children` | responsável | — | filhos confirmados |
 | GET `/api/family/students/:id` | responsável vinculado | — | aluno, saúde, apoio, histórico, métricas com `source` |
@@ -76,7 +78,7 @@ Quatro séries e seis matérias vêm do catálogo. Esta tarefa não envolve ques
 Resultados no commit desta entrega:
 
 - `npm run typecheck`: passou.
-- `npm test`: passou, 7 arquivos e 101 testes, dos quais 57 são novos: `roster-import`, `roster-service`, `family-service` e `roster-database`.
+- `npm test`: passou, 7 arquivos e 106 testes, dos quais 62 são novos: `roster-import`, `roster-service`, `family-service` e `roster-database`.
 - `npm run build`: passou, com `/api/roster/[...path]` e `/api/family/[...path]`.
 
 ## Percurso realmente executado
@@ -94,8 +96,7 @@ Resultados no commit desta entrega:
 
 ## Limitações e pendências
 
-- O coordenador ainda não tem tela para criar responsáveis nem confirmar `guardian_links`; a tarefa não listou esse passo, mas o percurso completo depende dele. Até lá, o vínculo vem do bootstrap em `supabase/README.md`.
 - Dois responsáveis editando o mesmo registro: prevalece a última gravação.
 - O histórico é consultado, mas a edição por coordenador e professor não tem tela nesta tarefa.
 - `docs/CONTRATOS_NIVALDO_CORE.md`, em `feat/nivaldo-core`, ainda cita "Fabia" e deve ser ajustado por Nivaldo.
-- O shell global aponta "Turmas e pessoas" para `/tarefas`, e `/demo/*` segue com os dados antigos. Ambos exigem acordo.
+- O shell global aponta "Turmas e pessoas" para `/tarefas`, e `/demo/*` segue com os dados antigos. Ambos exigem acordo, e `feat/viegas-aluno` já altera os mesmos itens do menu. Os painéis têm âncoras prontas: `/coordenador#turmas`, `#importacao`, `#vinculos`; `/responsavel#resultados`, `#saude-apoio`, `#historico`.

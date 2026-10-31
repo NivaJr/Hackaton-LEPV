@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { SubjectIdSchema, type SubjectId } from "@/contracts";
-import { RosterError, type AssignmentRecord, type ClassroomRecord, type EnrollmentRecord, type PersonRecord } from "../model";
+import { RosterError, type AssignmentRecord, type ClassroomRecord, type EnrollmentRecord, type GuardianLinkRecord, type PersonRecord } from "../model";
 import type { RosterRepository } from "../ports";
 
 interface PgFailure { code?: string; message?: string }
@@ -8,6 +8,9 @@ interface ClassroomRow { id: string; name: string; grade: number; school_year: n
 interface EnrollmentRow { id: string; classroom_id: string; student_id: string; classrooms: { name: string } | { name: string }[] | null }
 interface AssignmentRow { id: string; classroom_id: string; teacher_id: string; subject_id: string }
 
+interface GuardianLinkRow { id: string; guardian_id: string; student_id: string; status: GuardianLinkRecord["status"] }
+
+const GUARDIAN_LINK_COLUMNS = "id, guardian_id, student_id, status";
 const CLASSROOM_COLUMNS = "id, name, grade, school_year";
 const ENROLLMENT_COLUMNS = "id, classroom_id, student_id, classrooms!inner(name)";
 
@@ -18,6 +21,7 @@ function fail(error: PgFailure): never {
   throw new RosterError("DATABASE_ERROR", "Não foi possível acessar os dados da escola.", 500);
 }
 
+const toGuardianLink = (row: GuardianLinkRow): GuardianLinkRecord => ({ id: row.id, guardianId: row.guardian_id, studentId: row.student_id, status: row.status });
 const toClassroom = (row: ClassroomRow): ClassroomRecord => ({ id: row.id, name: row.name, grade: row.grade, schoolYear: row.school_year });
 const toAssignment = (row: AssignmentRow): AssignmentRecord | null => {
   const subject = SubjectIdSchema.safeParse(row.subject_id);
@@ -116,6 +120,28 @@ export function createSupabaseRosterRepository(client: SupabaseClient): RosterRe
       const { data, error } = await client.from("teacher_assignments").delete().eq("school_id", schoolId).eq("id", assignmentId).select("id");
       if (error) fail(error);
       return (data ?? []).length > 0;
+    },
+    async listGuardianLinks(schoolId) {
+      const { data, error } = await client.from("guardian_links").select(GUARDIAN_LINK_COLUMNS).eq("school_id", schoolId);
+      if (error) fail(error);
+      return (data as GuardianLinkRow[]).map(toGuardianLink);
+    },
+    async createGuardianLink(schoolId, guardianId, studentId) {
+      const { data, error } = await client.from("guardian_links")
+        .insert({ school_id: schoolId, guardian_id: guardianId, student_id: studentId })
+        .select(GUARDIAN_LINK_COLUMNS).single();
+      if (!error) return toGuardianLink(data as GuardianLinkRow);
+      if (error.code !== "23505") fail(error);
+      const existing = await client.from("guardian_links").select(GUARDIAN_LINK_COLUMNS)
+        .eq("school_id", schoolId).eq("guardian_id", guardianId).eq("student_id", studentId).single();
+      if (existing.error) fail(existing.error);
+      return toGuardianLink(existing.data as GuardianLinkRow);
+    },
+    async setGuardianLinkStatus(schoolId, linkId, status) {
+      const { data, error } = await client.from("guardian_links").update({ status })
+        .eq("school_id", schoolId).eq("id", linkId).select(GUARDIAN_LINK_COLUMNS).maybeSingle();
+      if (error) fail(error);
+      return data ? toGuardianLink(data as GuardianLinkRow) : null;
     },
   };
 }

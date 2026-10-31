@@ -72,7 +72,7 @@ function ChildPanel({ studentId }: { studentId: string }) {
 
   return <>
     {isFixture && <p className={styles.notice}><Flag size={13} /> Frequência e resultados abaixo são dados de exemplo, não medidos. Saúde, apoio e histórico são os registros reais da escola.</p>}
-    <div className="stats-grid">
+    <div className="stats-grid" id="resultados">
       <div className="stat-card"><span className="stat-icon tone-amber"><Flame size={21} /></span><div><span className="stat-label">Dias com atividades</span><strong className="stat-value">{summary.activityDays}</strong><span className="stat-note">{note}</span></div></div>
       <div className="stat-card"><span className="stat-icon tone-teal"><Check size={21} /></span><div><span className="stat-label">Respostas corretas</span><strong className="stat-value">{summary.correctAnswers} de {answers}</strong><span className="stat-note">{note}</span></div></div>
       <div className="stat-card"><span className="stat-icon tone-violet"><TrendingUp size={21} /></span><div><span className="stat-label">Dias de acesso</span><strong className="stat-value">{summary.accessDays}</strong><span className="stat-note">{note}</span></div></div>
@@ -82,11 +82,11 @@ function ChildPanel({ studentId }: { studentId: string }) {
       <p className={styles.feedback}>{feedback.text}</p>
       <span className={styles.meta}>{feedback.origin === "ia" ? "Gerado por IA a partir dos resultados, sem dados de saúde ou apoio." : "Mensagem automática, sem IA."}{feedback.metricsSource === "fixture" ? " Baseada em dados de exemplo." : ""}</span>
     </section>}
-    <div className={styles.columns}>
+    <div className={styles.columns} id="saude-apoio">
       <RecordEditor studentId={studentId} category="health" title="Saúde" initial={overview.health} />
       <RecordEditor studentId={studentId} category="support" title="Necessidades de apoio" initial={overview.support} />
     </div>
-    <section className="panel">
+    <section className="panel" id="historico">
       <div className="panel-heading"><div><span className="eyebrow">SOMENTE CONSULTA</span><h2>Histórico escolar</h2></div></div>
       {overview.history.length === 0 ? <p className={styles.empty}>Nenhum registro no histórico.</p> : <div className={styles.tableWrap}><table className={styles.table}>
         <thead><tr><th>Ano</th><th>Período</th><th>Matéria</th><th>Nota</th><th>Observações</th></tr></thead>

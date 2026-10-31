@@ -82,6 +82,45 @@ describe("turmas e alocação", () => {
   });
 });
 
+describe("vínculos de responsável", () => {
+  const studentId = randomUUID();
+  const input = { studentId, fullName: "Responsável Exemplo", email: "resp@b.com" };
+  beforeEach(() => { repository.people.push({ id: studentId, fullName: "Aluno Exemplo", schoolId: SCHOOL, role: "aluno" }); });
+
+  it("cria conta convidada com vínculo pendente, sem duplicar no reenvio", async () => {
+    const link = await service.createGuardianLink(coordinator, input);
+    expect(link.status).toBe("pending");
+    expect(await service.createGuardianLink(coordinator, input)).toMatchObject({ id: link.id });
+    expect(directory.invites).toEqual(["resp@b.com"]);
+    expect(repository.links).toHaveLength(1);
+  });
+
+  it("reutiliza responsável existente; recusa outra escola, outro papel e dados inválidos", async () => {
+    const guardianId = directory.add("resp@b.com", SCHOOL, ["responsavel"]);
+    expect(await service.createGuardianLink(coordinator, input)).toMatchObject({ guardianId });
+    directory.add("fora@b.com", OTHER_SCHOOL, ["responsavel"]);
+    directory.add("aluno@b.com", SCHOOL, ["aluno"]);
+    await expect(service.createGuardianLink(coordinator, { ...input, email: "fora@b.com" })).rejects.toMatchObject({ code: "OTHER_SCHOOL" });
+    await expect(service.createGuardianLink(coordinator, { ...input, email: "aluno@b.com" })).rejects.toMatchObject({ code: "ROLE_CONFLICT" });
+    await expect(service.createGuardianLink(coordinator, { ...input, email: "ruim" })).rejects.toMatchObject({ code: "INVALID_EMAIL" });
+    expect(repository.links).toHaveLength(1);
+  });
+
+  it("aluno de outra escola não gera convite", async () => {
+    await expect(service.createGuardianLink(otherCoordinator, input)).rejects.toMatchObject({ status: 404 });
+    expect(directory.invites).toEqual([]);
+  });
+
+  it("confirma e revoga somente na própria escola e não aceita voltar a pendente", async () => {
+    const link = await service.createGuardianLink(coordinator, input);
+    expect(await service.setGuardianLinkStatus(coordinator, link.id, { status: "confirmed" })).toMatchObject({ status: "confirmed" });
+    expect(await service.setGuardianLinkStatus(coordinator, link.id, { status: "revoked" })).toMatchObject({ status: "revoked" });
+    await expect(service.setGuardianLinkStatus(coordinator, link.id, { status: "pending" })).rejects.toThrow();
+    await expect(service.setGuardianLinkStatus(otherCoordinator, link.id, { status: "confirmed" })).rejects.toMatchObject({ status: 404 });
+    await expect(service.setGuardianLinkStatus(guardian, link.id, { status: "confirmed" })).rejects.toMatchObject({ status: 403 });
+  });
+});
+
 describe("prévia da importação", () => {
   it("classifica cada linha sem gravar nem convidar ninguém", async () => {
     await enrolledStudent("na-turma@b.com", classA.id);
