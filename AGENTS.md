@@ -17,7 +17,7 @@ Seis matérias e quatro séries. Professor importa PDF/Word e fornece o gabarito
 
 Teto de pontuação ainda é proposta. Não ativar teto sugerido como decisão aprovada. O domínio inicial não concede pontos em APIs nem cria persistência de tentativas.
 
-Saúde/apoio: perfis vinculados consultam; só responsável confirmado edita. Histórico: coordenador e professor da própria matéria/turma editam. Consulta da ficha por outros perfis ainda está pendente; manter restrição atual até decisão explícita.
+Saúde/apoio: perfis vinculados consultam; só responsável confirmado edita. Histórico escolar vem das provas da escola, não das atividades da plataforma: coordenador envia boletins em PDF por aluno e só responsável confirmado consulta. Cadastro por link dispensa email e confirmação do endereço: a escola entrega o link. Consulta da ficha por outros perfis ainda está pendente; manter restrição atual até decisão explícita.
 
 ## Segurança e verificação
 
