@@ -106,7 +106,7 @@ export function CoordinatorWorkspace({ fullName, schoolYear }: { fullName: strin
         </form>
       </section>
       <div className={styles.stack}>
-        {!selected && <section className="panel"><p className={styles.empty}>Selecione uma turma para ver alunos, professores e importações.</p></section>}
+        {!selected && <section className="panel"><span id="acompanhamento" /><span id="vinculos" /><span id="importacao" /><p className={styles.empty}>Selecione uma turma para ver alunos, professores, resultados, responsáveis e importações.</p></section>}
         {selected && <section className="panel">
           <div className="panel-heading"><div><span className="eyebrow">TURMA</span><h2>{selected.name}</h2></div>
             <button type="button" className={`${styles.link} ${styles.danger}`} disabled={busy} onClick={() => { if (window.confirm(`Excluir a turma ${selected.name}?`)) void act(async () => { await rosterApi.deleteClassroom(selected.id); setSelectedId(null); }, "Turma excluída."); }}>Excluir turma</button>

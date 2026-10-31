@@ -89,7 +89,7 @@ Resultados no commit desta entrega:
 - Migração real em PGlite com Auth emulado: formatos SQL dos adaptadores sob RLS, papéis e escolas diferentes.
 - Telas no Chrome headless com respostas simuladas, em rota temporária já removida: desktop com dados; 390 px real apenas no estado vazio. A tabela de prévia preenchida nessa largura não foi observada; ela tem rolagem própria.
 - Tema escuro e 390 px com painéis preenchidos no Chrome, com respostas simuladas: sem rolagem horizontal da página.
-- Login real da conta fictícia de coordenador em produção: `/api/me` retornou o papel `coordenador`. `/api/roster/overview` retornou 404, pois esta entrega ainda não foi publicada.
+- Login real da conta fictícia de coordenador em produção: `/api/me` retornou o papel `coordenador`. `/api/roster/overview` retornou 404 naquele momento; em 31/10/2026, após a publicação, a rota de gestão responde 401 sem sessão. O painel autenticado em produção não foi reexecutado.
 - Leitor XLSX testado com arquivo gerado por openpyxl, além dos arquivos sintéticos dos testes.
 
 **Não executado:** Supabase hospedado, PostgREST, adaptadores Supabase contra servidor real, envio de convite, login real, arquivo salvo pelo Excel e fornecedor de IA.
@@ -102,9 +102,11 @@ Resultados no commit desta entrega:
 
 Registradas em 31/10/2026, sem decisão tomada:
 
-1. **Ativação e rotação de atividades:** hoje só o coordenador pode executá-las pelas APIs, e nenhuma tela as chama. A equipe vai definir se passam ao professor ou viram ação do coordenador. Fabiano propõe tirar "Atividades" do menu do coordenador, mas outro integrante pode estar nisso.
-2. **"Meu espaço" no menu:** ainda sem destino; decisão adiada.
-3. **Menu lateral:** a alteração em `app-shell.tsx` depende do acordo da equipe. Proposta para o coordenador: "Visão geral" sem mudança, "Acompanhamento" para `#acompanhamento`, "Turmas e pessoas" para `#turmas`.
+1. **Ativação e rotação de atividades:** hoje só o coordenador pode executá-las pelas APIs, e nenhuma tela as chama. Fabiano entende que a função interessa ao professor e ao aluno; a passagem das APIs ao professor segue por definir com a equipe.
+
+## Menu do coordenador
+
+Painel real, em `src/components/app-shell.tsx`: "Visão geral", "Acompanhamento" (`#acompanhamento`), "Turmas e pessoas" (`#turmas`), "Importação" (`#importacao`) e "Responsáveis" (`#vinculos`). Por decisão de Fabiano em 31/10/2026, "Atividades" e "Meu espaço" saíram; "Meu espaço" pode voltar se a equipe sentir falta. Sem turma selecionada, os links que dependem dela levam ao aviso para selecionar uma. A demonstração `/demo/coordenador` mantém o menu antigo. Esta mudança vai por PR para a equipe ver antes do merge.
 
 ## Limitações e pendências
 
@@ -113,4 +115,5 @@ Registradas em 31/10/2026, sem decisão tomada:
 - Dois responsáveis editando o mesmo registro: prevalece a última gravação.
 - O histórico é consultado, mas a edição por coordenador e professor não tem tela nesta tarefa.
 - `docs/CONTRATOS_NIVALDO_CORE.md` ainda cita "Fabia" e deve ser ajustado por Nivaldo.
-- O shell global aponta "Turmas e pessoas" para `/tarefas`, e `/demo/*` segue com os dados antigos. Ambos exigem acordo, e `feat/viegas-aluno` já altera os mesmos itens do menu. Os painéis têm âncoras prontas: `/coordenador#turmas`, `#acompanhamento`, `#importacao`, `#vinculos`; `/responsavel#resultados`, `#saude-apoio`, `#historico`.
+- O menu do responsável ainda aponta para `/tarefas`, e `/demo/*` segue com os dados antigos. O painel tem âncoras prontas: `/responsavel#resultados`, `#saude-apoio`, `#historico`.
+- No menu do coordenador, "Visão geral" continua destacada ao navegar pelas âncoras, porque todas ficam na mesma página.
