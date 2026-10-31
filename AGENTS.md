@@ -5,7 +5,7 @@
 Implementação de aplicação educacional web do 6º ao 9º ano com aluno, coordenador, professor e responsável. Ler `README.md`, `docs/DIVISAO_EQUIPE.md`, `docs/INTEGRACAO.md` e a tarefa individual.
 
 - Viegas: telas e fluxo do aluno.
-- Fabia: coordenador, turmas, importação de alunos e painel do responsável.
+- Fabiano: coordenador, turmas, importação de alunos e painel do responsável.
 - Nivaldo: banco, autenticação, permissões, tentativas e pontuação.
 - Gallotte: professor, importação das questões, IA e validação integrada.
 

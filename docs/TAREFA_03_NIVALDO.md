@@ -2,7 +2,7 @@
 
 ## Objetivo e limites
 
-Evoluir o núcleo existente sem reimplementá-lo: persistência dos novos domínios, autorização, APIs de aprendizagem, tentativa única, recuperação e créditos de XP/pontos anuais. **Nivaldo é o único dono de configuração, cálculo, concessão, persistência, agregação e rotação da pontuação.** Viegas apresenta resultados; Fabia/Gallotte não copiam esse cálculo.
+Evoluir o núcleo existente sem reimplementá-lo: persistência dos novos domínios, autorização, APIs de aprendizagem, tentativa única, recuperação e créditos de XP/pontos anuais. **Nivaldo é o único dono de configuração, cálculo, concessão, persistência, agregação e rotação da pontuação.** Viegas apresenta resultados; Fabiano/Gallotte não copiam esse cálculo.
 
 ## Arquivos de sua responsabilidade
 
@@ -14,7 +14,7 @@ Evoluir o núcleo existente sem reimplementá-lo: persistência dos novos domín
 - Contratos/configuração/dependências comuns: integrar mudanças somente após coordenar consumidores, incluindo `package.json`/lockfile.
 - Testes de domínio/servidor e `PROMPTS/` com prefixo `03-nivaldo-`.
 
-Não editar UI/estado do aluno, páginas de Fabia/Gallotte ou drivers `src/lib/llm/**`. APIs roster/family/content pertencem aos respectivos donos; fornecer núcleo/contratos necessários sem tomar esses arquivos.
+Não editar UI/estado do aluno, páginas de Fabiano/Gallotte ou drivers `src/lib/llm/**`. APIs roster/family/content pertencem aos respectivos donos; fornecer núcleo/contratos necessários sem tomar esses arquivos.
 
 ## O que já existe
 
@@ -29,10 +29,10 @@ A base tem Supabase browser/server, login/primeiro acesso com convite validado a
 | Questão/gabarito | `QuestionForStudent` público; `QuestionAnswerKey` somente servidor/docente autorizado |
 | Resposta | `AttemptSubmission` → `AttemptResult`; uma resposta por aluno/instância |
 | IA | `GeneratedQuestion` validado e `LearningAiGateway` de Gallotte, ou stub da base |
-| Métricas | `StudentSummary` para UI e ports de Fabia/Gallotte |
+| Métricas | `StudentSummary` para UI e ports de Fabiano/Gallotte |
 | Regras | `calculateRecoveryReward`, `advanceRecovery`, `interruptRecovery`, `getRankForPoints` existentes |
 
-Publicar URLs/payloads e exemplos sintéticos para `StudentLearningClient` de Viegas e métricas de Fabia/Gallotte. Eles podem usar fake enquanto APIs são implementadas. Não criar acoplamento por imports privados entre features.
+Publicar URLs/payloads e exemplos sintéticos para `StudentLearningClient` de Viegas e métricas de Fabiano/Gallotte. Eles podem usar fake enquanto APIs são implementadas. Não criar acoplamento por imports privados entre features.
 
 ## Passos executáveis
 
@@ -66,7 +66,7 @@ Rodar `npm run typecheck`, `npm test` e `npm run build`. Acrescentar testes úte
 ```text
 Você trabalhará com Nivaldo na Tarefa 03 do Hackaton-LEPV. Leia AGENTS.md, README.md, docs/INTEGRACAO.md e docs/TAREFA_03_NIVALDO.md. Inspecione base, contratos, foundation, auth, domínio/testes e gateway antes de editar; não refaça a base.
 Use feat/nivaldo-core em checkout/worktree próprio no commit-base comum. Sem force-push, last-writer-wins ou sobrescrita de colegas. Arquive este prompt e os novos em PROMPTS/ com prefixo 03-nivaldo-, sem segredos/dados reais/instruções internas.
-Você é dono do banco/SQL, auth, domínio/config de pontuação e APIs learning. Concessão de pontos deve ter caminho único server-side, autorizado, transacional e idempotente. Viegas faz UI aluno; Fabia roster/family; Gallotte content/IA. Use ports/contratos e gateway único, sem copiar outro domínio.
+Você é dono do banco/SQL, auth, domínio/config de pontuação e APIs learning. Concessão de pontos deve ter caminho único server-side, autorizado, transacional e idempotente. Viegas faz UI aluno; Fabiano roster/family; Gallotte content/IA. Use ports/contratos e gateway único, sem copiar outro domínio.
 Preserve 70%, dois acertos consecutivos, tentativa única, XP ativo e pontos anuais. Base 100, teto e fórmula completa seguem propostas; não ative teto silenciosamente. Migrações são aditivas; não reescreva foundation. Mudanças em contratos/dependências/lockfile exigem coordenação prévia. Não altere UI dos colegas/demo global por conveniência.
 Execute npm run typecheck, npm test e npm run build e entregue checkpoint com APIs, SQL, políticas, testes de duplicação, cobertura e limites de Supabase/auth real.
 ```
