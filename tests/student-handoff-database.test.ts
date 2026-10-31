@@ -7,7 +7,6 @@ import { SupabaseContentRepository } from "@/features/content/server/supabase-re
 import { LearningActivityPublisher } from "@/features/content/server/learning-publisher";
 import { LearningService } from "@/features/learning/server/service";
 import { SupabaseLearningRepository } from "@/features/learning/server/supabase-repository";
-import { contentPostgresClient } from "./helpers/content-postgres";
 import { actor, coordinator, fixtureIds as ids, question, teacher, testNow, testPolicy } from "./helpers/learning-memory";
 import { createLearningDatabase, HANDOFF_MIGRATION, postgresRpcClient, queryAs, resetLearningDatabase } from "./helpers/learning-postgres";
 
@@ -22,16 +21,19 @@ const scope = { classId: ids.classId, subjectId: "matematica" as const };
 beforeAll(async () => { db = await createLearningDatabase(); }, 60_000);
 afterAll(async () => { await db?.close(); }, 60_000);
 beforeEach(async () => {
-  await db.exec("truncate public.content_questions,storage.objects");
+  await db.exec("truncate app_private.content_questions,storage.objects");
   await resetLearningDatabase(db);
   let sequence = 200;
   learning = new LearningService(new SupabaseLearningRepository(postgresRpcClient(db)), {
     generateRecoveryQuestion: async () => question(sequence++),
   }, testPolicy, testNow, async (_school, _class, subject) => subject === "matematica");
-  teacherRepository = new SupabaseContentRepository(async () => contentPostgresClient(db, ids.teacher));
-  content = new ContentService(teacherRepository, new InMemoryClassDirectory([
+  teacherRepository = new SupabaseContentRepository(postgresRpcClient(db));
+  const directory = new InMemoryClassDirectory([
     { id: ids.classId, institutionId: ids.school, name: "6A", grade: 6 },
-  ]), { extractQuestionsReport: async () => ({ questions: [question()], discarded: 0, issues: [] }) }, new LearningActivityPublisher(() => learning), testNow);
+  ]);
+  content = new ContentService(teacherRepository, {
+    listClasses: directory.listClasses.bind(directory), hasAssignedTeacher: async (_school, _class, subject) => subject === "matematica",
+  }, { extractQuestionsReport: async () => ({ questions: [question()], discarded: 0, issues: [] }) }, new LearningActivityPublisher(() => learning), testNow);
 });
 
 async function publishRegular() {
@@ -40,10 +42,10 @@ async function publishRegular() {
   return { draft, saved, published: await content.publish(teacher(), draft.id) };
 }
 
-describe.sequential("handoff do aluno: serviço, transporte Supabase e PostgreSQL real (Auth emulado)", () => {
+describe.sequential("handoff do aluno: serviço e RPCs em PostgreSQL real (Auth emulado)", () => {
   it("persiste o conteúdo revisado e entrega um exercício sem gabarito que vale 50 patente e 0 XP", async () => {
     const { published } = await publishRegular();
-    const anotherProcess = new SupabaseContentRepository(async () => contentPostgresClient(db, ids.teacher));
+    const anotherProcess = new SupabaseContentRepository(postgresRpcClient(db));
     expect(await anotherProcess.get(ids.school, published.id)).toEqual(published);
     const list = await learning.listActivities(actor());
     expect(list.activities.find((item) => item.rootQuestionId === published.id)).toMatchObject({
@@ -61,23 +63,23 @@ describe.sequential("handoff do aluno: serviço, transporte Supabase e PostgreSQ
   it("não expõe os rascunhos ou gabaritos ao aluno, responsável, outra turma ou outra escola", async () => {
     const { published } = await publishRegular();
     for (const userId of [ids.student, ids.guardian, "00000000-0000-4000-8000-000000000005"]) {
-      const repository = new SupabaseContentRepository(async () => contentPostgresClient(db, userId));
-      expect(await repository.get(ids.school, published.id)).toBeNull();
-      expect(await repository.list({ institutionId: ids.school, ...scope })).toEqual([]);
+      await expect(queryAs(db, "authenticated", userId, "select * from app_private.content_questions")).rejects.toMatchObject({ code: "42501" });
+      await expect(queryAs(db, "authenticated", userId, "select public.content_get_question($1,$2)", [ids.school, published.id])).rejects.toMatchObject({ code: "42501" });
     }
     expect(await teacherRepository.get(ids.otherSchool, published.id)).toBeNull();
-    await expect(queryAs(db, "anon", null, "select * from public.content_questions")).rejects.toMatchObject({ code: "42501" });
+    await expect(content.list(actor(), scope)).rejects.toMatchObject({ status: 403 });
+    await expect(content.list(teacher(), { ...scope, classId: ids.otherClass })).rejects.toMatchObject({ status: 403 });
+    await expect(queryAs(db, "anon", null, "select * from app_private.content_questions")).rejects.toMatchObject({ code: "42501" });
   });
 
   it("recusa coordenação na disciplina atribuída e permite a disciplina sem professor", async () => {
-    const coordinatorRepository = new SupabaseContentRepository(async () => contentPostgresClient(db, ids.coordinator));
     const { draft } = await publishRegular();
-    expect(await coordinatorRepository.get(ids.school, draft.id)).toBeNull();
+    await expect(content.list(coordinator(), scope)).rejects.toMatchObject({ code: "TEACHER_ASSIGNED" });
     const unassigned = { ...draft, id: "unassigned-content", rootQuestionId: "unassigned-content", status: "rascunho" as const,
       createdBy: ids.coordinator, contentDefinedBy: "coordinator" as const, body: { ...question(), subjectId: "historia" as const, skillCodes: ["EF06HI01"] } };
-    await coordinatorRepository.insert([unassigned]);
-    expect(await coordinatorRepository.get(ids.school, unassigned.id)).toMatchObject({ id: unassigned.id });
-    await expect(coordinatorRepository.insert([{ ...unassigned, id: "forbidden-math", body: question() }])).rejects.toMatchObject({ code: "CONTENT_FORBIDDEN" });
+    await teacherRepository.insert([unassigned]);
+    expect((await content.list(coordinator(), { ...scope, subjectId: "historia" })).drafts).toContainEqual(unassigned);
+    await expect(content.publish(coordinator(), draft.id)).rejects.toMatchObject({ code: "TEACHER_ASSIGNED" });
   });
 
   it("protege o original no bucket privado por escola, turma e disciplina", async () => {
@@ -104,8 +106,7 @@ describe.sequential("handoff do aluno: serviço, transporte Supabase e PostgreSQ
   it("valida CAS e impede alterar ou apagar uma versão já publicada", async () => {
     const { draft, published } = await publishRegular();
     expect(await teacherRepository.replace({ ...draft, version: 2 }, 1)).toBe(false);
-    await expect(teacherRepository.replace({ ...published, body: { ...published.body, statement: "Alteração indevida" } }, published.version))
-      .rejects.toMatchObject({ code: "CONTENT_PERSISTENCE_UNAVAILABLE" });
+    expect(await teacherRepository.replace({ ...published, body: { ...published.body, statement: "Alteração indevida" } }, published.version)).toBe(false);
     expect(await teacherRepository.remove(ids.school, published.id, published.version)).toBe(false);
   });
 });

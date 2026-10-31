@@ -23,6 +23,12 @@ const MAX_REASONS = 5;
 
 const subjectOrder = (subjectId: SubjectId) => SUBJECT_IDS.indexOf(subjectId);
 
+async function topicId(institutionId: string, classId: string, subjectId: SubjectId, title: string) {
+  const normalized = title.normalize("NFKC").toLocaleLowerCase("pt-BR");
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${institutionId}|${classId}|${subjectId}|${normalized}`));
+  return `content-${Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
+}
+
 export class ContentService {
   constructor(
     private readonly repository: ContentRepository,
@@ -106,7 +112,7 @@ export class ContentService {
   }
 
   private async callAi(actor: SessionContext, run: () => Promise<unknown>, unavailableMessage: string): Promise<unknown> {
-    const slot = this.quota.acquire({ institutionId: actor.institutionId, userId: actor.userId }, this.now());
+    const slot = await this.quota.acquire({ institutionId: actor.institutionId, userId: actor.userId }, this.now());
     if (!slot.ok) {
       throw new ContentError("AI_RATE_LIMITED", slot.reason === "busy"
         ? "Espere a leitura anterior terminar antes de enviar outra lista."
@@ -121,7 +127,7 @@ export class ContentService {
       }
       throw new ContentError("AI_PROVIDER_ERROR", "O serviço de IA não respondeu como esperado. Tente de novo em alguns minutos ou cole o texto.", 503, undefined, { cause: error });
     } finally {
-      slot.release();
+      await slot.release();
     }
   }
 
@@ -167,14 +173,10 @@ export class ContentService {
   private async newDraft(actor: SessionContext, classId: string, body: DraftQuestion, origin: ContentOrigin, answerKeySource: "ia" | "exemplo", metadata: ContentMetadata): Promise<ContentQuestion> {
     const id = this.newId();
     const at = this.now().toISOString();
-    const normalizedTitle = metadata.contentTitle.normalize("NFKC").toLocaleLowerCase("pt-BR");
-    const previous = (await this.repository.list({ institutionId: actor.institutionId, classId, subjectId: body.subjectId }))
-      .find((item) => item.contentTitle?.normalize("NFKC").toLocaleLowerCase("pt-BR") === normalizedTitle);
-    const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${actor.institutionId}|${classId}|${body.subjectId}|${normalizedTitle}`));
-    const contentId = `content-${Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
-    const teaches = actor.teacherAssignments.some((item) => item.institutionId === actor.institutionId && item.classId === classId && item.subjectId === body.subjectId);
+    const contentId = await topicId(actor.institutionId, classId, body.subjectId, metadata.contentTitle);
+    const teaches = actor.roles.includes("professor") && actor.teacherAssignments.some((item) => item.institutionId === actor.institutionId && item.classId === classId && item.subjectId === body.subjectId);
     return {
-      ...metadata, contentId: previous?.contentId ?? contentId, contentDefinedBy: teaches ? "teacher" : "coordinator",
+      ...metadata, contentId, contentDefinedBy: teaches ? "teacher" : "coordinator",
       id, institutionId: actor.institutionId, classId, status: "rascunho", sourceType: "original", rootQuestionId: id,
       origin, body, answerKeySource, reviewed: false, version: 1, createdBy: actor.userId,
       createdAt: at, updatedAt: at, publishedAt: null,
@@ -243,6 +245,7 @@ export class ContentService {
     }
     const next: ContentQuestion = {
       ...current, body, reviewed: update.reviewed, answerKeySource: "professor",
+      contentId: current.contentTitle ? await topicId(actor.institutionId, current.classId, body.subjectId, current.contentTitle) : current.contentId,
       version: current.version + 1, updatedAt: this.now().toISOString(),
     };
     if (!await this.repository.replace(next, current.version)) {

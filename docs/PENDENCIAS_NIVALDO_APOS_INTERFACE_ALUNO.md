@@ -1,5 +1,7 @@
 # Pendências para Nivaldo após a interface do aluno
 
+> Levantamento original preservado do ZIP. O estado da implementação e as verificações desta continuação estão em [Entrega do Viegas](ENTREGA_VIEGAS_CONTINUIDADE.md). A entrega atual publica a branch; promoção, migrações e validação hospedada da nova versão são etapas distintas.
+
 Data do levantamento: 31/10/2026  
 Branch da interface: `codex/acessibilidade-aluno`
 

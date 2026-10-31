@@ -1,6 +1,6 @@
 # Rotas reais — Tarefa 03 / Nivaldo
 
-Documento para integração da interface do aluno. Implementação na branch `feat/nivaldo-core`, a partir da base `7bfa3d5`. **Aplicação publicada: https://eai-lepv.vercel.app**. As APIs abaixo estão disponíveis nesse domínio, com autenticação por cookie. A integração à `main` continua como etapa separada do deploy por CLI.
+Documento para integração da interface do aluno. Origem: `feat/nivaldo-core`, base `7bfa3d5`. Atualizado em `codex/acessibilidade-aluno`, após integrar a `main` com o PR #17. **Ambiente de Production: https://eai-lepv.vercel.app**. Os campos novos desta branch dependem de suas migrações e da publicação conjunta do código; não representam confirmação de deploy em Production.
 
 As rotas abaixo existem no código, em `src/app/api/learning/[...path]/route.ts`, com dispatch em `src/features/learning/server/http.ts`. Os exemplos usam dados fictícios. O planejamento geral contém sugestões anteriores de URLs; use os caminhos deste documento para integrar esta implementação.
 
@@ -8,9 +8,9 @@ As rotas abaixo existem no código, em `src/app/api/learning/[...path]/route.ts`
 
 - A aplicação usa a sessão real do Supabase por cookie, validada no servidor. Não enviar `studentId`, papel, escola, gabarito ou pontos no corpo de operações do aluno.
 - Banco: no projeto `alkvhjnqfjyjflaswdmi` as migrações `20261030220000_foundation.sql` e `20261031030000_learning.sql` já foram aplicadas. Para uma instalação nova, aplicar nessa ordem. Configurar `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` e `SUPABASE_SECRET_KEY` no ambiente apropriado; a chave privada permanece no servidor. Ver [Configuração do Supabase](CONFIGURACAO_SUPABASE_LEPV.md).
-- A conta deve ter perfil, papel `aluno` e matrícula ativa. Abrir uma atividade exige ficha salva e política de pontuação explicitamente configurada.
-- As atividades precisam de snapshots revisados entregues pelo módulo de conteúdo e seleção inicial pelo coordenador. As APIs não criam conteúdo curricular automaticamente.
-- Próxima questão de recuperação usa o gateway de IA existente. O fornecedor da base continua desabilitado; sem o adaptador de Gallotte, essa operação retorna `503 AI_UNAVAILABLE`, preservando a tentativa.
+- A conta deve ter perfil, papel `aluno` e matrícula ativa. Abrir uma atividade exige ficha salva. Novas instâncias usam a política confirmada de 50/100/35; instâncias anteriores preservam seu snapshot.
+- Exercícios revisados ficam ativos ao publicar. Desafios exigem seleção inicial de dez por disciplina/turma, pelo professor atribuído ou pela coordenação em disciplina sem professor. As APIs não criam conteúdo curricular automaticamente.
+- A recuperação usa o gateway de Gallotte, com suporte a Gemini. Desabilitado, indisponível ou com saída inválida, retorna `503 AI_UNAVAILABLE`, preservando a tentativa; não há geração fictícia no runtime autenticado.
 
 Prefixo de todas as URLs: **`/api/learning`**. Respostas de sucesso retornam HTTP `200`. Respostas privadas usam `Cache-Control: private, no-store`.
 
@@ -60,7 +60,7 @@ Corpo exato, correspondente a `StudentPreferencesUpdateSchema`:
 {"interests":["futebol","música"],"context":"Prefiro exemplos de esportes."}
 ```
 
-Aceita até 20 interesses, cada um com 1 a 100 caracteres, e contexto de até 2.000 caracteres. A lista pode ser vazia. Campos extras são rejeitados. O retorno é o objeto `StudentPreferences` diretamente, sem o envelope `preferences` do GET. `version`, `studentId` e `updatedAt` vêm do servidor; reenviar dados idênticos não aumenta a versão. Instâncias já atribuídas preservam seu enunciado e a versão anterior da ficha.
+Aceita até 20 interesses da lista fechada `APPROVED_STUDENT_INTERESTS`, validada também no banco, e contexto de até 2.000 caracteres. A lista pode ser vazia. Campos extras são rejeitados. O retorno é `StudentPreferences`, sem envelope. `version`, `studentId` e `updatedAt` vêm do servidor; reenviar dados idênticos não aumenta a versão. Instâncias já atribuídas preservam o enunciado e a versão anterior da ficha.
 
 ## 2. Atividades e questões
 
@@ -74,6 +74,10 @@ Aceita até 20 interesses, cada um com 1 a 100 caracteres, e contexto de até 2.
   "schoolYear": 2026,
   "activities": [{
     "rootQuestionId": "root-01",
+    "activityType": "exercise",
+    "contentId": "content-fracoes",
+    "contentTitle": "Frações",
+    "contentDefinedBy": "teacher",
     "subjectId": "matematica",
     "grade": 6,
     "skillCodes": ["EF06MA01"],
@@ -199,21 +203,21 @@ Enviar `{}`. Retorna:
 ```json
 {
   "classId": "10000000-0000-4000-8000-000000000001",
-  "rankCalibration": "proposed",
+  "rankCalibration": "confirmed",
   "top10": [{
     "position": 1,
     "studentId": "00000000-0000-4000-8000-000000000004",
     "name": "Aluno fictício",
     "xp": 100,
     "rankPoints": 100,
-    "rankName": "Ferro (proposta)"
+    "rankName": "Ferro"
   }]
 }
 ```
 
 Retorna no máximo dez alunos, incluindo alunos com zero pontos quando a turma ainda não possui créditos. Ordena por XP decrescente, pontos anuais decrescentes e ID crescente como desempate. `xp` considera as raízes ativas e a política explicitamente escolhida para as adaptativas; `rankPoints` soma os créditos do ano letivo. A rotação não apaga os pontos anuais.
 
-O aluno acessa a própria turma; professor, responsável e coordenador precisam dos vínculos correspondentes. O ranking não concede acesso à ficha ou aos dados privados dos colegas. As patentes existentes continuam como proposta de calibração, por isso `rankCalibration` e o sufixo no nome.
+O aluno acessa a própria turma; professor, responsável e coordenador precisam dos vínculos correspondentes. O ranking não concede acesso à ficha ou aos dados privados dos colegas. `rankCalibration` é `confirmed`; pontos de elogios não influenciam a posição nem os desempates.
 
 ## Operações complementares
 
@@ -246,7 +250,9 @@ Formato de erro:
 | 503 | Configuração, persistência ou IA indisponível |
 | 500 | Falha inesperada, sem detalhes internos na resposta |
 
-O usuário confirmou para a demonstração: `LEPV_ORIGINAL_POINTS=100`, `LEPV_RECOVERY_REFERENCE=previous` e `LEPV_ADAPTIVE_XP_FOLLOWS_ROOT=true`. Cada adaptativa vale 70% do valor nominal anterior: 100 → 70 → 49 → 34,30, sem teto. Esses valores já estão no ambiente local configurado. Um novo ambiente ainda precisa receber as três variáveis; sem configuração válida a abertura retorna `503 SCORING_NOT_CONFIGURED`. A política fica congelada na instância e na cadeia. Os valores mostrados no exemplo do ranking são ilustrativos; a calibração de patentes continua proposta.
+Novas instâncias usam `confirmed-v1`: exercício 50 pontos anuais e 0 XP; desafio 100 anuais e 100 XP; recuperação 35 anuais e 0 XP, mesmo após muitos erros. Patentes vão de Ferro a Onisciente, em intervalos cumulativos de 1.000 pontos. Não há teto de créditos aprovado. As três variáveis da demonstração anterior estão obsoletas; valores e elegibilidade de XP de instâncias anteriores permanecem congelados em seus snapshots.
+
+`GET summary` também devolve `subjectProgress: [{ subjectId, earnedRankPoints, availableRankPoints }]`, calculado pelo servidor sobre os exercícios publicados da turma. O caso 200/2.000 equivale a 10%. Desafios e elogios são excluídos desse percentual; o professor recebe apenas suas disciplinas. A apresentação pode limitar o desenho do gráfico a 100%, sem cortar créditos concedidos.
 
 ## Exemplo mínimo no navegador
 

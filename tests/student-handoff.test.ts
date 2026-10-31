@@ -106,4 +106,18 @@ describe("conclusão do handoff do Viegas", () => {
     expect(await service.publish(teacher(), draft.id)).toMatchObject({ status: "publicada", version: 3 });
     expect(publisher.activities.size).toBe(1);
   });
+
+  it("preserva a elegibilidade de XP de recuperações antigas quando o snapshot previa essa retenção", async () => {
+    const { repository, service } = learningSetup();
+    const opened = await service.openActivity(actor(), "root-01");
+    repository.students.get(ids.student)!.state.instances[0].scoring = {
+      originalPoints: 100, recoveryReference: "previous", recoveryCapPoints: null, adaptiveXpFollowsRoot: false,
+    };
+    const wrong = await service.submitAttempt(actor(), { questionInstanceId: opened.question.questionInstanceId, selectedOptionId: "b", idempotencyKey: "legacy-retained-original" });
+    const next = await service.nextRecovery(actor(), wrong.recoveryId!);
+    const result = await service.submitAttempt(actor(), { questionInstanceId: next!.question.questionInstanceId, selectedOptionId: "a", idempotencyKey: "legacy-retained-recovery" });
+    expect(result.result).toMatchObject({ xpAwarded: 70, rankPointsAwarded: 70 });
+    await service.rotate(coordinator(), ids.classId, "matematica", "2026-10-26", ["root-11", "root-12"]);
+    expect((await service.summary(actor(), ids.student, "2026-01-01", "2026-12-31")).summary).toMatchObject({ xp: 70, rankPoints: 70 });
+  });
 });

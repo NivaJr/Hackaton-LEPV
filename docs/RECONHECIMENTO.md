@@ -2,6 +2,8 @@
 
 Responsável: Gallotte (Tarefa 04). Branch: `feat/gallotte-conteudo-ia`.
 
+Atualização do handoff de Nivaldo: a implementação canônica do banco está em `supabase/migrations/20261031060000_recognition.sql`, já aplicada no projeto de Production. Os trechos SQL deste documento preservam a proposta original; para instalar, usar as migrações do repositório. Integração de patente e validação em [Entrega do handoff](ENTREGA_NIVALDO_HANDOFF.md).
+
 O professor abre `/professor/reconhecer` no celular, escolhe turma e matéria, marca um ou mais alunos, escolhe o motivo e confirma. Cada aluno marcado ganha 20 pontos de patente e recebe um aviso no sino. O responsável com vínculo confirmado também recebe o aviso e consegue ver a lista de elogios do filho.
 
 ## Regras
@@ -161,13 +163,13 @@ Ele mostra contador, abre a lista, marca como lida ao tocar no item e exibe `Rec
 
 Para mostrar a lista completa de elogios no perfil do aluno, usar `GET /api/recognition` sem parâmetro.
 
-## Para a Fabia (painel do responsável)
+## Para Fabiano (painel do responsável)
 
 Usar `GET /api/recognition?studentId=<filho>` para a lista e `annualPoints`. O vínculo confirmado é conferido no servidor. O `NotificationBell` também funciona na página do responsável sem mudança, porque as notificações são do usuário logado.
 
 ## SQL proposto (para o Nivaldo aplicar)
 
-Sugestão de arquivo: `supabase/migrations/20261031050000_recognition.sql`, depois de `20261031030000_learning.sql`. Nenhuma migração foi criada nesta branch.
+Proposta original de Gallotte, anterior ao handoff. A migração final é `supabase/migrations/20261031060000_recognition.sql`; a versão `20261031050000` já pertence à função de nome de turma e não deve ser reutilizada.
 
 ```sql
 begin;
@@ -379,4 +381,4 @@ A página declara `manifest: "/professor/reconhecer/manifest.webmanifest"` só p
 
 `tests/recognition-service.test.ts`, `tests/recognition-http.test.ts` e `tests/recognition-supabase.test.ts` cobrem: professor de outra turma e de outra escola, matéria não atribuída, aluno e responsável tentando premiar, aluno transferido e de outra turma, limite de 3 com troca de dia no fuso de Brasília, limite separado por professor, toque duplo com a mesma chave, chave reutilizada com outro motivo, só pontos anuais, aviso para aluno e responsável confirmado (não para pendente), leitura por aluno, colega, responsável, professor e coordenador, marcação de lida, formato de erro, 503 sem migração e o mapeamento do adapter Supabase com cliente falso.
 
-Não foi testado: Supabase real, a RPC e as políticas acima (não existem no banco), navegador real e instalação do manifest.
+Na entrega original, não foram testados o Supabase real, as RPCs e políticas, o navegador e a instalação do manifest. A migração final agora existe no banco; a execução hospedada é registrada no PR do handoff. Instalação do manifest permanece fora dessa validação.

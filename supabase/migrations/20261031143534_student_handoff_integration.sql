@@ -54,68 +54,46 @@ $$;
 revoke all on function app_private.can_manage_content(uuid,uuid,text) from public, anon;
 grant execute on function app_private.can_manage_content(uuid,uuid,text) to authenticated, service_role;
 
-create table public.content_questions (
-  id text primary key,
-  school_id uuid not null references public.schools(id),
-  classroom_id uuid not null,
-  subject_id text not null references public.subjects(id),
-  created_by uuid not null,
-  version integer not null check (version > 0),
-  status text not null check (status in ('rascunho','publicando','publicada')),
-  payload jsonb not null,
-  created_at timestamptz not null,
-  foreign key (classroom_id, school_id) references public.classrooms(id,school_id),
-  foreign key (created_by, school_id) references public.profiles(id,school_id),
-  check ((payload->>'id' = id and payload->>'institutionId' = school_id::text
-    and payload->>'classId' = classroom_id::text and payload->'body'->>'subjectId' = subject_id
-    and payload->>'createdBy' = created_by::text and (payload->>'version')::integer = version
-    and payload->>'status' = status) is true),
-  check ((status = 'rascunho' or (payload->>'answerKeySource' = 'professor' and payload->'reviewed' = 'true'::jsonb)) is true)
-);
-create index content_questions_scope_idx on public.content_questions(school_id,classroom_id,subject_id,created_at,id);
-create index content_questions_class_idx on public.content_questions(classroom_id,school_id);
-create index content_questions_creator_idx on public.content_questions(created_by,school_id);
-create index content_questions_subject_idx on public.content_questions(subject_id);
-alter table public.content_questions enable row level security;
-revoke all on public.content_questions from public, anon, authenticated;
-grant select,insert,update,delete on public.content_questions to authenticated;
-grant all on public.content_questions to service_role;
-create policy content_questions_read on public.content_questions for select to authenticated
-  using (app_private.can_manage_content(school_id,classroom_id,subject_id));
-create policy content_questions_insert on public.content_questions for insert to authenticated
-  with check (created_by = (select auth.uid()) and status = 'rascunho'
-    and app_private.can_manage_content(school_id,classroom_id,subject_id));
-create policy content_questions_update on public.content_questions for update to authenticated
-  using (app_private.can_manage_content(school_id,classroom_id,subject_id))
-  with check (app_private.can_manage_content(school_id,classroom_id,subject_id));
-create policy content_questions_delete on public.content_questions for delete to authenticated
-  using (status = 'rascunho' and app_private.can_manage_content(school_id,classroom_id,subject_id));
+-- Reuse the private, server-only content bank delivered by PR #17.
+alter table app_private.content_questions drop constraint content_questions_status_check;
+alter table app_private.content_questions add constraint content_questions_status_check
+  check (status in ('rascunho','publicando','publicada'));
 
-create function app_private.validate_content_question() returns trigger
-language plpgsql security definer set search_path = pg_catalog as $$
+create or replace function public.content_replace_question(p_item jsonb,p_expected_version integer)
+returns boolean language plpgsql security invoker set search_path='' as $$
+declare old app_private.content_questions%rowtype;
 begin
-  if new.id <> old.id or new.school_id <> old.school_id or new.classroom_id <> old.classroom_id
-    or new.created_by <> old.created_by or new.created_at <> old.created_at then
-    raise exception 'CONTENT_IMMUTABLE_IDENTITY';
+  select * into old from app_private.content_questions q
+    where q.school_id=(p_item->>'institutionId')::uuid and q.id=p_item->>'id' for update;
+  if not found or old.version<>p_expected_version or old.status='publicada' then return false; end if;
+  if old.classroom_id<>(p_item->>'classId')::uuid or old.created_by<>(p_item->>'createdBy')::uuid
+    or old.payload->>'createdAt'<>p_item->>'createdAt' or old.payload->>'rootQuestionId'<>p_item->>'rootQuestionId'
+    then return false; end if;
+  if old.status='publicando' then
+    if p_item->>'status' not in ('publicando','publicada') or (p_item->>'version')::integer<>old.version
+      or (p_item - 'status' - 'updatedAt' - 'publishedAt')<>(old.payload - 'status' - 'updatedAt' - 'publishedAt')
+      then return false; end if;
+  elsif (p_item->>'version')::integer<>old.version+1 then return false;
   end if;
-  if old.status = 'publicada' and new.payload <> old.payload then raise exception 'CONTENT_ALREADY_PUBLISHED'; end if;
-  if old.status = 'publicando' and (
-    new.status not in ('publicando','publicada') or new.version <> old.version
-    or (new.payload - 'status' - 'updatedAt' - 'publishedAt') <> (old.payload - 'status' - 'updatedAt' - 'publishedAt')
-  ) then raise exception 'CONTENT_PUBLICATION_FROZEN'; end if;
-  if old.status = 'rascunho' and new.version <> old.version + 1 then raise exception 'CONTENT_VERSION_CONFLICT'; end if;
-  if new.status = 'publicada' and not exists (
-    select 1 from app_private.learning_catalogs c, jsonb_array_elements(c.payload->'activities') a
-    where c.school_id = new.school_id and c.classroom_id = new.classroom_id
-      and a->>'rootQuestionId' = new.payload->>'rootQuestionId' and a->'body' = new.payload->'body'
-      and (a->>'contentVersion')::integer = new.version
+  if not exists (select 1 from public.classrooms c where c.id=old.classroom_id
+    and c.school_id=old.school_id and c.grade=(p_item#>>'{body,grade}')::smallint) then return false; end if;
+  if p_item->>'status' in ('publicando','publicada') and (
+    p_item->>'answerKeySource' is distinct from 'professor' or p_item->'reviewed' is distinct from 'true'::jsonb
+  ) then raise exception 'CONTENT_REVIEW_REQUIRED'; end if;
+  if p_item->>'status'='publicada' and not exists (
+    select 1 from app_private.learning_catalogs c,jsonb_array_elements(c.payload->'activities') a
+    where c.school_id=old.school_id and c.classroom_id=old.classroom_id
+      and a->>'rootQuestionId'=p_item->>'rootQuestionId' and a->'body'=p_item->'body'
+      and (a->>'contentVersion')::integer=(p_item->>'version')::integer
   ) then raise exception 'CONTENT_CATALOGUE_REQUIRED'; end if;
-  return new;
+  update app_private.content_questions set payload=p_item,version=(p_item->>'version')::integer,
+    subject_id=p_item#>>'{body,subjectId}',status=p_item->>'status'
+    where school_id=old.school_id and id=old.id;
+  return true;
 end;
 $$;
-revoke all on function app_private.validate_content_question() from public,anon,authenticated;
-create trigger content_question_guard before update on public.content_questions
-  for each row execute function app_private.validate_content_question();
+revoke all on function public.content_replace_question(jsonb,integer) from public,anon,authenticated;
+grant execute on function public.content_replace_question(jsonb,integer) to service_role;
 
 -- The bucket and policies are created when Supabase Storage is installed. Pure
 -- Postgres test environments emulate the same tables to exercise these policies.
@@ -142,7 +120,7 @@ do $$ begin
   end if;
 end $$;
 
-comment on table public.content_questions is 'Private reviewed teacher drafts and publication snapshots. Students and guardians cannot read answer keys.';
+comment on table app_private.content_questions is 'Private reviewed teacher drafts and publication snapshots. Students and guardians cannot read answer keys.';
 
 -- The scoring function below is appended from the reviewed predecessor with
 -- per-instance policy validation and immutable historical attempts preserved.

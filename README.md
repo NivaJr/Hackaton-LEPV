@@ -63,7 +63,7 @@ Tarefa 02: escopo, validação e limites em [Entrega da Tarefa 02](docs/ENTREGA_
 
 Tarefa 01: `/aluno` integrado às APIs e ao Supabase real; `/demo/aluno` preserva o cliente fake. Fluxos, migração e validação no navegador em [Área do aluno integrada](docs/ENTREGA_ALUNO_INTEGRADO.md).
 
-O estado atual da hierarquia disciplina → conteúdo → exercício, do mapa percentual e da importação por professor/coordenador está em [Conteúdos e importação](docs/CONTEUDOS_E_IMPORTACAO_STATUS.md).
+O estado da hierarquia disciplina → conteúdo → exercício, do mapa percentual e da importação por professor/coordenador está em [Conteúdos e importação](docs/CONTEUDOS_E_IMPORTACAO_STATUS.md). A [continuidade do Viegas](docs/ENTREGA_VIEGAS_CONTINUIDADE.md) registra as correções, verificações e migrações desta branch.
 
 ## Validação
 
@@ -84,17 +84,17 @@ O workflow `.github/workflows/checks.yml` executa esses comandos com Node 24. A 
 - Questão respondida não pode ser refeita. Erro produz outra questão e explicação; recuperação termina após dois acertos consecutivos ou interrupção.
 - Exercício comum vale 50 pontos de patente e 0 XP; desafio semanal vale 100 de patente e 100 XP; acerto de recuperação vale 35 de patente e 0 XP.
 - Patentes são cumulativas e avançam a cada 1.000 pontos, de Ferro até Onisciente.
-- XP ativo e pontos anuais são separados. Dez desafios ficam ativos; entram dois por semana e saem os dois mais antigos. A saída remove o XP do ranking, não os pontos anuais.
+- XP ativo e pontos anuais são separados. Dez desafios ficam ativos por disciplina e turma; entram dois por semana e saem os dois mais antigos dessa disciplina. A saída remove o XP do ranking, não os pontos anuais.
 - Saúde e apoio: leitura por perfis vinculados e edição pelo responsável confirmado. Histórico: professor edita somente sua matéria/turma; coordenador edita na instituição.
 - A ficha é consultada e editada somente pelo próprio aluno. Os interesses são escolhidos em uma lista pedagógica previamente aprovada e o mesmo contrato é validado no servidor.
 
 ## O que falta implementar
 
-As demais frentes ainda cobrem CRUD/importação de alunos, convites administrativos, listas PDF/Word e armazenamento, banco de conteúdo, catálogo BNCC, interfaces, amizades e feedback da IA. Integrar essas frentes às APIs de aprendizagem e ao registro explícito de acesso. A base não contém 240 questões curriculares prontas nem uma LLM integrada. A Tarefa 03 validou Supabase e APIs hospedadas na Vercel com dados sintéticos; IA real e integração das telas continuam pendentes.
+O catálogo curricular completo, a revisão BNCC, amizades e os demais itens abertos nas entregas individuais continuam pendentes. A aplicação não contém 240 questões curriculares revisadas. Gestão e aluno já consomem APIs reais; o gateway Gemini possui extração e recuperação, com validação hospedada registrada separadamente dos testes simulados. Esta branch acrescenta armazenamento privado dos originais PDF/Word, contratos de conteúdo/progresso e acessibilidade do aluno. Suas migrações exigem publicação conjunta com o código antes de uso em Production. O [Handoff de Nivaldo](docs/ENTREGA_NIVALDO_HANDOFF.md) registra a persistência, os reconhecimentos, a auditoria e as métricas integrados no PR #17.
 
 ## Configuração de IA
 
-O contrato está em `src/lib/llm/gateway.ts`. O adaptador inicial rejeita as operações com `AiNotConfiguredError`. Gallotte implementará os fornecedores usando configuração no servidor: `LLM_PROVIDER`, `LLM_MODEL`, `LLM_API_KEY`, `LLM_BASE_URL` quando aplicável e `LLM_TIMEOUT_MS`.
+O contrato está em `src/lib/llm/gateway.ts`. O driver Gemini usa configuração somente no servidor: `LLM_PROVIDER=gemini`, `LLM_MODEL`, `LLM_API_KEY`, `LLM_BASE_URL` quando aplicável e `LLM_TIMEOUT_MS`. `LLM_PROVIDER=disabled` e configuração ausente/inválida recusam a geração explicitamente. Production usa um modelo definido no ambiente; veja [Configuração da Vercel](docs/CONFIGURACAO_VERCEL_LEPV.md). A existência da configuração não substitui a chamada real ao fornecedor.
 
 Escolher um fornecedor cujas condições atendam ao público-alvo antes de uso real. Não enviar automaticamente nome, email ou informações de saúde; o contexto de adaptação usa interesses pertinentes e a habilidade trabalhada. Não colocar chave no cliente, em prompts públicos ou em commits.
 
