@@ -7,9 +7,18 @@ Aplicação: **https://eai-lepv.vercel.app**. Configuração iniciada em 31/10/2
 - Conta: `nivaldojr15-6919`; escopo `Nivaldo's projects` (`nivaldos-projects-d24cfc1f`).
 - Projeto Vercel: `hackaton-lepv`, ID `prj_at9moJeGpwIvs3smh1LQsw2yPCx0`.
 - [Painel da aplicação](https://vercel.com/nivaldos-projects-d24cfc1f/hackaton-lepv).
-- Branch de implementação: `feat/nivaldo-core`. A integração à `main` continua separada da publicação por CLI.
+- Repositório conectado: `NivaJr/Hackaton-LEPV`, com branch de produção `main`.
 - Framework: Next.js. Runtime requerido pelo projeto: Node.js 24.x, alinhado com `.nvmrc`, o lockfile e o workflow GitHub.
-- Publicação executada pelo CLI a partir do checkout da Tarefa 03. Não presumir que outra branch será publicada automaticamente; coordenar a política de integração/deploy com a equipe.
+- A publicação inicial foi feita pelo CLI a partir da Tarefa 03. Em 31/10/2026, a `main` integrada (`9fa3cb5`) foi publicada manualmente e o usuário conectou o novo repositório à Vercel. A API do projeto confirmou `github`, proprietário `NivaJr`, repositório `Hackaton-LEPV` e produção em `main`.
+- O remoto local `origin` passou a usar o novo repositório; o anterior foi preservado como `upstream`. Pushes e merges de produção devem usar o novo `origin`.
+
+## Banco usado pelo site e verificação da integração
+
+A configuração Production da Vercel continua apontando para `https://alkvhjnqfjyjflaswdmi.supabase.co`. A consulta à API do Supabase confirmou o projeto `hackaton-lepv` na organização `pnwmxlwhvdmrgttxcwin`, com proprietário `nivaldo-raiz`. Conectar o novo repositório GitHub não transfere a propriedade do projeto Supabase.
+
+Na consulta de 31/10/2026, não havia conexão GitHub cadastrada para esse projeto na API de integrações do Supabase. O projeto de destino da conta NivaJR precisa ser identificado antes de alterar o banco e as chaves do runtime. Nenhuma credencial deve entrar no Git.
+
+O deploy manual de `9fa3cb5` foi promovido para o domínio público e validado no navegador: demonstração nova do aluno, login real, ficha, resposta salva somente leitura, turmas, responsáveis e resultados por aluno do coordenador. A publicação automática do novo vínculo GitHub deve ser acompanhada pelo SHA do commit e pelo estado `READY` da Vercel; um vínculo cadastrado sozinho não comprova que um build foi concluído.
 
 ## Endereço gratuito
 
