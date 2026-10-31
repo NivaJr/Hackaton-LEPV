@@ -14,9 +14,13 @@ export function prepareCorrectAnswerSound(enabled: boolean): AudioContext | null
   if (!enabled) return null;
   const AudioContextClass = browserAudioContext();
   if (!AudioContextClass) return null;
-  if (!sharedContext || sharedContext.state === "closed") sharedContext = new AudioContextClass();
-  if (sharedContext.state === "suspended") void sharedContext.resume().catch(() => undefined);
-  return sharedContext;
+  try {
+    if (!sharedContext || sharedContext.state === "closed") sharedContext = new AudioContextClass();
+    if (sharedContext.state === "suspended") void sharedContext.resume().catch(() => undefined);
+    return sharedContext;
+  } catch {
+    return null;
+  }
 }
 
 /** A short, low-volume ascending chime. Visual feedback remains the primary confirmation. */
@@ -45,6 +49,10 @@ export function playCorrectAnswerSound(context: AudioContext | null) {
     });
   };
 
-  if (context.state === "suspended") void context.resume().then(schedule).catch(() => undefined);
-  else schedule();
+  try {
+    if (context.state === "suspended") void context.resume().then(schedule).catch(() => undefined);
+    else schedule();
+  } catch {
+    // Sound is optional feedback: unavailable audio must never invalidate an answer.
+  }
 }

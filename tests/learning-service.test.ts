@@ -258,6 +258,53 @@ describe("rotação, ranking e métricas autorizadas", () => {
     expect(StudentSummarySchema.safeParse(summary).success).toBe(true);
   });
 
+  describe("ativação e rotação por turma e matéria", () => {
+    const inactive = (repository: MemoryLearningRepository) => {
+      const initial = catalog();
+      initial.catalog.activities.forEach((item) => { item.active = false; item.activatedAt = null; });
+      repository.catalogs.set(fixtureIds.classId, initial);
+      return initial.catalog.activities.slice(0, 10).map((item) => item.rootQuestionId);
+    };
+    const withTeacher = (repository: MemoryLearningRepository) => new LearningService(repository, { generateRecoveryQuestion: async () => question(1) }, testPolicy, testNow, async () => true);
+
+    it("professor da turma e matéria ativa e rotaciona", async () => {
+      const { service, repository } = setup();
+      const roots = inactive(repository);
+      await service.activate(teacher(), fixtureIds.classId, "matematica", roots);
+      expect((await service.listActivities(actor())).activities).toHaveLength(10);
+      const rotated = await service.rotate(teacher(), fixtureIds.classId, "matematica", "2026-10-26", ["root-11", "root-12"]);
+      expect(rotated.outgoingRootIds).toHaveLength(2);
+    });
+
+    it("professor de outra matéria e aluno são recusados", async () => {
+      const { service, repository } = setup();
+      const roots = inactive(repository);
+      await expect(service.activate(teacher(), fixtureIds.classId, "historia", roots)).rejects.toMatchObject({ code: "ACTIVITY_MANAGER_REQUIRED", status: 403 });
+      await expect(service.activate(actor(), fixtureIds.classId, "matematica", roots)).rejects.toMatchObject({ code: "ACTIVITY_MANAGER_REQUIRED" });
+      await expect(service.activityCatalog(actor(), fixtureIds.classId, "matematica")).rejects.toMatchObject({ status: 403 });
+    });
+
+    it("coordenador só atua quando a matéria não tem professor", async () => {
+      const { repository } = setup();
+      const roots = inactive(repository);
+      await expect(withTeacher(repository).activate(coordinator(), fixtureIds.classId, "matematica", roots)).rejects.toMatchObject({ code: "TEACHER_ASSIGNED", status: 403 });
+      await expect(withTeacher(repository).rotate(coordinator(), fixtureIds.classId, "matematica", "2026-10-26", ["root-11", "root-12"])).rejects.toMatchObject({ code: "TEACHER_ASSIGNED" });
+      await withTeacher(repository).activate(teacher(), fixtureIds.classId, "matematica", roots);
+      expect(repository.catalogs.get(fixtureIds.classId)!.catalog.activities.filter((item) => item.active)).toHaveLength(10);
+    });
+
+    it("o catálogo mostra o estado da semana sem expor gabarito", async () => {
+      const { service } = setup();
+      const before = await service.activityCatalog(teacher(), fixtureIds.classId, "matematica");
+      expect(before).toMatchObject({ weekStart: "2026-10-26", rotatedThisWeek: false, outgoingNext: ["root-01", "root-02"] });
+      expect(JSON.stringify(before)).not.toMatch(/correctOptionId|explanation|hint/);
+      await service.rotate(teacher(), fixtureIds.classId, "matematica", "2026-10-26", ["root-11", "root-12"]);
+      const after = await service.activityCatalog(teacher(), fixtureIds.classId, "matematica");
+      expect(after.rotatedThisWeek).toBe(true);
+      expect(after.activities.filter((item) => item.retired).map((item) => item.rootQuestionId)).toEqual(["root-01", "root-02"]);
+    });
+  });
+
   it("publicação interna exige professor atribuído e não reescreve snapshots", async () => {
     const { service, repository } = setup();
     const input = { rootQuestionId: "new-reviewed", body: question(777), reviewed: true as const, contentVersion: 1 };

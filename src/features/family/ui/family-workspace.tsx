@@ -3,7 +3,10 @@
 import { useEffect, useState } from "react";
 import { Check, Flag, Flame, HeartPulse, MessageSquareText, TrendingUp } from "lucide-react";
 import { SUBJECTS } from "@/config/catalog";
+import { NotificationBell } from "@/features/recognition/ui/notification-bell";
+import { FamilyReportsList } from "@/features/school-reports/ui/family-reports-list";
 import type { ChildRecord, FamilyRecord, FamilyRecordCategory, FeedbackResult, StudentOverview } from "../model";
+import { RecognitionsPanel } from "./recognitions-panel";
 import styles from "./family.module.css";
 
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
@@ -83,13 +86,15 @@ function ChildPanel({ studentId }: { studentId: string }) {
       <p className={styles.feedback}>{feedback.text}</p>
       <span className={styles.meta}>{feedback.origin === "ia" ? "Gerado por IA a partir dos resultados, sem dados de saúde ou apoio." : "Mensagem automática, sem IA."}{feedback.metricsSource === "fixture" ? " Baseada em dados de exemplo." : ""}</span>
     </section>}
+    <RecognitionsPanel studentId={studentId} />
     <div className={styles.columns} id="saude-apoio">
       <RecordEditor studentId={studentId} category="health" title="Saúde" initial={overview.health} />
       <RecordEditor studentId={studentId} category="support" title="Necessidades de apoio" initial={overview.support} />
     </div>
     <section className="panel" id="historico">
       <div className="panel-heading"><div><span className="eyebrow">SOMENTE CONSULTA</span><h2>Histórico escolar</h2></div></div>
-      {overview.history.length === 0 ? <p className={styles.empty}>Nenhum registro no histórico.</p> : <div className={styles.tableWrap}><table className={styles.table}>
+      <FamilyReportsList studentId={studentId} />
+      {overview.history.length > 0 && <div className={styles.tableWrap}><table className={styles.table}>
         <thead><tr><th>Ano</th><th>Período</th><th>Matéria</th><th>Nota</th><th>Observações</th></tr></thead>
         <tbody>{overview.history.map((entry) => <tr key={entry.id}><td>{entry.schoolYear}</td><td>{entry.period}</td><td>{subjectName(entry.subjectId)}</td><td>{entry.grade ?? "—"}</td><td>{entry.notes || "—"}</td></tr>)}</tbody>
       </table></div>}
@@ -110,7 +115,7 @@ export function FamilyWorkspace({ fullName }: { fullName: string }) {
 
   const selected = children?.find((child) => child.id === selectedId);
   return <div className={styles.stack}>
-    <div className="page-heading"><div><span className="eyebrow">PRESENTE EM CADA DESCOBERTA</span><h1>Olá, {fullName.split(" ")[0]}<span className="greeting-dot">.</span></h1><p>Acompanhe a jornada dos estudantes vinculados à sua conta.</p></div></div>
+    <div className="page-heading"><div><span className="eyebrow">PRESENTE EM CADA DESCOBERTA</span><h1>Olá, {fullName.split(" ")[0]}<span className="greeting-dot">.</span></h1><p>Acompanhe a jornada dos estudantes vinculados à sua conta.</p></div><NotificationBell /></div>
     {error && <p role="alert" className={`${styles.notice} ${styles.error}`}>{error}</p>}
     {children?.length === 0 && <section className="panel"><p className={styles.empty}>Nenhum estudante com vínculo confirmado. Fale com a coordenação da escola.</p></section>}
     {children && children.length > 0 && <label className={styles.field}>Estudante

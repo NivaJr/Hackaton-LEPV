@@ -38,3 +38,4 @@
 .empty{color:var(--muted);font-size:14px;margin:14px 0 0}
 :global([data-theme="dark"]) .success,:global([data-theme="dark"]) .badge:not(.badgeWarn):not(.badgeError){color:#a8ecd2}
 @media(max-width:900px){.columns{grid-template-columns:minmax(0,1fr)}}
+.linkNotice{position:sticky;top:12px;z-index:5;padding:14px 18px}

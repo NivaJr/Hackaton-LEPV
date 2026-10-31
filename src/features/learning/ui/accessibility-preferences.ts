@@ -88,5 +88,6 @@ export function loadAccessibilityPreferences(studentId: string, registeredNeeds:
 
 export function saveAccessibilityPreferences(studentId: string, preferences: StudentAccessibilityPreferences) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(storageKey(studentId), JSON.stringify(normalizeAccessibilityPreferences(preferences)));
+  try { window.localStorage.setItem(storageKey(studentId), JSON.stringify(normalizeAccessibilityPreferences(preferences))); }
+  catch { /* The interface still changes when browser storage is unavailable. */ }
 }

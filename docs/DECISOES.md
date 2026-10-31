@@ -8,7 +8,7 @@ Esta decisão substitui a política provisória de 30/10/2026 para novas instân
 - Desafio semanal correto: 100 pontos de patente e 100 XP.
 - Recuperação correta: 35 pontos de patente e 0 XP, independentemente da quantidade de tentativas.
 - A recuperação continua até dois acertos consecutivos ou interrupção.
-- Há dez desafios semanais ativos. A cada semana entram dois e saem os dois mais antigos, por `activatedAt`; o XP dos desafios removidos deixa de compor o ranking, mas seus pontos de patente permanecem.
+- Há dez desafios semanais ativos **por disciplina** em cada turma. A cada semana entram dois e saem os dois mais antigos dessa disciplina, por `activatedAt`; o XP dos desafios removidos deixa de compor o ranking, mas seus pontos de patente permanecem. Confirmação de Nivaldo em `PROMPTS/01-viegas-2026-10-31_051_desafios-por-disciplina.md`, esclarecendo a abrangência do pedido original.
 - Patentes cumulativas: Ferro (0), Bronze (1.000), Prata (2.000), Ouro (3.000), Platina (4.000), Esmeralda (5.000), Diamante (6.000), Mestre (7.000), Grão-Mestre (8.000) e Onisciente (9.000).
 
 A regra é validada no serviço e na função SQL de persistência; valores enviados pelo navegador não são aceitos como autoridade.

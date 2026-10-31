@@ -1,14 +1,26 @@
+import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
-import { TeacherContentWorkspace } from "@/features/content/ui/teacher-content-workspace";
+import { TeacherContentPanel } from "@/features/content/ui/teacher-content-panel";
+import { ActivityManager } from "@/features/learning/ui/activity-manager";
+import { TeacherReportsPanel } from "@/features/school-reports/ui/teacher-reports-panel";
+import { TeacherOverviewPanel } from "@/features/teacher-dashboard/ui/teacher-overview";
+import { loadTeacherOverview } from "@/features/teacher-dashboard/server/load-teacher-overview";
 import { getSessionContext, requireRole } from "@/lib/auth/session";
 
 export default async function TeacherPage() {
   const profile = await requireRole("professor");
-  const context = await getSessionContext();
-  const assignments = (context?.teacherAssignments ?? []).map((assignment) => ({
-    classId: assignment.classId,
-    className: `Turma ${assignment.classId}`,
-    subjectId: assignment.subjectId,
-  }));
-  return <AppShell role="professor" fullName={profile.fullName} mode="real"><TeacherContentWorkspace fullName={profile.fullName} mode="real" assignments={assignments} /></AppShell>;
+  const session = await getSessionContext();
+  if (!session) redirect("/login?next=%2Fprofessor");
+  const overview = await loadTeacherOverview(session);
+  const classNames = new Map(overview.classes.map((item) => [item.classId, item.className]));
+  const activityScopes = session.teacherAssignments.filter((item) => item.institutionId === session.institutionId)
+    .map((item) => ({ classId: item.classId, className: classNames.get(item.classId) ?? "Turma", subjectId: item.subjectId }));
+  return <AppShell role="professor" fullName={profile.fullName} mode="real">
+    <div className="grid gap-8">
+      <div id="acompanhamento" className="scroll-mt-6"><TeacherOverviewPanel overview={overview} /></div>
+      <div id="questoes" className="scroll-mt-6"><TeacherContentPanel mode="real" /></div>
+      <ActivityManager scopes={activityScopes} />
+      <TeacherReportsPanel classes={[...new Map(activityScopes.map((item) => [item.classId, { classId: item.classId, className: item.className }])).values()]} />
+    </div>
+  </AppShell>;
 }

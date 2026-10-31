@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowUpRight, BookOpen, ChevronRight, CircleHelp, Compass, Flag, GraduationCap, LayoutDashboard, ShieldCheck, Sparkles, Trophy, Users } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Award, BookOpen, ChevronRight, CircleHelp, Compass, FileText, Flag, GraduationCap, HeartPulse, LayoutDashboard, ShieldCheck, Sparkles, Trophy, Upload, UserCheck, Users } from "lucide-react";
 import type { Role } from "@/contracts";
 import { ROLE_LABELS } from "@/lib/auth/navigation";
 import { Brand } from "./brand";
@@ -10,14 +10,42 @@ export type DashboardMode = "demo" | "real";
 
 export function AppShell({ role, fullName, mode, children }: { role: Role; fullName: string; mode: DashboardMode; children: ReactNode }) {
   const isStudent = role === "aluno";
+  const isCoordinatorPanel = role === "coordenador" && mode === "real";
+  const isGuardianPanel = role === "responsavel" && mode === "real";
   const home = mode === "demo" ? `/demo/${role}` : `/${role}`;
-  const items = isStudent ? [
+  const items = isCoordinatorPanel ? [
+    { label: "Visão geral", icon: LayoutDashboard, href: home },
+    { label: "Acompanhamento", icon: Compass, href: `${home}#acompanhamento` },
+    { label: "Turmas e pessoas", icon: Users, href: `${home}#turmas` },
+    { label: "Importação", icon: Upload, href: `${home}#importacao` },
+    { label: "Boletins", icon: FileText, href: `${home}#boletins` },
+    { label: "Responsáveis", icon: UserCheck, href: `${home}#vinculos` },
+  ] : isGuardianPanel ? [
+    { label: "Visão geral", icon: LayoutDashboard, href: home },
+    { label: "Resultados", icon: Compass, href: `${home}#resultados` },
+    { label: "Elogios", icon: Award, href: `${home}#elogios` },
+    { label: "Saúde e apoio", icon: HeartPulse, href: `${home}#saude-apoio` },
+    { label: "Histórico", icon: BookOpen, href: `${home}#historico` },
+  ] : isStudent ? [
     { label: "Visão geral", icon: LayoutDashboard, href: home },
     { label: "Minhas atividades", icon: BookOpen, href: `${home}#atividade` },
     { label: "Meu progresso", icon: Compass, href: `${home}#progresso` },
     { label: "Ranking da turma", icon: Trophy, href: `${home}#ranking-turma` },
     { label: "Meu perfil", icon: GraduationCap, href: `${home}#perfil` },
+    ...(mode === "real" ? [{ label: "Boletins", icon: FileText, href: `${home}#boletins` }] : []),
+  ] : role === "professor" ? (mode === "real" ? [
+    { label: "Visão geral", icon: LayoutDashboard, href: home },
+    { label: "Listas de exercícios", icon: BookOpen, href: `${home}#questoes` },
+    { label: "Desafios semanais", icon: Trophy, href: `${home}#atividades` },
+    { label: "Acompanhamento", icon: Compass, href: `${home}#acompanhamento` },
+    { label: "Boletins", icon: FileText, href: `${home}#boletins` },
+    { label: "Elogiar aluno", icon: Award, href: "/professor/reconhecer" },
   ] : [
+    { label: "Visão geral", icon: LayoutDashboard, href: home },
+    { label: "Importar lista", icon: Upload, href: `${home}#content-import-title` },
+    { label: "Rascunhos", icon: BookOpen, href: `${home}#content-drafts-title` },
+    { label: "Publicadas", icon: ShieldCheck, href: `${home}#content-published-title` },
+  ]) : [
     { label: "Visão geral", icon: LayoutDashboard, href: home },
     { label: role === "responsavel" ? "Atividades do aluno" : "Atividades", icon: BookOpen, href: "/tarefas" },
     { label: "Acompanhamento", icon: Compass, href: "/tarefas" },
@@ -31,7 +59,7 @@ export function AppShell({ role, fullName, mode, children }: { role: Role; fullN
       <Brand light />
       <div className="workspace-label"><span className="workspace-icon"><GraduationCap size={18} /></span><div><strong>{mode === "demo" ? "Escola Horizonte" : "Seu espaço de ensino"}</strong><small>{mode === "demo" ? "Instituição fictícia" : "Área autenticada"}</small></div><ChevronRight size={14} /></div>
       <span className="nav-caption">SEU ESPAÇO</span>
-      <nav className="side-nav" aria-label="Navegação principal">{items.map((item, index) => <Link key={item.label} href={item.href} className={`side-link${index === 0 ? " active" : ""}`} aria-current={index === 0 ? "page" : undefined}><item.icon size={20} /><span>{item.label}</span>{index === 1 && <span className="nav-dot" />}</Link>)}</nav>
+      <nav className="side-nav" aria-label="Navegação principal">{items.map((item, index) => <Link key={item.label} href={item.href} className={`side-link${index === 0 ? " active" : ""}`} aria-current={index === 0 ? "page" : undefined}><item.icon size={20} /><span>{item.label}</span>{index === 1 && !isCoordinatorPanel && !isGuardianPanel && <span className="nav-dot" />}</Link>)}</nav>
       <div className="sidebar-bottom">
         <div className="sidebar-note"><span className="sidebar-note-icon"><Sparkles size={23} /></span><strong>Aprender abre caminhos.</strong><p>Um passo de cada vez, uma nova possibilidade.</p><span className="note-line" /></div>
         <Link href="/tarefas" className="side-link muted"><CircleHelp size={19} />Sobre esta base<ArrowUpRight size={15} /></Link>

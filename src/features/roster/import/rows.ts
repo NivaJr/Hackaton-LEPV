@@ -37,6 +37,13 @@ export const TEMPLATES: Record<ImportKind, { fileName: string; content: string }
   teachers: { fileName: "modelo-professores.csv", content: "nome completo,email,matéria\nProfessor Exemplo Lima,professor.exemplo@escola.example,Matemática\n" },
 };
 
+/** Separated by semicolons, which Excel in pt-BR opens as columns. */
+export function accessLinksCsv(rows: { fullName: string; email: string; accessLink: string }[]): string {
+  const quote = (value: string) => `"${value.replace(/"/g, '""')}"`;
+  const lines = rows.map((row) => [row.fullName, row.email, row.accessLink].map(quote).join(";"));
+  return ["nome completo;email;link de cadastro", ...lines].join("\r\n") + "\r\n";
+}
+
 export function validateRow(kind: ImportKind, row: { line: number; fullName: string; email: string; subject?: string }): ParsedRow {
   const fullName = row.fullName.trim().replace(/\s+/g, " ");
   const email = row.email.trim().toLocaleLowerCase("pt-BR");

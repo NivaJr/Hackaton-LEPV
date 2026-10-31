@@ -10,6 +10,7 @@ import {
 import { SUBJECTS, getSubject, type SubjectId } from "@/config/catalog";
 import { APPROVED_STUDENT_INTERESTS, isApprovedStudentInterest, type ApprovedStudentInterest } from "@/config/student-interests";
 import type { AttemptSubmission, QuestionForStudent, StudentPreferencesUpdate } from "@/contracts";
+import { getRankProgress } from "@/features/learning/domain/scoring";
 import { createFakeStudentLearningClient, createHttpStudentLearningClient, LearningClientError, type StudentActivity, type StudentLearningClient, type StudentLearningSnapshot } from "@/features/learning/client";
 import { ActivityHeatmap } from "./activity-heatmap";
 import {
@@ -28,6 +29,7 @@ import { SkillMatrix } from "./skill-matrix";
 import styles from "./student-activities.module.css";
 
 const subjectTone: Record<SubjectId, string> = { matematica: "violet", portugues: "coral", ingles: "blue", historia: "amber", geografia: "teal", biologia: "green" };
+const NO_ACCESSIBILITY_NEEDS: AccessibilityNeed[] = [];
 
 function contentKey(activity: StudentActivity) {
   return activity.contentId?.trim() || activity.skillCodes.join("|");
@@ -37,12 +39,16 @@ function contentTitle(activity: StudentActivity) {
   return activity.contentTitle?.trim() || `Habilidade ${activity.skillCodes.join(" · ")}`;
 }
 
+function contentOwnerLabel(owner: StudentActivity["contentDefinedBy"]) {
+  return owner === "teacher" ? "pelo professor" : "pela coordenação";
+}
+
 function messageFor(error: unknown) {
   if (error instanceof LearningClientError) return error.message;
   return error instanceof Error ? error.message : "Algo não saiu como esperado. Tente novamente.";
 }
 
-export function StudentLearningExperience({ fullName, mode, registeredAccessibilityNeeds = [] }: { fullName: string; mode: "demo" | "real"; registeredAccessibilityNeeds?: AccessibilityNeed[] }) {
+export function StudentLearningExperience({ fullName, mode, registeredAccessibilityNeeds = NO_ACCESSIBILITY_NEEDS }: { fullName: string; mode: "demo" | "real"; registeredAccessibilityNeeds?: AccessibilityNeed[] }) {
   const clientRef = useRef<StudentLearningClient | null>(null);
   if (!clientRef.current) clientRef.current = mode === "demo" ? createFakeStudentLearningClient() : createHttpStudentLearningClient();
   const client = clientRef.current;
@@ -74,6 +80,12 @@ export function StudentLearningExperience({ fullName, mode, registeredAccessibil
     return true;
   }
   function finish() { operation.current = null; setBusy(null); }
+
+  // Sections render after the snapshot loads, so the browser cannot follow the hash on its own.
+  const loaded = snapshot !== null;
+  useEffect(() => {
+    if (loaded && window.location.hash) document.getElementById(window.location.hash.slice(1))?.scrollIntoView();
+  }, [loaded]);
 
   useEffect(() => {
     let active = true;
@@ -244,6 +256,7 @@ export function StudentLearningExperience({ fullName, mode, registeredAccessibil
 
   if (!snapshot) return <section className="panel student-loading" aria-live="polite">{busy === "loading" ? <LoaderCircle className="spin" /> : <CircleAlert />}<h2>{busy === "loading" ? "Preparando sua jornada..." : "Não foi possível carregar seu espaço"}</h2><p>{notice ?? "Carregando sua turma, matérias e atividades."}</p>{busy !== "loading" && <button className="button button-primary" onClick={() => { operation.current = "loading"; setBusy("loading"); setNotice(null); setLoadAttempt((value) => value + 1); }}>Tentar novamente</button>}</section>;
   const { summary, ranking } = snapshot;
+  const rankProgress = getRankProgress(summary.rankPoints);
   const firstName = fullName.split(" ")[0];
   const correct = result?.result.isCorrect;
   const recoveryComplete = recoveryStatus === "recovered";
@@ -261,7 +274,7 @@ export function StudentLearningExperience({ fullName, mode, registeredAccessibil
   ].filter(Boolean).join(" ");
 
   return <div className={experienceClassName} data-interface-mode={accessibleMode ? "accessible" : "standard"}>
-    <div className={styles.accessibilityTop}><button type="button" onClick={toggleAccessibility} aria-pressed={accessibleMode} aria-label={accessibleMode ? "Usar interface normal" : "Ativar modo acessível"}><span><Image src="/brand/accessibility-symbol.png" alt="" width={42} height={35} aria-hidden="true" priority /></span><span><strong>Acessibilidade</strong><small>{accessibleMode ? "Modo acessível ativo" : "Ativar modo acessível"}</small></span></button></div>
+    <div className={styles.accessibilityTop}><button type="button" onClick={toggleAccessibility} disabled={busy !== null} aria-pressed={accessibleMode} aria-label={accessibleMode ? "Usar interface normal" : "Ativar modo acessível"}><span><Image src="/brand/accessibility-symbol.png" alt="" width={42} height={35} aria-hidden="true" priority /></span><span><strong>Acessibilidade</strong><small>{accessibleMode ? "Modo acessível ativo" : "Ativar modo acessível"}</small></span></button></div>
     {mode === "demo" && <div className="student-demo-banner"><Sparkles size={16} /><span><strong>Demonstração provisória:</strong> dados sintéticos e adapter fake. Nenhuma resposta desta página é persistida no banco.</span></div>}
     <div className="page-heading"><div><span className="eyebrow">{accessibleMode ? "SEU ESPAÇO DE ESTUDO" : "CENTRAL DE APRENDIZADO"}</span><h1>{accessibleMode ? <>Olá, {firstName}. Escolha o que estudar.</> : <>Olá, {firstName}<span className="greeting-dot">.</span> Escolha sua missão.</>}</h1><p>{accessibleMode ? "Primeiro escolha uma matéria. Depois escolha o conteúdo e a atividade." : "Escolha a matéria, o conteúdo definido para sua turma e o exercício que quer praticar."}</p></div><span className="class-badge"><GraduationCap size={16} />{snapshot.activities.className}</span></div>
     {notice && <div className="student-notice" role="status" aria-live="polite"><CircleAlert size={17} /><span>{notice}</span><button onClick={() => setNotice(null)} aria-label="Fechar aviso"><X size={15} /></button></div>}
@@ -272,7 +285,7 @@ export function StudentLearningExperience({ fullName, mode, registeredAccessibil
           <div><span className="mission-tag"><Target size={14} />{accessibleMode ? "ATIVIDADE DE ESTUDO" : "MISSÃO ATUAL"}</span><h2>{accessibleMode ? <>Treine uma habilidade.<br />No seu ritmo.</> : <>Treine uma habilidade.<br />Evolua no seu ritmo.</>}</h2><p>{accessibleMode ? "Escolha a matéria, o conteúdo e depois uma atividade da sua turma." : "Escolha uma matéria e pratique um dos conteúdos publicados para sua turma."}</p><a href="#atividade" className="button button-lime">Ver matérias<ArrowRight size={17} /></a></div>
           <div className="command-orbit" aria-hidden="true"><span>XP</span><BookOpen size={80} /></div>
         </section>
-        <section className="student-rank-card"><RankBadge rankName={summary.rankName} /><div className="student-rank-copy"><span className="eyebrow">PATENTE ATUAL</span><strong>{summary.rankName}</strong><p>Os pontos de patente são cumulativos durante o ano.</p>{mode === "demo" && <><div className="student-rank-track"><span style={{ width: "85%" }} /></div><small>Próxima patente a cada 1.000 pontos</small></>}</div></section>
+        <section className="student-rank-card"><RankBadge rankName={summary.rankName} /><div className="student-rank-copy"><span className="eyebrow">PATENTE ATUAL</span><strong>{summary.rankName}</strong><p>Os pontos de patente são cumulativos durante o ano.</p><div className="student-rank-track" role="progressbar" aria-label="Progresso para a próxima patente" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(rankProgress.progress * 100)}><span style={{ width: `${rankProgress.progress * 100}%` }} /></div><small>{rankProgress.next ? `${rankProgress.pointsToNext.toLocaleString("pt-BR")} pontos para ${rankProgress.next.name}` : "Última patente alcançada; os pontos continuam acumulando."}</small></div></section>
       </div>
 
       <ScoringOverview summary={summary} ranking={ranking} className={snapshot.activities.className} />
@@ -289,7 +302,7 @@ export function StudentLearningExperience({ fullName, mode, registeredAccessibil
 
     <section className={styles.contentSection} aria-labelledby="content-heading">
       <div className="section-heading"><div><span className="eyebrow">CONTEÚDOS DE {getSubject(subject).name.toLocaleUpperCase("pt-BR")}</span><h2 id="content-heading">O que você está estudando?</h2><p>Escolha o conteúdo definido para sua turma antes de abrir os exercícios.</p></div><span className="subtle-pill">{contents.length} {contents.length === 1 ? "conteúdo" : "conteúdos"}</span></div>
-      {contents.length ? <div className={styles.contentGrid}>{contents.map((item) => <button key={item.id} type="button" disabled={busy !== null} className={content === item.id ? styles.contentSelected : ""} aria-pressed={content === item.id} onClick={() => selectContent(item.id)}><span><Layers3 size={20} /></span><strong>{item.title}</strong><small>{item.count} {item.count === 1 ? "exercício" : "exercícios"}{item.definedBy ? ` · definido pelo ${item.definedBy}` : ""}</small>{content === item.id && <CheckCircle2 size={17} />}</button>)}</div> : <p className={styles.contentEmpty}>Nenhum conteúdo foi publicado para esta disciplina.</p>}
+      {contents.length ? <div className={styles.contentGrid}>{contents.map((item) => <button key={item.id} type="button" disabled={busy !== null} className={content === item.id ? styles.contentSelected : ""} aria-pressed={content === item.id} onClick={() => selectContent(item.id)}><span><Layers3 size={20} /></span><strong>{item.title}</strong><small>{item.count} {item.count === 1 ? "atividade" : "atividades"}{item.definedBy ? ` · definido ${contentOwnerLabel(item.definedBy)}` : ""}</small>{content === item.id && <CheckCircle2 size={17} />}</button>)}</div> : <p className={styles.contentEmpty}>Nenhum conteúdo foi publicado para esta disciplina.</p>}
     </section>
 
     <div className="student-workspace-grid">
@@ -305,7 +318,7 @@ export function StudentLearningExperience({ fullName, mode, registeredAccessibil
             </section>
             <section className={styles.teacherSection} aria-labelledby="teacher-lists-heading">
               <div className={styles.activitySectionHeading}><span><ClipboardList size={20} /></span><div><strong id="teacher-lists-heading">Listas do professor</strong><small>Exercícios da disciplina · 50 pontos de patente por acerto</small></div></div>
-              {teacherExercises.length ? <ol className={styles.activities} aria-label="Listas do professor">{teacherExercises.map((activity, index) => <li key={activity.rootQuestionId}><button disabled={busy !== null || !snapshot.preferencesSaved} onClick={() => openActivity(activity)}><span><strong>Lista do professor {index + 1}</strong><small>{activity.skillCodes.join(" · ")} · {activity.contentDefinedBy === "coordenador" ? "publicada pela coordenação" : "publicada pelo professor"}</small></span><span>{activity.recoveryStatus === "in_progress" ? "Retomar recuperação" : activity.status === "answered" ? "Ver resposta" : activity.status === "pending" ? "Continuar lista" : "Abrir lista"}<ArrowRight size={16} aria-hidden="true" /></span></button></li>)}</ol> : <p className={styles.activityEmpty}>Nenhuma lista do professor neste conteúdo.</p>}
+              {teacherExercises.length ? <ol className={styles.activities} aria-label="Listas do professor">{teacherExercises.map((activity, index) => <li key={activity.rootQuestionId}><button disabled={busy !== null || !snapshot.preferencesSaved} onClick={() => openActivity(activity)}><span><strong>Lista do professor {index + 1}</strong><small>{activity.skillCodes.join(" · ")} · {activity.contentDefinedBy === "coordinator" ? "publicada pela coordenação" : "publicada pelo professor"}</small></span><span>{activity.recoveryStatus === "in_progress" ? "Retomar recuperação" : activity.status === "answered" ? "Ver resposta" : activity.status === "pending" ? "Continuar lista" : "Abrir lista"}<ArrowRight size={16} aria-hidden="true" /></span></button></li>)}</ol> : <p className={styles.activityEmpty}>Nenhuma lista do professor neste conteúdo.</p>}
             </section>
           </div>}
           {busy === "opening" && <p role="status">Abrindo atividade...</p>}

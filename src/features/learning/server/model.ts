@@ -2,12 +2,13 @@ import { z } from "zod";
 import {
   AttemptResultSchema, GeneratedQuestionSchema, GradeSchema, IdSchema,
   QuestionAnswerKeySchema, QuestionForStudentSchema, RecoveryStateSchema,
-  StudentPreferencesSchema, SubjectIdSchema,
+  StudentPreferencesSchema, SubjectIdSchema, type SubjectId,
 } from "@/contracts";
 
 const timestamp = z.string().datetime();
 const points = z.number().finite().nonnegative();
 export const ScoringPolicySchema = z.object({
+  version: z.enum(["legacy", "confirmed-v1"]).optional(),
   originalPoints: points.positive().max(1_000_000),
   recoveryReference: z.enum(["original", "previous"]),
   adaptiveXpFollowsRoot: z.boolean(),
@@ -16,7 +17,10 @@ export const ScoringPolicySchema = z.object({
 
 export const ActivitySchema = z.object({
   rootQuestionId: IdSchema,
-  activityType: z.enum(["exercise", "weekly_challenge"]).default("weekly_challenge"),
+  activityType: z.enum(["exercise", "weekly_challenge"]).default("exercise"),
+  contentId: IdSchema.optional(),
+  contentTitle: z.string().trim().min(1).max(100).optional(),
+  contentDefinedBy: z.enum(["teacher", "coordinator"]).optional(),
   body: GeneratedQuestionSchema,
   contentVersion: z.number().int().positive(),
   reviewed: z.literal(true),
@@ -24,6 +28,16 @@ export const ActivitySchema = z.object({
   activatedAt: timestamp.nullable(),
 }).strict();
 export type LearningActivity = z.infer<typeof ActivitySchema>;
+
+/** Management view: never carries the answer key, explanation or hint. */
+export interface ActivityCatalogView {
+  classId: string;
+  subjectId: SubjectId;
+  weekStart: string;
+  rotatedThisWeek: boolean;
+  outgoingNext: string[];
+  activities: { rootQuestionId: string; statement: string; skillCodes: string[]; active: boolean; retired: boolean; activityType: LearningActivity["activityType"]; contentTitle?: string }[];
+}
 
 export const CatalogSchema = z.object({
   classId: IdSchema,
@@ -41,6 +55,7 @@ export const CatalogSchema = z.object({
 export type LearningCatalog = z.infer<typeof CatalogSchema>;
 
 export const InstanceSchema = z.object({
+  activityType: z.enum(["exercise", "weekly_challenge"]).optional(),
   classId: IdSchema,
   contentVersion: z.number().int().positive(),
   rootContentVersion: z.number().int().positive(),

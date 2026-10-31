@@ -22,7 +22,7 @@ export function ScoringOverview({ summary, ranking, className }: { summary: Stud
       <div className="dynamic-score-main"><div><strong>{summary.xp.toLocaleString("pt-BR")}</strong><span>XP ativo</span></div><div className="ranking-position-card"><Trophy size={22} /><span>Classificação</span><strong>{current ? `#${current.position}` : "—"}</strong><small>{current ? `de ${ranking.top10.length} no TOP 10` : "Fora do TOP 10"}</small></div></div>
       <div className="dynamic-progress-copy"><span>Comparação com o líder da {className}</span><strong>{relativeXp}%</strong></div>
       <div className="dynamic-progress" role="progressbar" aria-label="XP em relação ao líder da turma" aria-valuemin={0} aria-valuemax={100} aria-valuenow={relativeXp}><span style={{ width: `${relativeXp}%` }}><i /></span></div>
-      <div className="dynamic-score-footer"><span>Dois desafios entram e os dois mais antigos saem a cada semana.</span><a href="#ranking-turma">Ver TOP 10<ArrowUpRight size={13} /></a></div>
+      <div className="dynamic-score-footer"><span>Em cada disciplina, dois desafios entram e os dois mais antigos saem a cada semana.</span><a href="#ranking-turma">Ver TOP 10<ArrowUpRight size={13} /></a></div>
     </article>
   </section>;
 }

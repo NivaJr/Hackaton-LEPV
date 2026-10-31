@@ -39,7 +39,9 @@ export function postgresRpcClient(db: PGlite): LearningRpcClient {
   } };
 }
 
-export async function createLearningDatabase() {
+export const HANDOFF_MIGRATION = "supabase/migrations/20261031143534_student_handoff_integration.sql";
+
+export async function createLearningDatabase(includeHandoff = true) {
   const db = new PGlite();
   await db.exec(`
     create role anon nologin;
@@ -53,10 +55,18 @@ export async function createLearningDatabase() {
     grant usage on schema public to anon,authenticated,service_role;
     grant usage on schema auth to authenticated,service_role;
     grant execute on function auth.uid() to authenticated,service_role;
+    create schema storage;
+    create table storage.buckets(id text primary key,name text not null,public boolean not null default false,file_size_limit bigint,allowed_mime_types text[]);
+    create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text references storage.buckets(id),name text not null);
+    alter table storage.objects enable row level security;
+    grant usage on schema storage to anon,authenticated,service_role;
+    grant select,insert on storage.objects to authenticated;
+    grant all on storage.buckets,storage.objects to service_role;
   `);
   for (const file of ["supabase/migrations/20261030220000_foundation.sql", "supabase/seed.sql", "supabase/migrations/20261031030000_learning.sql", "supabase/migrations/20261031050000_learning_classroom_name.sql", "supabase/migrations/20261031110000_learning_scoring_confirmed.sql"]) {
     await db.exec(await readFile(resolve(process.cwd(), file), "utf8"));
   }
+  if (includeHandoff) await db.exec(await readFile(resolve(process.cwd(), HANDOFF_MIGRATION), "utf8"));
   await db.exec(`
     insert into auth.users(id) values ('${ids.student}'),('${ids.teacher}'),('${ids.coordinator}'),('${ids.guardian}'),('00000000-0000-4000-8000-000000000005');
     insert into public.profiles(id,school_id,full_name) values

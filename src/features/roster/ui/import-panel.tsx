@@ -4,11 +4,12 @@ import { useState, type FormEvent } from "react";
 import { Download, UploadCloud } from "lucide-react";
 import { TEMPLATES } from "../import/rows";
 import type { ConfirmStatus, ImportConfirmRow, ImportKind, ImportPreview, ImportResult, PreviewRow, PreviewStatus } from "../model";
+import { ACCESS_LINK_WARNING, CopyLinkButton, downloadAccessLinks } from "./access-link";
 import { rosterApi } from "./api";
 import styles from "./roster.module.css";
 
 const STATUS_LABELS: Record<PreviewStatus, string> = {
-  new: "Nova conta e convite", enroll_existing: "Matricular conta existente", already_in_class: "Já está na turma",
+  new: "Nova conta e link", enroll_existing: "Matricular conta existente", already_in_class: "Já está na turma",
   transfer_available: "Em outra turma", assign_existing: "Atribuir conta existente", already_assigned: "Já atribuído", invalid: "Com erro",
 };
 const RESULT_LABELS: Record<ConfirmStatus, string> = {
@@ -81,10 +82,14 @@ export function ImportPanel({ classroomId, classroomName, onApplied }: { classro
 
   const failedLines = new Set(result?.rows.filter((row) => row.status === "failed").map((row) => row.line));
   const retryable = actionable.filter((row) => failedLines.has(row.line));
+  const issuedLinks = result?.rows.flatMap((row) => {
+    const person = preview?.rows.find((item) => item.line === row.line);
+    return row.accessLink && person ? [{ fullName: person.fullName, email: row.email, accessLink: row.accessLink }] : [];
+  }) ?? [];
 
   return <section className="panel" id="importacao">
     <div className="panel-heading"><div><span className="eyebrow">IMPORTAÇÃO</span><h2>Importar para {classroomName}</h2></div><UploadCloud size={22} /></div>
-    <p className="panel-description">Nada é gravado na prévia. Convites e matrículas só acontecem depois da confirmação.</p>
+    <p className="panel-description">Nada é gravado na prévia. Contas, links de cadastro e matrículas só são criados depois da confirmação.</p>
     <form className={styles.form} onSubmit={submitPreview}>
       <label className={styles.field}>Tipo
         <select value={kind} onChange={(event) => { setKind(event.target.value as ImportKind); setPreview(null); setResult(null); }}>
@@ -119,9 +124,13 @@ export function ImportPanel({ classroomId, classroomName, onApplied }: { classro
         {retryable.length > 0 && <button type="button" className="button button-outline" disabled={busy} onClick={() => confirm(retryable)}>Repetir {retryable.length} falha(s)</button>}
       </div>
     </>}
+    {issuedLinks.length > 0 && <>
+      <p className={styles.notice}>{ACCESS_LINK_WARNING}</p>
+      <div className={styles.actions}><button type="button" className="button button-outline" onClick={() => downloadAccessLinks(issuedLinks, classroomName)}><Download size={14} /> Baixar {issuedLinks.length} link(s) em CSV</button></div>
+    </>}
     {result && <div className={styles.tableWrap}><table className={styles.table}>
-      <thead><tr><th>Linha</th><th>Email</th><th>Resultado</th></tr></thead>
-      <tbody>{result.rows.map((row) => <tr key={row.line}><td>{row.line}</td><td>{row.email}</td><td><span className={badge(row.status)}>{RESULT_LABELS[row.status]}</span>{row.issue && <div>{row.issue.message}</div>}</td></tr>)}</tbody>
+      <thead><tr><th>Linha</th><th>Email</th><th>Resultado</th><th>Link de cadastro</th></tr></thead>
+      <tbody>{result.rows.map((row) => <tr key={row.line}><td>{row.line}</td><td>{row.email}</td><td><span className={badge(row.status)}>{RESULT_LABELS[row.status]}</span>{row.issue && <div>{row.issue.message}</div>}</td><td>{row.accessLink ? <CopyLinkButton link={row.accessLink} /> : "—"}</td></tr>)}</tbody>
     </table></div>}
   </section>;
 }

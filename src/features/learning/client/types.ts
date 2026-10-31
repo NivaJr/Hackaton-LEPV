@@ -17,7 +17,7 @@ export interface StudentActivity {
   activityType: "exercise" | "weekly_challenge";
   contentId?: string;
   contentTitle?: string;
-  contentDefinedBy?: "professor" | "coordenador";
+  contentDefinedBy?: "teacher" | "coordinator";
   subjectId: SubjectId;
   grade: Grade;
   skillCodes: string[];

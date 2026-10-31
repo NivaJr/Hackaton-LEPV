@@ -7,9 +7,18 @@ Aplicação: **https://eai-lepv.vercel.app**. Configuração iniciada em 31/10/2
 - Conta: `nivaldojr15-6919`; escopo `Nivaldo's projects` (`nivaldos-projects-d24cfc1f`).
 - Projeto Vercel: `hackaton-lepv`, ID `prj_at9moJeGpwIvs3smh1LQsw2yPCx0`.
 - [Painel da aplicação](https://vercel.com/nivaldos-projects-d24cfc1f/hackaton-lepv).
-- Branch de implementação: `feat/nivaldo-core`. A integração à `main` continua separada da publicação por CLI.
+- Repositório conectado: `NivaJr/Hackaton-LEPV`, com branch de produção `main`.
 - Framework: Next.js. Runtime requerido pelo projeto: Node.js 24.x, alinhado com `.nvmrc`, o lockfile e o workflow GitHub.
-- Publicação executada pelo CLI a partir do checkout da Tarefa 03. Não presumir que outra branch será publicada automaticamente; coordenar a política de integração/deploy com a equipe.
+- A publicação inicial foi feita pelo CLI a partir da Tarefa 03. Em 31/10/2026, a `main` integrada (`9fa3cb5`) foi publicada manualmente e o usuário conectou o novo repositório à Vercel. A API do projeto confirmou `github`, proprietário `NivaJr`, repositório `Hackaton-LEPV` e produção em `main`.
+- O remoto local `origin` passou a usar o novo repositório; o anterior foi preservado como `upstream`. Pushes e merges de produção devem usar o novo `origin`.
+
+## Banco usado pelo site e verificação da integração
+
+A configuração Production da Vercel continua apontando para `https://alkvhjnqfjyjflaswdmi.supabase.co`. A consulta à API do Supabase confirmou o projeto `hackaton-lepv` na organização `pnwmxlwhvdmrgttxcwin`, com proprietário `nivaldo-raiz`. Conectar o novo repositório GitHub não transfere a propriedade do projeto Supabase.
+
+Na consulta de 31/10/2026, não havia conexão GitHub cadastrada para esse projeto na API de integrações do Supabase. O projeto de destino da conta NivaJR precisa ser identificado antes de alterar o banco e as chaves do runtime. Nenhuma credencial deve entrar no Git.
+
+O deploy manual de `9fa3cb5` foi promovido para o domínio público e validado no navegador: demonstração nova do aluno, login real, ficha, resposta salva somente leitura, turmas, responsáveis e resultados por aluno do coordenador. A publicação automática do novo vínculo GitHub deve ser acompanhada pelo SHA do commit e pelo estado `READY` da Vercel; um vínculo cadastrado sozinho não comprova que um build foi concluído.
 
 ## Endereço gratuito
 
@@ -29,8 +38,12 @@ Configuradas no ambiente **Production**, sem valores privados no código:
 | `LEPV_ORIGINAL_POINTS` | `100` |
 | `LEPV_RECOVERY_REFERENCE` | `previous` |
 | `LEPV_ADAPTIVE_XP_FOLLOWS_ROOT` | `true` |
-| `LLM_PROVIDER` | `disabled` |
+| `LLM_PROVIDER` | `gemini` |
+| `LLM_API_KEY` | Chave do Gemini, marcada como sensível na Vercel |
+| `LLM_MODEL` | `gemini-3.5-flash-lite` |
 | `LLM_TIMEOUT_MS` | `15000` |
+| `TEACHER_METRICS_SOURCE` | `learning` |
+| `RECOGNITION_STORE` | `supabase` |
 | `NEXT_PUBLIC_APP_URL` | `https://eai-lepv.vercel.app` |
 
 A senha direta do PostgreSQL e as senhas de demonstração não são variáveis de hospedagem. O runtime usa PostgREST/RPC com sessão verificada e a chave administrativa apenas no servidor. `.vercelignore` exclui `.env*`, `supabase/.temp/`, caches e metadados locais dos uploads. `.vercel/` e os arquivos de credenciais locais são ignorados pelo Git.
@@ -67,4 +80,16 @@ O build remoto de produção passou. A configuração completa de ambiente preci
 
 ## Limites atuais
 
-A infraestrutura e as APIs da Tarefa 03 estão disponíveis. O conteúdo de validação é sintético. As telas ainda dependem da integração dos outros integrantes com essas APIs. Fornecedor real de IA, envio administrativo de convites e conteúdo curricular/BNCC revisado permanecem pendentes. Recuperação sem fornecedor configurado retorna `503 AI_UNAVAILABLE` e preserva a tentativa.
+A infraestrutura e as APIs da Tarefa 03 estão disponíveis. O conteúdo de validação é sintético. O Gemini está configurado em Production e a extração de uma questão sintética foi executada pelo endpoint real, com HTTP 201; isso não comprova revisão pedagógica nem a validação de todas as operações de IA. A migração `20261031060000_recognition.sql` ainda não foi recebida/aplicada nesta etapa: notificações retornam `503 STORE_UNAVAILABLE`. Envio administrativo de convites e conteúdo curricular/BNCC revisado permanecem fora desta validação.
+
+## Atualização de Production em 31/10/2026
+
+As variáveis acima foram conferidas na API da Vercel. A URL do Supabase existente foi preservada, assim como as chaves sensíveis já cadastradas. `TEACHER_METRICS_SOURCE` e `RECOGNITION_STORE` foram adicionadas e seus valores conferidos sem caracteres extras. O modelo foi definido explicitamente porque o [Google limita modelos 2.5 a projetos que já os utilizavam](https://ai.google.dev/gemini-api/docs/models); a extração real funcionou com `gemini-3.5-flash-lite`.
+
+Com sessões de contas previamente identificadas como fictícias, foram exercitados `/api/me` (aluno, professor e responsável), ficha, dez atividades, abertura de questão, ranking e painel do professor. APIs privadas sem sessão continuam retornando HTTP 401. Nenhum email foi enviado, nenhuma senha foi alterada e nenhum dado de aluno real foi usado.
+
+O teste real também revelou uma incompatibilidade na recuperação: o núcleo passava `studentId` e `updatedAt` junto às preferências, mas o contrato `GenerationContext` e a validação estrita do gateway aceitam somente `interests`, `context` e `version`. A correção em `learning/server/service.ts` projeta esses três campos, preservando os contratos e o driver de Gallotte.
+
+O novo teste `tests/learning-gemini-integration.test.ts` reproduziu `AI_UNAVAILABLE` antes da correção. Após a correção, o teste percorre ficha persistida, erro na original, duas variantes pelo gateway Gemini com HTTP simulado, créditos de 70 e 49 com referência `previous` e encerramento por dois acertos consecutivos. Também confere a ausência de identidade no conteúdo enviado ao provedor. Esse teste não usa a API real.
+
+Validação local sobre a `main` atualizada (`ebf3d1f`) com a correção: typecheck, 321 testes TypeScript, sete testes Python do arquivador e build. Os relatórios operacionais locais, sem valores de credenciais, ficam em `.vercel/production-environment-audit.json` e `.vercel/production-verification.json`, ignorados pelo Git. O resultado da recuperação na publicação final deve ser confirmado nesse relatório após o deploy; o teste local sozinho não comprova a operação hospedada.

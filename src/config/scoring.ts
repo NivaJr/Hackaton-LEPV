@@ -24,8 +24,9 @@ export const RANK_THRESHOLDS = [
 export const PROPOSED_RANK_THRESHOLDS = RANK_THRESHOLDS;
 export type Rank = (typeof RANK_THRESHOLDS)[number];
 
-/** Explicit provisional configuration, never inferred from the proposed constants above. */
+/** Legacy snapshots remain readable; newly issued instances use confirmed-v1. */
 export interface LearningScoringPolicy {
+  version?: "legacy" | "confirmed-v1";
   originalPoints: number;
   recoveryReference: "original" | "previous";
   adaptiveXpFollowsRoot: boolean;
@@ -33,6 +34,7 @@ export interface LearningScoringPolicy {
 }
 
 export const CONFIRMED_LEARNING_SCORING_POLICY: LearningScoringPolicy = {
+  version: "confirmed-v1",
   originalPoints: REGULAR_EXERCISE_RANK_POINTS,
   recoveryReference: "original",
   adaptiveXpFollowsRoot: true,

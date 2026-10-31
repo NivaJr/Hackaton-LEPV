@@ -9,10 +9,11 @@ import {
   CONFIRMED_LEARNING_SCORING_POLICY, RECOVERY_RANK_POINTS, REGULAR_EXERCISE_RANK_POINTS,
   WEEKLY_CHALLENGE_RANK_POINTS, WEEKLY_CHALLENGE_XP,
 } from "@/config/scoring";
-import { advanceRecovery, canViewStudentData, createRecoveryState, getRankForPoints, interruptRecovery } from "@/features/learning/domain";
+import { isApprovedStudentInterest } from "@/config/student-interests";
+import { advanceRecovery, calculateRecoveryReward, canViewStudentData, createRecoveryState, getRankForPoints, interruptRecovery } from "@/features/learning/domain";
 import type { LearningAiGateway } from "@/lib/llm/gateway";
 import {
-  ActivitySchema, LearningError, ScoringPolicySchema, brazilDay, notFound,
+  ActivitySchema, LearningError, ScoringPolicySchema, brazilDay, notFound, type ActivityCatalogView,
   type LearningActivity, type LearningCatalog, type LearningInstance, type LearningState,
   type LoadedStudent,
 } from "./model";
@@ -21,12 +22,15 @@ import type { LearningRepository } from "./repository";
 const sum = (values: number[]) => Math.round(values.reduce((total, value) => total + value, 0) * 100) / 100;
 const normalizeStatement = (text: string) => text.normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleLowerCase("pt-BR");
 
+export type TeacherAssignmentLookup = (institutionId: string, classId: string, subjectId: SubjectId) => Promise<boolean>;
+
 export class LearningService {
   constructor(
     private readonly repository: LearningRepository,
     private readonly ai: Pick<LearningAiGateway, "generateRecoveryQuestion">,
     private readonly scoring: LearningScoringPolicy | null,
     private readonly now: () => Date = () => new Date(),
+    private readonly hasAssignedTeacher: TeacherAssignmentLookup = async () => false,
   ) {}
 
   private student(actor: SessionContext): string {
@@ -37,7 +41,9 @@ export class LearningService {
   }
 
   private async own(actor: SessionContext) {
-    return this.repository.loadStudent(actor.institutionId, this.student(actor));
+    const loaded = await this.repository.loadStudent(actor.institutionId, this.student(actor));
+    if (loaded.preferences) loaded.preferences = { ...loaded.preferences, interests: loaded.preferences.interests.filter(isApprovedStudentInterest) };
+    return loaded;
   }
 
   /** The callback is synchronous: no external side effects can be repeated on a CAS retry. */
@@ -52,10 +58,28 @@ export class LearningService {
     throw new LearningError("CONCURRENT_UPDATE", "O progresso mudou. Repita a operação com a mesma chave.");
   }
 
-  private requireCoordinator(actor: SessionContext) {
+  /** The assigned teacher decides; the coordinator acts only for a subject without one. */
+  private async requireActivityManager(actor: SessionContext, classId: string, subjectId: SubjectId) {
+    const teaches = actor.roles.includes("professor") && actor.teacherAssignments.some((item) => item.institutionId === actor.institutionId
+      && item.classId === classId && item.subjectId === subjectId);
+    if (teaches) return;
     if (!actor.roles.includes("coordenador") || !actor.coordinatorInstitutionIds.includes(actor.institutionId)) {
-      throw new LearningError("COORDINATOR_REQUIRED", "Operação exclusiva do coordenador da instituição.", 403);
+      throw new LearningError("ACTIVITY_MANAGER_REQUIRED", "Operação do professor desta turma e matéria.", 403);
     }
+    if (await this.hasAssignedTeacher(actor.institutionId, classId, subjectId)) {
+      throw new LearningError("TEACHER_ASSIGNED", "Esta matéria tem professor atribuído; a ativação fica com ele.", 403);
+    }
+  }
+
+  private currentWeekStart() {
+    const monday = new Date(`${brazilDay(this.now())}T12:00:00Z`);
+    monday.setUTCDate(monday.getUTCDate() - (monday.getUTCDay() + 6) % 7);
+    return monday.toISOString().slice(0, 10);
+  }
+
+  private oldestActive(catalog: LearningCatalog, subjectId: SubjectId) {
+    return catalog.activities.filter((item) => item.active && item.activityType === "weekly_challenge" && item.body.subjectId === subjectId)
+      .sort((a, b) => (a.activatedAt ?? "").localeCompare(b.activatedAt ?? "") || a.rootQuestionId.localeCompare(b.rootQuestionId));
   }
 
   private async catalogTransaction<T>(actor: SessionContext, classId: string, change: (catalog: LearningCatalog) => T): Promise<T> {
@@ -110,6 +134,9 @@ export class LearningService {
       return {
         rootQuestionId: activity.rootQuestionId, subjectId: activity.body.subjectId,
         activityType: activity.activityType,
+        contentId: activity.contentId ?? `legacy-${activity.body.subjectId}`,
+        contentTitle: activity.contentTitle ?? "Conteúdos anteriores",
+        contentDefinedBy: activity.contentDefinedBy,
         grade: activity.body.grade, skillCodes: activity.body.skillCodes,
         questionInstanceId: instance?.question.questionInstanceId ?? null,
         status: answered ? "answered" : instance ? "pending" : "not_started",
@@ -129,7 +156,7 @@ export class LearningService {
         && item.question.rootQuestionId === rootQuestionId && item.recoveryId === null);
       if (previous) return this.publicInstance(state, previous);
       if (!loaded.preferences) throw new LearningError("PREFERENCES_REQUIRED", "Salve a ficha antes de iniciar a atividade.");
-      const policy = ScoringPolicySchema.parse(this.scoring ?? CONFIRMED_LEARNING_SCORING_POLICY);
+      const policy = ScoringPolicySchema.parse(CONFIRMED_LEARNING_SCORING_POLICY);
       const nominalPoints = root.activityType === "weekly_challenge"
         ? WEEKLY_CHALLENGE_RANK_POINTS : REGULAR_EXERCISE_RANK_POINTS;
       const instance = this.makeInstance(loaded, root, loaded.preferences, nominalPoints, policy, null);
@@ -145,7 +172,7 @@ export class LearningService {
     const questionId = recoveryId ? randomUUID() : root.rootQuestionId;
     const body = root.body;
     return {
-      classId: loaded.catalog.classId, contentVersion: recoveryId ? 1 : root.contentVersion,
+      classId: loaded.catalog.classId, contentVersion: recoveryId ? 1 : root.contentVersion, activityType: root.activityType,
       rootContentVersion: root.contentVersion, recoveryId, scoring, nominalPoints, issuedAt: this.now().toISOString(),
       question: QuestionForStudentSchema.parse({
         questionInstanceId: randomUUID(), questionId, rootQuestionId: root.rootQuestionId,
@@ -195,8 +222,10 @@ export class LearningService {
         state.recoveries.push(recovery);
       }
       const rankPointsAwarded = isCorrect ? instance.nominalPoints : 0;
-      const xpAwarded = isCorrect && instance.recoveryId === null && root.activityType === "weekly_challenge"
-        ? WEEKLY_CHALLENGE_XP : 0;
+      const confirmed = instance.scoring.version === "confirmed-v1";
+      const xpAwarded = !isCorrect ? 0 : confirmed
+        ? instance.recoveryId === null && instance.activityType === "weekly_challenge" ? WEEKLY_CHALLENGE_XP : 0
+        : instance.nominalPoints;
       const result = AttemptResultSchema.parse({
         attemptId: randomUUID(), questionInstanceId: submission.questionInstanceId, isCorrect,
         explanation: instance.answerKey.explanation, xpAwarded, rankPointsAwarded,
@@ -244,7 +273,13 @@ export class LearningService {
     if ("pending" in claim) return claim.pending;
     try {
       const body = GeneratedQuestionSchema.parse(await this.ai.generateRecoveryQuestion({
-        original: claim.previous.question, preferences: claim.preferences, selectedOptionId: claim.selectedOptionId,
+        original: claim.previous.question,
+        preferences: {
+          interests: claim.preferences.interests,
+          context: claim.preferences.context,
+          version: claim.preferences.version,
+        },
+        selectedOptionId: claim.selectedOptionId,
       }));
       const sameSkills = [...body.skillCodes].sort().join("|") === [...claim.root.body.skillCodes].sort().join("|");
       if (body.subjectId !== claim.root.body.subjectId || body.grade !== claim.root.body.grade || !sameSkills) {
@@ -259,7 +294,10 @@ export class LearningService {
         if (state.instances.some((item) => normalizeStatement(item.question.statement) === normalizeStatement(body.statement))) {
           throw new LearningError("REPEATED_GENERATED_QUESTION", "A IA repetiu uma questão já atribuída. Solicite outra variante.", 503);
         }
-        const instance = this.makeInstance(loaded, { ...claim.root, body }, claim.preferences, RECOVERY_RANK_POINTS, claim.original.scoring, recoveryId);
+        const nominalPoints = claim.original.scoring.version === "confirmed-v1" ? RECOVERY_RANK_POINTS : calculateRecoveryReward({
+          originalPoints: claim.original.scoring.recoveryReference === "previous" ? claim.previous.nominalPoints : claim.original.nominalPoints,
+        });
+        const instance = this.makeInstance(loaded, { ...claim.root, body }, claim.preferences, nominalPoints, claim.original.scoring, recoveryId);
         state.instances.push(instance);
         recovery.leaseToken = null;
         recovery.leaseUntil = null;
@@ -332,8 +370,19 @@ export class LearningService {
       xp, rankPoints, rankName: getRankForPoints(rankPoints).name,
       difficultSkillCodes: [...new Set(attempts.filter((attempt) => !attempt.result.isCorrect).flatMap((attempt) => attempt.skillCodes))],
     });
+    const publishedExercises = loaded.catalog.activities.filter((activity) => activity.activityType === "exercise" && mayRead({
+      classId: loaded.catalog.classId, subjectId: activity.body.subjectId,
+    }));
+    const subjectIds = [...new Set(publishedExercises.map((activity) => activity.body.subjectId))];
+    const subjectProgress = subjectIds.map((subjectId) => {
+      const roots = new Set(publishedExercises.filter((activity) => activity.body.subjectId === subjectId).map((activity) => activity.rootQuestionId));
+      const earnedByRoot = [...roots].map((rootId) => sum(ledger.filter((entry) => entry.kind === "annual"
+        && entry.schoolYear === loaded.catalog.schoolYear && entry.classId === loaded.catalog.classId && entry.rootQuestionId === rootId).map((entry) => entry.points)));
+      return { subjectId, earnedRankPoints: sum(earnedByRoot), availableRankPoints: roots.size * REGULAR_EXERCISE_RANK_POINTS };
+    });
     return {
       summary, rankCalibration: "confirmed" as const, accessDaysScope: wholeStudent ? "student" : "not_available_for_subject",
+      subjectProgress,
       activityDates: [...new Set(attempts.map((attempt) => brazilDay(new Date(attempt.createdAt))))].sort(),
       originalAttempts: attempts.filter((item) => item.source === "original").length,
       recoveryAttempts: attempts.filter((item) => item.source === "recovery").length,
@@ -365,17 +414,24 @@ export class LearningService {
   }
 
   /** Internal content handoff; review/BNCC verification remain with the content owner. */
-  async registerActivity(actor: SessionContext, classId: string, value: Pick<LearningActivity, "rootQuestionId" | "body" | "contentVersion" | "reviewed"> & { activityType?: LearningActivity["activityType"] }) {
+  async registerActivity(actor: SessionContext, classId: string, value: Pick<LearningActivity, "rootQuestionId" | "body" | "contentVersion" | "reviewed"> & Partial<Pick<LearningActivity, "activityType" | "contentId" | "contentTitle" | "contentDefinedBy">>) {
     const activity = ActivitySchema.parse({ activityType: "exercise", ...value, active: false, activatedAt: null });
-    const coordinator = actor.roles.includes("coordenador") && actor.coordinatorInstitutionIds.includes(actor.institutionId);
+    await this.requireActivityManager(actor, classId, activity.body.subjectId);
+    if (activity.activityType === "weekly_challenge" && activity.body.difficulty !== "dificil") {
+      throw new LearningError("CHALLENGE_DIFFICULTY_REQUIRED", "Desafios semanais precisam ser revisados com dificuldade alta.", 422);
+    }
     const teacher = actor.roles.includes("professor") && actor.teacherAssignments.some((item) => item.institutionId === actor.institutionId
       && item.classId === classId && item.subjectId === activity.body.subjectId);
-    if (!coordinator && !teacher) throw new LearningError("CONTENT_FORBIDDEN", "A publicação exige atribuição nesta turma e matéria.", 403);
+    activity.contentDefinedBy = teacher ? "teacher" : "coordinator";
+    activity.contentId ??= `legacy-${activity.body.subjectId}`;
+    activity.contentTitle ??= "Conteúdos anteriores";
+    if (activity.activityType === "exercise") { activity.active = true; activity.activatedAt = this.now().toISOString(); }
     return this.catalogTransaction(actor, classId, (catalog) => {
       if (activity.body.grade !== catalog.grade) throw new LearningError("GRADE_MISMATCH", "O ano da questão difere do ano da turma.", 422);
       const existing = catalog.activities.find((item) => item.rootQuestionId === activity.rootQuestionId);
       if (existing) {
-        if (JSON.stringify(existing.body) !== JSON.stringify(activity.body) || existing.contentVersion !== activity.contentVersion) {
+        if (JSON.stringify(existing.body) !== JSON.stringify(activity.body) || existing.contentVersion !== activity.contentVersion
+          || existing.activityType !== activity.activityType || existing.contentId !== activity.contentId || existing.contentTitle !== activity.contentTitle) {
           throw new LearningError("CONTENT_VERSION_CONFLICT", "O snapshot publicado é imutável; publique uma nova raiz para outra versão.");
         }
       } else catalog.activities.push(activity);
@@ -383,27 +439,39 @@ export class LearningService {
     });
   }
 
-  async activate(actor: SessionContext, classId: string, _subjectId: SubjectId, rootIds: string[]) {
-    this.requireCoordinator(actor);
+  async activityCatalog(actor: SessionContext, classId: string, subjectId: SubjectId): Promise<ActivityCatalogView> {
+    await this.requireActivityManager(actor, classId, subjectId);
+    const { catalog } = await this.repository.loadCatalog(actor.institutionId, classId);
+    const weekStart = this.currentWeekStart();
+    return {
+      classId, subjectId, weekStart,
+      rotatedThisWeek: catalog.rotations.some((item) => item.subjectId === subjectId && item.weekStart === weekStart),
+      outgoingNext: this.oldestActive(catalog, subjectId).slice(0, 2).map((item) => item.rootQuestionId),
+      activities: catalog.activities.filter((item) => item.body.subjectId === subjectId).map((item) => ({
+        rootQuestionId: item.rootQuestionId, statement: item.body.statement, skillCodes: item.body.skillCodes,
+        active: item.active, retired: !item.active && item.activatedAt !== null, activityType: item.activityType, contentTitle: item.contentTitle,
+      })),
+    };
+  }
+
+  async activate(actor: SessionContext, classId: string, subjectId: SubjectId, rootIds: string[]) {
+    await this.requireActivityManager(actor, classId, subjectId);
     if (rootIds.length !== 10 || new Set(rootIds).size !== 10) throw new LearningError("TEN_CHALLENGES_REQUIRED", "Selecione dez desafios semanais distintos.", 422);
     return this.catalogTransaction(actor, classId, (catalog) => {
-      const current = catalog.activities.filter((item) => item.active && item.activityType === "weekly_challenge");
+      const current = this.oldestActive(catalog, subjectId);
       if (current.length) {
         if (current.length === 10 && current.every((item) => rootIds.includes(item.rootQuestionId))) return { rootQuestionIds: rootIds };
         throw new LearningError("ALREADY_ACTIVATED", "A seleção inicial já existe. Use a rotação semanal.");
       }
       const selected = rootIds.map((id) => catalog.activities.find((item) => item.rootQuestionId === id
-        && item.activityType === "weekly_challenge") ?? notFound());
+        && item.activityType === "weekly_challenge" && item.body.subjectId === subjectId && item.activatedAt === null) ?? notFound());
       for (const item of selected) { item.active = true; item.activatedAt = this.now().toISOString(); }
       return { rootQuestionIds: rootIds };
     });
   }
 
   async rotate(actor: SessionContext, classId: string, subjectId: SubjectId, weekStart: string, incomingRootIds: string[]) {
-    this.requireCoordinator(actor);
-    const currentDay = brazilDay(this.now());
-    const monday = new Date(`${currentDay}T12:00:00Z`);
-    monday.setUTCDate(monday.getUTCDate() - (monday.getUTCDay() + 6) % 7);
+    await this.requireActivityManager(actor, classId, subjectId);
     if (incomingRootIds.length !== 2 || new Set(incomingRootIds).size !== 2) throw new LearningError("TWO_CHALLENGES_REQUIRED", "Selecione dois desafios semanais distintos.", 422);
     return this.catalogTransaction(actor, classId, (catalog) => {
       const previous = catalog.rotations.find((item) => item.subjectId === subjectId && item.weekStart === weekStart);
@@ -411,10 +479,9 @@ export class LearningService {
         if ([...previous.incomingRootIds].sort().join("|") !== [...incomingRootIds].sort().join("|")) throw new LearningError("ROTATION_CONFLICT", "Esta semana já foi processada com outra seleção.");
         return previous;
       }
-      if (weekStart !== monday.toISOString().slice(0, 10)) throw new LearningError("INVALID_WEEK", "Use a segunda-feira da semana atual em Brasília.", 422);
-      const active = catalog.activities.filter((item) => item.active && item.activityType === "weekly_challenge")
-        .sort((a, b) => (a.activatedAt ?? "").localeCompare(b.activatedAt ?? "") || a.rootQuestionId.localeCompare(b.rootQuestionId));
-      if (active.length !== 10) throw new LearningError("TEN_CHALLENGES_REQUIRED", "A rotação exige dez desafios semanais ativos na turma.");
+      if (weekStart !== this.currentWeekStart()) throw new LearningError("INVALID_WEEK", "Use a segunda-feira da semana atual em Brasília.", 422);
+      const active = this.oldestActive(catalog, subjectId);
+      if (active.length !== 10) throw new LearningError("TEN_CHALLENGES_REQUIRED", "A rotação exige dez desafios semanais ativos.");
       const incoming = incomingRootIds.map((id) => catalog.activities.find((item) => item.rootQuestionId === id
         && item.activityType === "weekly_challenge" && item.body.subjectId === subjectId && !item.active && item.activatedAt === null) ?? notFound());
       const outgoing = active.slice(0, 2);

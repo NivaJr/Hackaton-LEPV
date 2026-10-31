@@ -16,7 +16,7 @@ Pessoa: Fabiano. Tarefa: 02, gestão escolar e família. Branch: `feat/fabiano-g
 
 ## Contratos consumidos / mudanças combinadas
 
-Consome sem alterar: `SessionContext`, `StudentSummary`, `canViewStudentData`, `canEditStudentData`, `getSessionContext`, `requireRole`, `LearningAiGateway.summarizeStudent`, `SUBJECTS`, `GRADES`. Nenhum schema central, SQL, `package.json` ou lockfile foi alterado.
+Consome também `GET /api/recognition?studentId=` e `NotificationBell`, da Tarefa 04, no painel do responsável. Consome sem alterar: `SessionContext`, `StudentSummary`, `canViewStudentData`, `canEditStudentData`, `getSessionContext`, `requireRole`, `LearningAiGateway.summarizeStudent`, `SUBJECTS`, `GRADES`. Nenhum schema central, SQL, `package.json` ou lockfile foi alterado.
 
 XLSX não usa pacote novo: há um leitor próprio sobre `node:zlib`. Ele lê valores da primeira aba, nunca avalia fórmulas, descarta o resultado em cache, recusa macros e DOCTYPE e limita a descompressão a 16 MB por parte interna.
 
@@ -36,7 +36,9 @@ Todos usam a sessão por cookie e respondem `{ error: { code, message } }` em fa
 | POST `/api/roster/imports/preview` | coordenador | multipart `kind, classroomId, file` | `ImportPreview`, sem gravar |
 | POST `/api/roster/imports/confirm` | coordenador | `ImportConfirm` | `ImportResult` por linha |
 | GET `/api/roster/students/:id/results` | coordenador | — | resumo real de 30 dias ou `source: "unavailable"` |
-| POST `/api/roster/guardian-links` | coordenador | `studentId, fullName, email` | vínculo `pending`; convida se a conta não existir |
+| POST `/api/roster/guardian-links` | coordenador | `studentId, fullName, email` | vínculo `pending`; `accessLink` se a conta for nova |
+| POST `/api/roster/classrooms/:id/access-links` | coordenador | — | `{ links, activeCount }`: links novos de quem está na turma e não ativou a conta |
+| POST `/api/roster/access-links` | coordenador | `personId` | `{ accessLink }`; 409 `ACCOUNT_ALREADY_ACTIVE` se a pessoa já ativou a conta |
 | PATCH `/api/roster/guardian-links/:id` | coordenador | `status: confirmed` ou `revoked` | vínculo |
 | GET `/api/roster/templates/:arquivo` | coordenador | `modelo-alunos.csv`, `modelo-professores.csv` | CSV |
 | GET `/api/family/children` | responsável | — | filhos confirmados |
@@ -80,8 +82,8 @@ Quatro séries e seis matérias vêm do catálogo. Esta tarefa não envolve ques
 Resultados no commit desta entrega:
 
 - `npm run typecheck`: passou.
-- `npm test`: passou, 12 arquivos e 164 testes da `main` integrada, incluindo `roster-import`, `roster-service`, `family-service` e `roster-database`.
-- `npm run build`: passou, com `/api/roster/[...path]` e `/api/family/[...path]`.
+- `npm test`: 341 de 342 testes passaram em 29 arquivos, incluindo `roster-import`, `roster-service`, `roster-directory`, `family-service`, `family-recognitions` e `roster-database`. A falha é `llm-prompts`, somente em checkout Windows, que converte `PROMPTS/04-gallotte-templates-ia.md` para CRLF.
+- `npm run build`: passou.
 
 ## Percurso realmente executado
 
@@ -89,10 +91,14 @@ Resultados no commit desta entrega:
 - Migração real em PGlite com Auth emulado: formatos SQL dos adaptadores sob RLS, papéis e escolas diferentes.
 - Telas no Chrome headless com respostas simuladas, em rota temporária já removida: desktop com dados; 390 px real apenas no estado vazio. A tabela de prévia preenchida nessa largura não foi observada; ela tem rolagem própria.
 - Tema escuro e 390 px com painéis preenchidos no Chrome, com respostas simuladas: sem rolagem horizontal da página.
-- Login real da conta fictícia de coordenador em produção: `/api/me` retornou o papel `coordenador`. `/api/roster/overview` retornou 404, pois esta entrega ainda não foi publicada.
+- Login real da conta fictícia de coordenador em produção: `/api/me` retornou o papel `coordenador`. `/api/roster/overview` retornou 404 naquele momento; em 31/10/2026, após a publicação, a rota de gestão responde 401 sem sessão. O painel autenticado em produção não foi reexecutado.
 - Leitor XLSX testado com arquivo gerado por openpyxl, além dos arquivos sintéticos dos testes.
 
-**Não executado:** Supabase hospedado, PostgREST, adaptadores Supabase contra servidor real, envio de convite, login real, arquivo salvo pelo Excel e fornecedor de IA.
+Importação real em produção com `inviteUserByEmail`, em 31/10/2026: a planilha foi lida e todas as linhas falharam no envio do convite, inclusive com dois endereços Gmail. A causa exata não foi lida no log do Auth; a documentação do Supabase restringe o email padrão aos membros da organização e a cerca de 2 envios por hora.
+
+Cadastro por link em produção, em 31/10/2026: Fabiano importou contas, abriu o link, concluiu o cadastro e confirmou as contas salvas no banco. Isso exercita `generateLink`, `/convite`, a definição de senha e os adaptadores de gestão contra o Supabase hospedado.
+
+**Não executado:** cadastro por link de professor e de responsável, se não fizeram parte desse percurso; validade do link no projeto; bloqueio de "Novo link" para conta ativada contra o Supabase real; elogios com dados reais, pois a migração de reconhecimento não existe; arquivo salvo pelo Excel.
 
 ## Configuração externa necessária
 
@@ -100,17 +106,51 @@ Resultados no commit desta entrega:
 
 ## Decisões em aberto
 
-Registradas em 31/10/2026, sem decisão tomada:
+Nenhuma decisão desta entrega permanece em aberto.
 
-1. **Ativação e rotação de atividades:** hoje só o coordenador pode executá-las pelas APIs, e nenhuma tela as chama. A equipe vai definir se passam ao professor ou viram ação do coordenador. Fabiano propõe tirar "Atividades" do menu do coordenador, mas outro integrante pode estar nisso.
-2. **"Meu espaço" no menu:** ainda sem destino; decisão adiada.
-3. **Menu lateral:** a alteração em `app-shell.tsx` depende do acordo da equipe. Proposta para o coordenador: "Visão geral" sem mudança, "Acompanhamento" para `#acompanhamento`, "Turmas e pessoas" para `#turmas`.
+## Boletins em PDF
+
+Por decisão de Fabiano em 31/10/2026, o histórico escolar vem das provas da escola, em PDF, e não das atividades da plataforma. O coordenador envia, abre e remove boletins por aluno na turma (`#boletins`); o responsável confirmado abre em "Histórico escolar", o aluno vê os próprios em `/aluno#boletins` e o professor vê os dos alunos das suas turmas em `/professor#boletins`. Esses três perfis só consultam.
+
+O módulo `src/features/school-reports` tem rota própria, `/api/school-reports/students/:id` (GET, POST), `/files/:fileId` (GET, DELETE) e `/api/school-reports/classes/:id/students` (GET, professor da turma). Limite de 4 MB, assinatura `%PDF` conferida no servidor. Os arquivos ficam no bucket privado `boletins`, criado no primeiro envio, sem migração: o título fica no nome do objeto e todo acesso passa pelo servidor. Não há registro de quem enviou cada arquivo.
+
+## Cadastro sem email
+
+Fabiano aceitou em 31/10/2026 que o cadastro feito pelo coordenador dispensa email: a escola entrega o link, então o endereço não é confirmado. SMTP próprio deixa de ser necessário para esse fluxo.
+
+## Ativação e rotação de atividades
+
+Por decisão de Fabiano em 31/10/2026, o professor da turma e matéria ativa e rotaciona; o coordenador só atua em matéria sem professor atribuído. A regra é validada no serviço, e `GET /api/learning/catalog` lista as questões sem gabarito. A tela `ActivityManager` fica em `/professor` e, para matérias sem professor, na turma em `/coordenador`. A ativação continua exigindo dez originais de uma vez, e cada semana troca duas.
+
+## Cadastro por link
+
+Decidido por Fabiano em 31/10/2026, depois da falha dos convites por email. Aluno, professor e responsável usam o mesmo fluxo, sem envio de email:
+
+1. Ao confirmar a importação ou criar um vínculo com email novo, `generateLink` cria a conta e devolve um token. A resposta traz `accessLink`.
+2. O coordenador copia o link ou baixa um CSV com nome, email e link. O link não é gravado: fora daquela resposta, só gerando outro.
+3. O link abre `/convite`, e o token só é validado no botão "Continuar". Prévias de link de aplicativos fazem GET e gastariam um token de uso único.
+4. Em `/primeiro-acesso` a pessoa define a senha. O aluno escolhe preencher a ficha agora (`/aluno#perfil`) ou depois.
+
+Na tela da turma, "Gerar links da turma" lista e baixa em CSV os links de alunos e professores que ainda não ativaram a conta. Como os links não são salvos, cada geração cria novos e invalida os anteriores dessas pessoas; a tela pede confirmação. "Novo link" faz o mesmo para uma pessoa. A conta fica com `app_metadata.access_pending` até a senha ser definida; contas ativadas e coordenadores são recusados, para que o link nunca sirva para assumir a conta de alguém. A validade segue o limite de OTP do projeto, 1 hora por padrão no Supabase. O email não é verificado neste fluxo: quem recebe o link confirma ter a conta. Com SMTP próprio, o convite por email pode voltar.
+
+Falhas do Supabase Auth registram apenas código e status no log do servidor, sem email nem link.
+
+## Menu do coordenador
+
+Painel real, em `src/components/app-shell.tsx`: "Visão geral", "Acompanhamento" (`#acompanhamento`), "Turmas e pessoas" (`#turmas`), "Importação" (`#importacao`) e "Responsáveis" (`#vinculos`). Por decisão de Fabiano em 31/10/2026, "Atividades" e "Meu espaço" saíram; "Meu espaço" pode voltar se a equipe sentir falta. Sem turma selecionada, os links que dependem dela levam ao aviso para selecionar uma. A demonstração `/demo/coordenador` mantém o menu antigo. Esta mudança vai por PR para a equipe ver antes do merge.
+
+## Menu e elogios do responsável
+
+Painel real: "Visão geral", "Resultados" (`#resultados`), "Elogios" (`#elogios`), "Saúde e apoio" (`#saude-apoio`) e "Histórico" (`#historico`). A demonstração `/demo/responsavel` mantém o menu antigo.
+
+A seção de elogios lista motivo, nota, professor, matéria, data e pontos, com o total de pontos de patente do ano. O vínculo confirmado é conferido no servidor, e a falha dessa seção não afeta as demais.
 
 ## Limitações e pendências
 
 - Resultados: a visão por aluno usa o resumo real; o agregado por turma ainda é exemplo e depende de Nivaldo.
 
 - Dois responsáveis editando o mesmo registro: prevalece a última gravação.
-- O histórico é consultado, mas a edição por coordenador e professor não tem tela nesta tarefa.
 - `docs/CONTRATOS_NIVALDO_CORE.md` ainda cita "Fabia" e deve ser ajustado por Nivaldo.
-- O shell global aponta "Turmas e pessoas" para `/tarefas`, e `/demo/*` segue com os dados antigos. Ambos exigem acordo, e `feat/viegas-aluno` já altera os mesmos itens do menu. Os painéis têm âncoras prontas: `/coordenador#turmas`, `#acompanhamento`, `#importacao`, `#vinculos`; `/responsavel#resultados`, `#saude-apoio`, `#historico`.
+- `/demo/*` segue com os dados e os menus antigos.
+- Nos menus do coordenador e do responsável, "Visão geral" continua destacada ao navegar pelas âncoras, porque todas ficam na mesma página.
+- Enquanto a migração de reconhecimento não for aplicada, a seção de elogios mostra que ainda não está disponível e o sino informa a falha ao ser aberto. O restante do painel continua funcionando.

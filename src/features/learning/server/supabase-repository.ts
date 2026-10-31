@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { StudentPreferencesSchema, type StudentPreferencesUpdate } from "@/contracts";
+import { StudentPreferencesSchema, StudentPreferencesUpdateSchema, type StudentPreferencesUpdate } from "@/contracts";
 import {
   LearningError, LearningStateSchema, LoadedStudentSchema, RankingRowSchema, VersionedCatalogSchema,
   type LearningState, type LoadedStudent, type VersionedCatalog,
@@ -45,7 +45,7 @@ export class SupabaseLearningRepository implements LearningRepository {
     }, z.boolean());
   }
   savePreferences(institutionId: string, studentId: string, value: StudentPreferencesUpdate) {
-    return this.rpc("learning_save_preferences", { p_school: institutionId, p_student: studentId, p_preferences: value }, StudentPreferencesSchema);
+    return this.rpc("learning_save_preferences", { p_school: institutionId, p_student: studentId, p_preferences: StudentPreferencesUpdateSchema.parse(value) }, StudentPreferencesSchema);
   }
   loadCatalog(institutionId: string, classId: string) {
     return this.rpc("learning_read_catalog", { p_school: institutionId, p_class: classId }, VersionedCatalogSchema);

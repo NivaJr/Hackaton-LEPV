@@ -31,7 +31,7 @@ Domínio publicado: `https://eai-lepv.vercel.app`. O frontend usa a mesma origem
 | GET `/summary` | `studentId?`, `from`, `to` (datas ISO) | `{ summary: StudentSummary, rankCalibration, accessDaysScope, originalAttempts, recoveryAttempts }` |
 | GET `/ranking` | `classId` | Somente TOP 10 da turma autorizada |
 | POST `/access` | `{}` | Registro idempotente do dia de acesso em Brasília |
-| POST `/activation` | `classId, subjectId, rootQuestionIds[10]` | Primeira seleção de dez originais revisadas; coordenador |
+| POST `/activation` | `classId, subjectId, rootQuestionIds[10]` | Primeira seleção de dez originais revisadas; professor da turma e matéria, ou coordenador se não houver professor atribuído |
 | POST `/rotation` | `classId, subjectId, weekStart, incomingRootIds[2]` | Duas saídas e duas entradas, uma vez por semana/matéria/turma; coordenador |
 
 Erros têm `{ error: { code, message } }`: 401 sem sessão, 403 perfil inadequado, 404 recurso sem vínculo, 409 conflito/estado encerrado, 422 entrada inválida, 503 configuração ou IA indisponível. Uma geração em andamento retorna conflito recuperável; repetir depois permite retomar a mesma instância. Reutilizar a chave em outra instância ou mudar a alternativa respondida causa conflito.
