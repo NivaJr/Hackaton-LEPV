@@ -1,3 +1,4 @@
+import type { SessionContext } from "@/contracts";
 import type { ChildRecord, FamilyRecord, FamilyRecordCategory, HistoryEntry, MetricsResult } from "./model";
 
 export interface FamilyRepository {
@@ -8,5 +9,6 @@ export interface FamilyRepository {
 }
 
 export interface FamilyMetricsGateway {
-  studentSummary(studentId: string, from: string, to: string): Promise<MetricsResult>;
+  /** The actor travels with the call so the learning core repeats its own authorization. */
+  studentSummary(actor: SessionContext, studentId: string, from: string, to: string): Promise<MetricsResult>;
 }

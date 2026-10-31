@@ -35,6 +35,8 @@ Todos usam a sessão por cookie e respondem `{ error: { code, message } }` em fa
 | DELETE `/api/roster/enrollments/:id` | coordenador | — | `{ removed }` |
 | POST `/api/roster/imports/preview` | coordenador | multipart `kind, classroomId, file` | `ImportPreview`, sem gravar |
 | POST `/api/roster/imports/confirm` | coordenador | `ImportConfirm` | `ImportResult` por linha |
+| POST `/api/roster/guardian-links` | coordenador | `studentId, fullName, email` | vínculo `pending`; convida se a conta não existir |
+| PATCH `/api/roster/guardian-links/:id` | coordenador | `status: confirmed` ou `revoked` | vínculo |
 | GET `/api/roster/templates/:arquivo` | coordenador | `modelo-alunos.csv`, `modelo-professores.csv` | CSV |
 | GET `/api/family/children` | responsável | — | filhos confirmados |
 | GET `/api/family/students/:id` | responsável vinculado | — | aluno, saúde, apoio, histórico, métricas com `source` |
@@ -63,7 +65,8 @@ Nenhuma migração foi criada.
 
 ## Fixtures/stubs
 
-- `fixtureRosterMetrics` e `fixtureFamilyMetrics` geram números de exemplo, sempre com `source: "fixture"` e aviso visível na tela. Adapter real: resumo autorizado da Tarefa 03, trocando uma linha em cada `server/runtime.ts`, depois do merge de `feat/nivaldo-core`.
+- `fixtureRosterMetrics` gera números de exemplo por turma, sempre com `source: "fixture"` e aviso visível na tela, porque ainda não há agregado por turma.
+- O painel do responsável usa o resumo real da Tarefa 03, repassando o ator para o núcleo repetir a autorização. Qualquer falha aparece como `source: "unavailable"`, nunca como número de exemplo. `fixtureFamilyMetrics` fica só para testes.
 - Métrica de exemplo nunca é enviada ao fornecedor de IA. Com métricas reais, o gateway recebe só `StudentSummary`, sem saúde ou apoio. Sem IA, a tela mostra mensagem automática identificada.
 - Sem `SUPABASE_SECRET_KEY`, a importação falha com `PROVISIONING_UNAVAILABLE`, sem simular contas.
 
@@ -76,7 +79,7 @@ Quatro séries e seis matérias vêm do catálogo. Esta tarefa não envolve ques
 Resultados no commit desta entrega:
 
 - `npm run typecheck`: passou.
-- `npm test`: passou, 7 arquivos e 101 testes, dos quais 57 são novos: `roster-import`, `roster-service`, `family-service` e `roster-database`.
+- `npm test`: passou, 12 arquivos e 160 testes da `main` integrada, incluindo `roster-import`, `roster-service`, `family-service` e `roster-database`.
 - `npm run build`: passou, com `/api/roster/[...path]` e `/api/family/[...path]`.
 
 ## Percurso realmente executado
@@ -84,6 +87,8 @@ Resultados no commit desta entrega:
 - `next start` sem Supabase: rotas de gestão e família retornaram 401; `/coordenador` e `/responsavel` redirecionaram ao login.
 - Migração real em PGlite com Auth emulado: formatos SQL dos adaptadores sob RLS, papéis e escolas diferentes.
 - Telas no Chrome headless com respostas simuladas, em rota temporária já removida: desktop com dados; 390 px real apenas no estado vazio. A tabela de prévia preenchida nessa largura não foi observada; ela tem rolagem própria.
+- Tema escuro e 390 px com painéis preenchidos no Chrome, com respostas simuladas: sem rolagem horizontal da página.
+- Login real da conta fictícia de coordenador em produção: `/api/me` retornou o papel `coordenador`. `/api/roster/overview` retornou 404, pois esta entrega ainda não foi publicada.
 - Leitor XLSX testado com arquivo gerado por openpyxl, além dos arquivos sintéticos dos testes.
 
 **Não executado:** Supabase hospedado, PostgREST, adaptadores Supabase contra servidor real, envio de convite, login real, arquivo salvo pelo Excel e fornecedor de IA.
@@ -94,8 +99,7 @@ Resultados no commit desta entrega:
 
 ## Limitações e pendências
 
-- O coordenador ainda não tem tela para criar responsáveis nem confirmar `guardian_links`; a tarefa não listou esse passo, mas o percurso completo depende dele. Até lá, o vínculo vem do bootstrap em `supabase/README.md`.
 - Dois responsáveis editando o mesmo registro: prevalece a última gravação.
 - O histórico é consultado, mas a edição por coordenador e professor não tem tela nesta tarefa.
-- `docs/CONTRATOS_NIVALDO_CORE.md`, em `feat/nivaldo-core`, ainda cita "Fabia" e deve ser ajustado por Nivaldo.
-- O shell global aponta "Turmas e pessoas" para `/tarefas`, e `/demo/*` segue com os dados antigos. Ambos exigem acordo.
+- `docs/CONTRATOS_NIVALDO_CORE.md` ainda cita "Fabia" e deve ser ajustado por Nivaldo.
+- O shell global aponta "Turmas e pessoas" para `/tarefas`, e `/demo/*` segue com os dados antigos. Ambos exigem acordo, e `feat/viegas-aluno` já altera os mesmos itens do menu. Os painéis têm âncoras prontas: `/coordenador#turmas`, `#importacao`, `#vinculos`; `/responsavel#resultados`, `#saude-apoio`, `#historico`.

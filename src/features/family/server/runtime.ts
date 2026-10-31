@@ -1,9 +1,10 @@
 import "server-only";
+import { createLearningService } from "@/features/learning/server/runtime";
 import { getLearningAiGateway } from "@/lib/llm/gateway";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { fixtureFamilyMetrics } from "../fixtures";
 import { FamilyError } from "../model";
 import { FamilyService } from "../service";
+import { createLearningFamilyMetrics } from "./learning-metrics";
 import { createSupabaseFamilyRepository } from "./supabase-repository";
 
 export async function createFamilyService(): Promise<FamilyService> {
@@ -11,7 +12,7 @@ export async function createFamilyService(): Promise<FamilyService> {
   if (!client) throw new FamilyError("NOT_CONFIGURED", "Configure o Supabase para usar o painel do responsável.", 503);
   return new FamilyService({
     repository: createSupabaseFamilyRepository(client),
-    metrics: fixtureFamilyMetrics,
+    metrics: createLearningFamilyMetrics(createLearningService),
     summarize: (input) => getLearningAiGateway().summarizeStudent(input),
   });
 }

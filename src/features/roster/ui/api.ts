@@ -1,6 +1,6 @@
 import type { SubjectId } from "@/contracts";
 import type { ImportConfirm, ImportKind, ImportPreview, ImportResult } from "../model";
-import type { AssignmentRecord, ClassMetrics, ClassroomRecord, EnrollmentRecord, PersonRecord } from "../model";
+import type { AssignmentRecord, ClassMetrics, ClassroomRecord, EnrollmentRecord, GuardianLinkRecord, PersonRecord } from "../model";
 
 export interface RosterOverview {
   classrooms: ClassroomRecord[];
@@ -8,6 +8,8 @@ export interface RosterOverview {
   assignments: AssignmentRecord[];
   students: PersonRecord[];
   teachers: PersonRecord[];
+  guardians: PersonRecord[];
+  guardianLinks: GuardianLinkRecord[];
   metrics: { source: "fixture" | "real"; classes: ClassMetrics[] };
 }
 
@@ -25,11 +27,14 @@ const send = (method: string, body?: unknown): RequestInit => ({
 export const rosterApi = {
   overview: () => call<RosterOverview>("overview"),
   createClassroom: (input: { name: string; grade: number; schoolYear: number }) => call<ClassroomRecord>("classrooms", send("POST", input)),
+  updateClassroom: (id: string, input: { name: string; grade: number; schoolYear: number }) => call<ClassroomRecord>(`classrooms/${id}`, send("PATCH", input)),
   deleteClassroom: (id: string) => call(`classrooms/${id}`, send("DELETE")),
   assign: (input: { classroomId: string; teacherId: string; subjectId: SubjectId }) => call("assignments", send("POST", input)),
   unassign: (id: string) => call(`assignments/${id}`, send("DELETE")),
   allocate: (input: { classroomId: string; studentId: string; expectedEnrollmentId?: string }) => call("enrollments", send("POST", input)),
   removeEnrollment: (id: string) => call(`enrollments/${id}`, send("DELETE")),
+  linkGuardian: (input: { studentId: string; fullName: string; email: string }) => call<GuardianLinkRecord>("guardian-links", send("POST", input)),
+  setGuardianLink: (id: string, status: "confirmed" | "revoked") => call<GuardianLinkRecord>(`guardian-links/${id}`, send("PATCH", { status })),
   preview: (kind: ImportKind, classroomId: string, file: File) => {
     const form = new FormData();
     form.set("kind", kind);

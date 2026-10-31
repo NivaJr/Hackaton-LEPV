@@ -22,7 +22,10 @@ export function createFamilyHttpHandler(dependencies: FamilyHttpDependencies) {
       const url = new URL(request.url);
       const method = request.method;
       const origin = request.headers.get("origin");
-      if (method !== "GET" && origin && origin !== url.origin) {
+      // Next may expose an internal listen address in request.url; Host is what the browser requested.
+      const host = request.headers.get("host");
+      const expected = host ? `${url.protocol}//${host}` : url.origin;
+      if (method !== "GET" && origin && origin !== expected) {
         throw new FamilyError("INVALID_ORIGIN", "A origem desta operação não é permitida.", 403);
       }
       const service = await dependencies.createService();
