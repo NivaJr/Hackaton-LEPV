@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { GradeSchema, SubjectIdSchema, type Role, type SubjectId } from "@/contracts";
+import { GradeSchema, SubjectIdSchema, type Role, type StudentSummary, type SubjectId } from "@/contracts";
 
 export class RosterError extends Error {
   constructor(public readonly code: string, message: string, public readonly status: number) {
@@ -89,4 +89,5 @@ export interface EnrollmentRecord extends CurrentEnrollment { studentId: string;
 export interface AssignmentRecord { id: string; classroomId: string; teacherId: string; subjectId: SubjectId; }
 export interface AccountRecord { userId: string; schoolId: string | null; fullName: string | null; roles: Role[]; }
 export interface GuardianLinkRecord { id: string; guardianId: string; studentId: string; status: "pending" | "confirmed" | "revoked"; }
+export type StudentResults = { source: "real"; summary: StudentSummary } | { source: "unavailable"; summary: null };
 export interface ClassMetrics { classroomId: string; frequencyPercent: number; correctPercent: number; }

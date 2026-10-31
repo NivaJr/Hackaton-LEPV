@@ -35,6 +35,7 @@ Todos usam a sessão por cookie e respondem `{ error: { code, message } }` em fa
 | DELETE `/api/roster/enrollments/:id` | coordenador | — | `{ removed }` |
 | POST `/api/roster/imports/preview` | coordenador | multipart `kind, classroomId, file` | `ImportPreview`, sem gravar |
 | POST `/api/roster/imports/confirm` | coordenador | `ImportConfirm` | `ImportResult` por linha |
+| GET `/api/roster/students/:id/results` | coordenador | — | resumo real de 30 dias ou `source: "unavailable"` |
 | POST `/api/roster/guardian-links` | coordenador | `studentId, fullName, email` | vínculo `pending`; convida se a conta não existir |
 | PATCH `/api/roster/guardian-links/:id` | coordenador | `status: confirmed` ou `revoked` | vínculo |
 | GET `/api/roster/templates/:arquivo` | coordenador | `modelo-alunos.csv`, `modelo-professores.csv` | CSV |
@@ -79,7 +80,7 @@ Quatro séries e seis matérias vêm do catálogo. Esta tarefa não envolve ques
 Resultados no commit desta entrega:
 
 - `npm run typecheck`: passou.
-- `npm test`: passou, 12 arquivos e 160 testes da `main` integrada, incluindo `roster-import`, `roster-service`, `family-service` e `roster-database`.
+- `npm test`: passou, 12 arquivos e 164 testes da `main` integrada, incluindo `roster-import`, `roster-service`, `family-service` e `roster-database`.
 - `npm run build`: passou, com `/api/roster/[...path]` e `/api/family/[...path]`.
 
 ## Percurso realmente executado
@@ -97,9 +98,19 @@ Resultados no commit desta entrega:
 
 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` (somente servidor) e `NEXT_PUBLIC_APP_URL` para o link do convite.
 
+## Decisões em aberto
+
+Registradas em 31/10/2026, sem decisão tomada:
+
+1. **Ativação e rotação de atividades:** hoje só o coordenador pode executá-las pelas APIs, e nenhuma tela as chama. A equipe vai definir se passam ao professor ou viram ação do coordenador. Fabiano propõe tirar "Atividades" do menu do coordenador, mas outro integrante pode estar nisso.
+2. **"Meu espaço" no menu:** ainda sem destino; decisão adiada.
+3. **Menu lateral:** a alteração em `app-shell.tsx` depende do acordo da equipe. Proposta para o coordenador: "Visão geral" sem mudança, "Acompanhamento" para `#acompanhamento`, "Turmas e pessoas" para `#turmas`.
+
 ## Limitações e pendências
+
+- Resultados: a visão por aluno usa o resumo real; o agregado por turma ainda é exemplo e depende de Nivaldo.
 
 - Dois responsáveis editando o mesmo registro: prevalece a última gravação.
 - O histórico é consultado, mas a edição por coordenador e professor não tem tela nesta tarefa.
 - `docs/CONTRATOS_NIVALDO_CORE.md` ainda cita "Fabia" e deve ser ajustado por Nivaldo.
-- O shell global aponta "Turmas e pessoas" para `/tarefas`, e `/demo/*` segue com os dados antigos. Ambos exigem acordo, e `feat/viegas-aluno` já altera os mesmos itens do menu. Os painéis têm âncoras prontas: `/coordenador#turmas`, `#importacao`, `#vinculos`; `/responsavel#resultados`, `#saude-apoio`, `#historico`.
+- O shell global aponta "Turmas e pessoas" para `/tarefas`, e `/demo/*` segue com os dados antigos. Ambos exigem acordo, e `feat/viegas-aluno` já altera os mesmos itens do menu. Os painéis têm âncoras prontas: `/coordenador#turmas`, `#acompanhamento`, `#importacao`, `#vinculos`; `/responsavel#resultados`, `#saude-apoio`, `#historico`.
