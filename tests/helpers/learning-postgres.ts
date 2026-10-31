@@ -48,7 +48,7 @@ export function postgresRpcClient(db: PGlite): LearningRpcClient {
   } };
 }
 
-export async function createLearningDatabase() {
+export async function createLearningDatabase({ beforeMigration }: { beforeMigration?: string } = {}) {
   const db = new PGlite();
   await db.exec(`
     create role anon nologin;
@@ -64,7 +64,7 @@ export async function createLearningDatabase() {
     grant execute on function auth.uid() to authenticated,service_role;
   `);
   const migrations = resolve(process.cwd(), "supabase/migrations");
-  for (const file of (await readdir(migrations)).filter((file) => file.endsWith(".sql")).sort()) {
+  for (const file of (await readdir(migrations)).filter((file) => file.endsWith(".sql") && (!beforeMigration || file < beforeMigration)).sort()) {
     await db.exec(await readFile(resolve(migrations, file), "utf8"));
   }
   await db.exec(await readFile(resolve(process.cwd(), "supabase/seed.sql"), "utf8"));

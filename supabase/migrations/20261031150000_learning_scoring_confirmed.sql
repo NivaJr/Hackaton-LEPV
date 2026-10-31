@@ -51,6 +51,8 @@ begin
   end loop;
 
   for item in select value from jsonb_array_elements(p_state->'attempts') loop
+    -- Immutable attempts were already validated under the policy in effect when saved.
+    if (account.payload->'attempts') @> jsonb_build_array(item) then continue; end if;
     result := item->'result';
     select value into instance from jsonb_array_elements(p_state->'instances')
       where value->'question'->>'questionInstanceId' = result->>'questionInstanceId';
@@ -69,9 +71,10 @@ begin
       or (result->>'xpAwarded')::numeric is distinct from (
         case when (result->>'isCorrect')::boolean and instance->>'recoveryId' is null
           and coalesce(activity->>'activityType','weekly_challenge') = 'weekly_challenge' then 100 else 0 end)
-      or (instance->>'nominalPoints')::numeric is distinct from (
+      or (not ((account.payload->'instances') @> jsonb_build_array(instance))
+        and (instance->>'nominalPoints')::numeric is distinct from (
         case when instance->>'recoveryId' is not null then 35
-          when coalesce(activity->>'activityType','weekly_challenge') = 'weekly_challenge' then 100 else 50 end)
+          when coalesce(activity->>'activityType','weekly_challenge') = 'weekly_challenge' then 100 else 50 end))
       then raise exception 'LEARNING_INVALID_RESULT'; end if;
     if not (account.payload->'attempts' @> jsonb_build_array(item)) and (item->>'classId' <> current_class::text or not exists (
       select 1 from jsonb_array_elements(catalog.payload->'activities') a

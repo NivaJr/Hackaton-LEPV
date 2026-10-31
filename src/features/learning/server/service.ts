@@ -215,7 +215,10 @@ export class LearningService {
         };
         state.recoveries.push(recovery);
       }
-      const rankPointsAwarded = isCorrect ? instance.nominalPoints : 0;
+      // Snapshots issued before the confirmed policy keep their original nominal value.
+      const rankPoints = instance.recoveryId !== null ? RECOVERY_RANK_POINTS
+        : root.activityType === "weekly_challenge" ? WEEKLY_CHALLENGE_RANK_POINTS : REGULAR_EXERCISE_RANK_POINTS;
+      const rankPointsAwarded = isCorrect ? rankPoints : 0;
       const xpAwarded = isCorrect && instance.recoveryId === null && root.activityType === "weekly_challenge"
         ? WEEKLY_CHALLENGE_XP : 0;
       const result = AttemptResultSchema.parse({

@@ -35,7 +35,9 @@ Configuração remota conferida com `supabase config diff`: zero diferenças nas
 
 Nenhum convite ou mensagem foi enviado. Login de demonstração usa contas fictícias criadas administrativamente, com emails confirmados apenas para os testes.
 
-## Política escolhida pelo usuário
+## Política usada na validação inicial (30/10/2026)
+
+Registro histórico, substituído pela regra confirmada do PR #20. Os valores e resultados abaixo descrevem a execução inicial; não são a política atual de novas respostas.
 
 ```dotenv
 LEPV_ORIGINAL_POINTS=100
@@ -86,3 +88,11 @@ A aplicação está publicada em https://eai-lepv.vercel.app, com variáveis de 
 Aplicadas no mesmo projeto de Production, em transação junto ao histórico: `20261031060000_recognition.sql`, `20261031133738_content.sql` e `20261031133820_roster_handoff.sql`. O histórico foi comparado ao texto dos arquivos, normalizado para LF. O advisor de segurança não apontou novos avisos de banco; permanece o aviso de configuração Auth já existente antes desta etapa.
 
 Tabelas novas: `teacher_recognitions`, `notifications`, `roster_import_audits`, `app_private.content_questions` e `app_private.content_import_usage`. Todas possuem RLS; respostas de questões e credenciais não são liberadas ao navegador. Contratos, critérios e localização da evidência hospedada em [Entrega do handoff](ENTREGA_NIVALDO_HANDOFF.md).
+
+## Produção e pontuação confirmadas — PR #20, 31/10/2026
+
+O ambiente Production da Vercel foi consultado diretamente e usa **`alkvhjnqfjyjflaswdmi`**, com URL `https://alkvhjnqfjyjflaswdmi.supabase.co`. O projeto `sufgxlmwhxudykxpnvpa`, ligado ao MCP nesta sessão, é outro banco e não recebeu esta migração.
+
+Aplicada `20261031150000_learning_scoring_confirmed.sql` às **15:44 UTC (12:44 de Brasília)**, em transação junto ao registro da versão no histórico. O texto registrado e o corpo de `learning_commit_student` foram comparados ao arquivo validado. A função mantém acesso exclusivo a `service_role` e `search_path = pg_catalog`.
+
+Novas respostas seguem exercício comum 50 pontos/0 XP, desafio semanal 100 pontos/100 XP e recuperação 35 pontos/0 XP. A transição preserva os créditos antigos de 70/49 e aceita questões emitidas anteriormente, sem reescrever o histórico. O serviço e o SQL foram verificados por quatro testes de atualização, além da suíte completa. As evidências, hashes e procedimento de teste publicado estão em [Validação do PR #20](VALIDACAO_PR20.md).
