@@ -40,6 +40,7 @@ Preencher `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, a
 - Migração de identidade, escola, turmas, vínculos, ficha, histórico, saúde e apoio; seed sem senhas.
 - Contrato do gateway de LLM, inicialmente desabilitado, com erro explícito em vez de geração fictícia.
 - Workflow de checks e registro de prompts em `PROMPTS/`.
+- Gestão escolar e painel do responsável na branch `feat/fabiano-gestao`; escopo, validação e limites em [Entrega da Tarefa 02](docs/ENTREGA_FABIANO_GESTAO.md).
 
 Login, convites e permissões ainda precisam ser exercitados contra o projeto Supabase da equipe. As rotas `/aluno`, `/coordenador`, `/professor` e `/responsavel` são protegidas; os dados mostrados nelas serão preenchidos pelos módulos individuais. O envio administrativo de convites ainda não está implementado.
 
