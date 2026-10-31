@@ -18,6 +18,15 @@ trabalhar em subpastas. Requer Python 3 disponível como `python3` (Unix) ou
 `python` (Windows). Não lê históricos de outras conversas. Não configura GitHub,
 faz commits ou envia arquivos ao repositório automaticamente.
 
+O evento JSON é lido diretamente dos bytes da entrada padrão, sem usar a página
+de códigos do Windows. Assim, acentos, aspas curvas e emojis em UTF-8 não são
+convertidos em caracteres inválidos. O JSON de erro usa escapes ASCII para que
+a resposta de bloqueio também funcione em terminais com codificação legada.
+
+Os arquivos automáticos `PROMPTS/s_*.md` e o índice usam LF, definido em
+`.gitattributes`. Isso preserva os bytes usados pelos hashes após clone/pull
+em máquinas Windows com `core.autocrlf=true`.
+
 ## Formato e limites
 
 Suporta o JSONL do Codex com `response_item`/mensagem de papel `user` e/ou
@@ -61,16 +70,23 @@ Execute a partir da raiz:
 python3 scripts/archive_prompts.py < /caminho/do/evento.json
 ```
 
-No PowerShell:
+No PowerShell, use redirecionamento pelo `cmd` para preservar os bytes UTF-8 do
+arquivo, sem passar pela codificação do pipeline de texto:
 
 ```powershell
-Get-Content -Raw C:\caminho\evento.json | python scripts/archive_prompts.py
+cmd /c "python scripts/archive_prompts.py < C:\caminho\evento.json"
 ```
 
 Sucesso retorna `{}`; falha retorna `continue: false` e escreve o motivo em
 stderr. Na execução manual, ninguém interrompe a conversa automaticamente:
 é necessário corrigir o erro antes de compactar. Para um registro direto, use
 `hook_event_name: "UserPromptSubmit"`, `session_id`, `turn_id` e `prompt`.
+
+Testes do arquivador, com registros fictícios somente em diretórios temporários:
+
+```sh
+python -m unittest discover -s tests -p "test_archive_prompts.py"
+```
 
 Fontes oficiais consultadas: https://learn.chatgpt.com/docs/hooks e
 https://learn.chatgpt.com/docs/config-file/config-advanced.

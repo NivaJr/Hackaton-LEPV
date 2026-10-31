@@ -1,0 +1,3 @@
+# Automatic prompt records are checked against hashes of their exact UTF-8 bytes.
+PROMPTS/s_*.md text eol=lf
+PROMPTS/.archive-index.json text eol=lf
