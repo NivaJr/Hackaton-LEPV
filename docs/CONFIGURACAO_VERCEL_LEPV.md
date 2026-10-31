@@ -1,6 +1,6 @@
 # Publicação na Vercel
 
-Aplicação: **https://hackaton-lepv.vercel.app**. Configuração iniciada em 31/10/2026, após o usuário escolher preparar o deploy na Vercel.
+Aplicação: **https://eai-lepv.vercel.app**. Configuração iniciada em 31/10/2026, após o usuário escolher preparar o deploy na Vercel.
 
 ## Projeto e código
 
@@ -10,6 +10,12 @@ Aplicação: **https://hackaton-lepv.vercel.app**. Configuração iniciada em 31
 - Branch de implementação: `feat/nivaldo-core`. A integração à `main` continua separada da publicação por CLI.
 - Framework: Next.js. Runtime requerido pelo projeto: Node.js 24.x, alinhado com `.nvmrc`, o lockfile e o workflow GitHub.
 - Publicação executada pelo CLI a partir do checkout da Tarefa 03. Não presumir que outra branch será publicada automaticamente; coordenar a política de integração/deploy com a equipe.
+
+## Endereço gratuito
+
+O usuário escolheu um endereço gratuito da Vercel e confirmou manter `eai-lepv.vercel.app`. O nome exato `eai.vercel.app` já estava em uso e não pertence à conta conectada. `eai-lepv.vercel.app` foi adicionado aos domínios do projeto `hackaton-lepv`, para acompanhar as próximas publicações de produção. Não houve compra ou configuração do domínio `eai.com`.
+
+O endereço inicial `https://hackaton-lepv.vercel.app` permanece como alias de compatibilidade. A URL de produção declarada no ambiente e no Supabase é `https://eai-lepv.vercel.app`.
 
 ## Variáveis de produção
 
@@ -25,14 +31,15 @@ Configuradas no ambiente **Production**, sem valores privados no código:
 | `LEPV_ADAPTIVE_XP_FOLLOWS_ROOT` | `true` |
 | `LLM_PROVIDER` | `disabled` |
 | `LLM_TIMEOUT_MS` | `15000` |
-| `NEXT_PUBLIC_APP_URL` | `https://hackaton-lepv.vercel.app` |
+| `NEXT_PUBLIC_APP_URL` | `https://eai-lepv.vercel.app` |
 
 A senha direta do PostgreSQL e as senhas de demonstração não são variáveis de hospedagem. O runtime usa PostgREST/RPC com sessão verificada e a chave administrativa apenas no servidor. `.vercelignore` exclui `.env*`, `supabase/.temp/`, caches e metadados locais dos uploads. `.vercel/` e os arquivos de credenciais locais são ignorados pelo Git.
 
 ## Autenticação
 
-O Supabase tem Site URL `https://hackaton-lepv.vercel.app` e os callbacks:
+O Supabase tem Site URL `https://eai-lepv.vercel.app` e os callbacks:
 
+- `https://eai-lepv.vercel.app/auth/callback`.
 - `https://hackaton-lepv.vercel.app/auth/callback`.
 - `http://localhost:3000/auth/callback`.
 - `http://127.0.0.1:3000/auth/callback`.
@@ -43,7 +50,7 @@ As chamadas de interface usam a mesma origem da aplicação, com cookies. O fron
 
 ## Validação observada em produção
 
-Verificação por HTTPS no domínio público, com relatório inicial em `2026-10-31T03:16:18.988Z`:
+Verificação por HTTPS executada inicialmente no endereço `hackaton-lepv.vercel.app`, com relatório em `2026-10-31T03:16:18.988Z`, e repetida em `eai-lepv.vercel.app` em `2026-10-31T03:39:28.744Z`:
 
 - Página inicial, login e `/api/health` responderam HTTP 200.
 - APIs privadas sem sessão retornaram HTTP 401.

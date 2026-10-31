@@ -15,7 +15,7 @@ Estes contratos aditivos estão implementados na branch `feat/nivaldo-core` e pr
 
 Prefixo: `/api/learning`. Sessão real por cookie; sem fallback para memória em produção. Respostas privadas usam `Cache-Control: private, no-store`.
 
-Domínio publicado: `https://hackaton-lepv.vercel.app`. O frontend usa a mesma origem da aplicação, com as rotas e os cookies do próprio app. Detalhes em [Configuração da Vercel](CONFIGURACAO_VERCEL_LEPV.md).
+Domínio publicado: `https://eai-lepv.vercel.app`. O frontend usa a mesma origem da aplicação, com as rotas e os cookies do próprio app. Detalhes em [Configuração da Vercel](CONFIGURACAO_VERCEL_LEPV.md).
 
 | Método e caminho | Entrada | Resultado |
 | --- | --- | --- |

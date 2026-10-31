@@ -17,3 +17,9 @@ A decisão foi solicitada para a demonstração. Os limites de patentes e bônus
 ## Banco da demonstração — 30/10/2026
 
 O usuário escolheu criar um projeto Supabase exclusivo para o LEPV. Projeto `hackaton-lepv`, ref `alkvhjnqfjyjflaswdmi`, na organização pessoal `nivaldo-raiz's Org`, região São Paulo (`sa-east-1`). Credenciais ficam somente em arquivos locais ignorados e no ambiente privado do serviço que vier a hospedar a aplicação.
+
+## Endereço gratuito da aplicação — 31/10/2026
+
+O usuário pediu inicialmente `eai.com` e depois esclareceu que desejava um endereço gratuito terminado em `.vercel.app`. O nome exato `eai.vercel.app` já estava em uso; o usuário informou não ter acesso a esse endereço e confirmou manter o sufixo `-lepv`.
+
+Endereço escolhido: **https://eai-lepv.vercel.app**. O domínio foi vinculado ao projeto Vercel existente; a URL pública do ambiente e o Site URL do Supabase usam esse endereço. O alias inicial e seu callback são preservados para compatibilidade. Não foi solicitada compra de domínio ou transferência de domínio de terceiros.

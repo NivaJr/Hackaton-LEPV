@@ -2,7 +2,7 @@
 
 Aplicação web de educação adaptativa para o 6º ao 9º ano. Esta entrega estabelece a fundação para quatro pessoas trabalharem em paralelo; os fluxos de negócio completos continuam nas tarefas individuais.
 
-Ambiente publicado: **https://hackaton-lepv.vercel.app**. Configuração e evidências em [Supabase](docs/CONFIGURACAO_SUPABASE_LEPV.md) e [Vercel](docs/CONFIGURACAO_VERCEL_LEPV.md).
+Ambiente publicado: **https://eai-lepv.vercel.app**. Configuração e evidências em [Supabase](docs/CONFIGURACAO_SUPABASE_LEPV.md) e [Vercel](docs/CONFIGURACAO_VERCEL_LEPV.md).
 
 ## Executar
 

@@ -1,6 +1,6 @@
 # Rotas reais — Tarefa 03 / Nivaldo
 
-Documento para integração da interface do aluno. Implementação na branch `feat/nivaldo-core`, a partir da base `7bfa3d5`. **Aplicação publicada: https://hackaton-lepv.vercel.app**. As APIs abaixo estão disponíveis nesse domínio, com autenticação por cookie. A integração à `main` continua como etapa separada do deploy por CLI.
+Documento para integração da interface do aluno. Implementação na branch `feat/nivaldo-core`, a partir da base `7bfa3d5`. **Aplicação publicada: https://eai-lepv.vercel.app**. As APIs abaixo estão disponíveis nesse domínio, com autenticação por cookie. A integração à `main` continua como etapa separada do deploy por CLI.
 
 As rotas abaixo existem no código, em `src/app/api/learning/[...path]/route.ts`, com dispatch em `src/features/learning/server/http.ts`. Os exemplos usam dados fictícios. O planejamento geral contém sugestões anteriores de URLs; use os caminhos deste documento para integrar esta implementação.
 
