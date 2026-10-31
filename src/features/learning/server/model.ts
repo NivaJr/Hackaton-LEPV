@@ -2,7 +2,7 @@ import { z } from "zod";
 import {
   AttemptResultSchema, GeneratedQuestionSchema, GradeSchema, IdSchema,
   QuestionAnswerKeySchema, QuestionForStudentSchema, RecoveryStateSchema,
-  StudentPreferencesSchema, SubjectIdSchema,
+  StudentPreferencesSchema, SubjectIdSchema, type SubjectId,
 } from "@/contracts";
 
 const timestamp = z.string().datetime();
@@ -23,6 +23,16 @@ export const ActivitySchema = z.object({
   activatedAt: timestamp.nullable(),
 }).strict();
 export type LearningActivity = z.infer<typeof ActivitySchema>;
+
+/** Management view: never carries the answer key, explanation or hint. */
+export interface ActivityCatalogView {
+  classId: string;
+  subjectId: SubjectId;
+  weekStart: string;
+  rotatedThisWeek: boolean;
+  outgoingNext: string[];
+  activities: { rootQuestionId: string; statement: string; skillCodes: string[]; active: boolean; retired: boolean }[];
+}
 
 export const CatalogSchema = z.object({
   classId: IdSchema,

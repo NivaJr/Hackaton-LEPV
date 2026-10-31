@@ -76,7 +76,7 @@ export function createLearningHttpHandler(dependencies: LearningHttpDependencies
       }
       if (method === "GET" && path.length === 1 && first === "catalog") {
         const query = catalogQuery.parse(Object.fromEntries(url.searchParams));
-        return respond(await service.publishedActivities(actor, query.classId, query.subjectId));
+        return respond(await service.activityCatalog(actor, query.classId, query.subjectId));
       }
       if (method === "POST" && path.length === 1 && first === "activation") {
         const input = activateInput.parse(body);

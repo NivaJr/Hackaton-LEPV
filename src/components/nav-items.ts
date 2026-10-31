@@ -20,12 +20,13 @@ export function navItems(role: Role, mode: DashboardMode, home: string): NavItem
   if (role === "professor") return [
     overview,
     { label: "Questões", icon: BookOpen, href: "/professor#questoes" },
+    { label: "Ativar e rotacionar", icon: ToggleRight, href: "/professor#atividades" },
     { label: "Pontos por comportamento", icon: Medal, href: "/professor/reconhecer" },
   ];
   if (role === "coordenador") return [
     overview,
     { label: "Turmas e pessoas", icon: Users, href: "/coordenador#turmas" },
-    { label: "Ativar questões", icon: ToggleRight, href: "/coordenador#ativacao" },
+    { label: "Atividades sem professor", icon: ToggleRight, href: "/coordenador#atividades" },
     { label: "Acompanhamento", icon: Compass, href: "/coordenador#acompanhamento" },
     { label: "Responsáveis", icon: GraduationCap, href: "/coordenador#vinculos" },
     { label: "Importar alunos", icon: FileUp, href: "/coordenador#importacao" },

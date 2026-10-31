@@ -8,7 +8,7 @@ import type { LearningScoringPolicy } from "@/config/scoring";
 import { advanceRecovery, calculateRecoveryReward, canViewStudentData, createRecoveryState, getRankForPoints, interruptRecovery } from "@/features/learning/domain";
 import type { LearningAiGateway } from "@/lib/llm/gateway";
 import {
-  ActivitySchema, LearningError, ScoringPolicySchema, brazilDay, notFound,
+  ActivitySchema, LearningError, ScoringPolicySchema, brazilDay, notFound, type ActivityCatalogView,
   type LearningActivity, type LearningCatalog, type LearningInstance, type LearningState,
   type LoadedStudent,
 } from "./model";
@@ -17,12 +17,15 @@ import type { LearningRepository } from "./repository";
 const sum = (values: number[]) => Math.round(values.reduce((total, value) => total + value, 0) * 100) / 100;
 const normalizeStatement = (text: string) => text.normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleLowerCase("pt-BR");
 
+export type TeacherAssignmentLookup = (institutionId: string, classId: string, subjectId: SubjectId) => Promise<boolean>;
+
 export class LearningService {
   constructor(
     private readonly repository: LearningRepository,
     private readonly ai: Pick<LearningAiGateway, "generateRecoveryQuestion">,
     private readonly scoring: LearningScoringPolicy | null,
     private readonly now: () => Date = () => new Date(),
+    private readonly hasAssignedTeacher: TeacherAssignmentLookup = async () => false,
   ) {}
 
   private student(actor: SessionContext): string {
@@ -48,10 +51,28 @@ export class LearningService {
     throw new LearningError("CONCURRENT_UPDATE", "O progresso mudou. Repita a operação com a mesma chave.");
   }
 
-  private requireCoordinator(actor: SessionContext) {
+  /** The assigned teacher decides; the coordinator acts only for a subject without one. */
+  private async requireActivityManager(actor: SessionContext, classId: string, subjectId: SubjectId) {
+    const teaches = actor.roles.includes("professor") && actor.teacherAssignments.some((item) => item.institutionId === actor.institutionId
+      && item.classId === classId && item.subjectId === subjectId);
+    if (teaches) return;
     if (!actor.roles.includes("coordenador") || !actor.coordinatorInstitutionIds.includes(actor.institutionId)) {
-      throw new LearningError("COORDINATOR_REQUIRED", "Operação exclusiva do coordenador da instituição.", 403);
+      throw new LearningError("ACTIVITY_MANAGER_REQUIRED", "Operação do professor desta turma e matéria.", 403);
     }
+    if (await this.hasAssignedTeacher(actor.institutionId, classId, subjectId)) {
+      throw new LearningError("TEACHER_ASSIGNED", "Esta matéria tem professor atribuído; a ativação fica com ele.", 403);
+    }
+  }
+
+  private currentWeekStart() {
+    const monday = new Date(`${brazilDay(this.now())}T12:00:00Z`);
+    monday.setUTCDate(monday.getUTCDate() - (monday.getUTCDay() + 6) % 7);
+    return monday.toISOString().slice(0, 10);
+  }
+
+  private oldestActive(catalog: LearningCatalog, subjectId: SubjectId) {
+    return catalog.activities.filter((item) => item.active && item.body.subjectId === subjectId)
+      .sort((a, b) => (a.activatedAt ?? "").localeCompare(b.activatedAt ?? "") || a.rootQuestionId.localeCompare(b.rootQuestionId));
   }
 
   private async catalogTransaction<T>(actor: SessionContext, classId: string, change: (catalog: LearningCatalog) => T): Promise<T> {
@@ -384,19 +405,23 @@ export class LearningService {
     });
   }
 
-  /** Coordinator view of published originals (active or not) for one class and subject. No answer keys. */
-  async publishedActivities(actor: SessionContext, classId: string, subjectId: SubjectId) {
-    this.requireCoordinator(actor);
+  async activityCatalog(actor: SessionContext, classId: string, subjectId: SubjectId): Promise<ActivityCatalogView> {
+    await this.requireActivityManager(actor, classId, subjectId);
     const { catalog } = await this.repository.loadCatalog(actor.institutionId, classId);
-    const activities = catalog.activities.filter((item) => item.body.subjectId === subjectId).map((item) => ({
-      rootQuestionId: item.rootQuestionId, statement: item.body.statement, skillCodes: item.body.skillCodes,
-      difficulty: item.body.difficulty, active: item.active, activatedAt: item.activatedAt,
-    }));
-    return { classId, subjectId, grade: catalog.grade, activities };
+    const weekStart = this.currentWeekStart();
+    return {
+      classId, subjectId, weekStart,
+      rotatedThisWeek: catalog.rotations.some((item) => item.subjectId === subjectId && item.weekStart === weekStart),
+      outgoingNext: this.oldestActive(catalog, subjectId).slice(0, 2).map((item) => item.rootQuestionId),
+      activities: catalog.activities.filter((item) => item.body.subjectId === subjectId).map((item) => ({
+        rootQuestionId: item.rootQuestionId, statement: item.body.statement, skillCodes: item.body.skillCodes,
+        active: item.active, retired: !item.active && item.activatedAt !== null,
+      })),
+    };
   }
 
   async activate(actor: SessionContext, classId: string, subjectId: SubjectId, rootIds: string[]) {
-    this.requireCoordinator(actor);
+    await this.requireActivityManager(actor, classId, subjectId);
     if (rootIds.length !== 10 || new Set(rootIds).size !== 10) throw new LearningError("TEN_ORIGINALS_REQUIRED", "Selecione dez originais distintas.", 422);
     return this.catalogTransaction(actor, classId, (catalog) => {
       const current = catalog.activities.filter((item) => item.active && item.body.subjectId === subjectId);
@@ -411,10 +436,7 @@ export class LearningService {
   }
 
   async rotate(actor: SessionContext, classId: string, subjectId: SubjectId, weekStart: string, incomingRootIds: string[]) {
-    this.requireCoordinator(actor);
-    const currentDay = brazilDay(this.now());
-    const monday = new Date(`${currentDay}T12:00:00Z`);
-    monday.setUTCDate(monday.getUTCDate() - (monday.getUTCDay() + 6) % 7);
+    await this.requireActivityManager(actor, classId, subjectId);
     if (incomingRootIds.length !== 2 || new Set(incomingRootIds).size !== 2) throw new LearningError("TWO_ORIGINALS_REQUIRED", "Selecione duas originais distintas.", 422);
     return this.catalogTransaction(actor, classId, (catalog) => {
       const previous = catalog.rotations.find((item) => item.subjectId === subjectId && item.weekStart === weekStart);
@@ -422,9 +444,8 @@ export class LearningService {
         if ([...previous.incomingRootIds].sort().join("|") !== [...incomingRootIds].sort().join("|")) throw new LearningError("ROTATION_CONFLICT", "Esta semana já foi processada com outra seleção.");
         return previous;
       }
-      if (weekStart !== monday.toISOString().slice(0, 10)) throw new LearningError("INVALID_WEEK", "Use a segunda-feira da semana atual em Brasília.", 422);
-      const active = catalog.activities.filter((item) => item.active && item.body.subjectId === subjectId)
-        .sort((a, b) => (a.activatedAt ?? "").localeCompare(b.activatedAt ?? "") || a.rootQuestionId.localeCompare(b.rootQuestionId));
+      if (weekStart !== this.currentWeekStart()) throw new LearningError("INVALID_WEEK", "Use a segunda-feira da semana atual em Brasília.", 422);
+      const active = this.oldestActive(catalog, subjectId);
       if (active.length !== 10) throw new LearningError("TEN_ORIGINALS_REQUIRED", "A rotação exige dez originais ativas desta matéria.");
       const incoming = incomingRootIds.map((id) => catalog.activities.find((item) => item.rootQuestionId === id
         && item.body.subjectId === subjectId && !item.active && item.activatedAt === null) ?? notFound());

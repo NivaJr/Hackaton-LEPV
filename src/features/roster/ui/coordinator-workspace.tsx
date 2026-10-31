@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Flag, GraduationCap, TrendingUp, Users } from "lucide-react";
+import { ActivityManager } from "@/features/learning/ui/activity-manager";
 import { GRADES, SUBJECTS, getSubject } from "@/config/catalog";
 import type { SubjectId } from "@/contracts";
 import { AccessLinkNotice, ClassAccessLinksPanel, type IssuedLink } from "./access-link";
@@ -67,6 +68,8 @@ export function CoordinatorWorkspace({ fullName, schoolYear }: { fullName: strin
   const nameOf = (id: string) => data?.students.concat(data.teachers).find((person) => person.id === id)?.fullName ?? "Pessoa";
   const roster = data?.enrollments.filter((item) => item.classroomId === selectedId) ?? [];
   const staff = data?.assignments.filter((item) => item.classroomId === selectedId) ?? [];
+  // The assigned teacher activates a subject; the coordinator covers only the remaining ones.
+  const orphanSubjects = SUBJECTS.filter((subject) => !staff.some((item) => item.subjectId === subject.id));
   const available = data?.students.filter((student) => !roster.some((item) => item.studentId === student.id)) ?? [];
 
   function editClassroom(event: FormEvent<HTMLFormElement>) {
@@ -149,6 +152,7 @@ export function CoordinatorWorkspace({ fullName, schoolYear }: { fullName: strin
         </section>}
         {selected && data && <StudentResultsPanel key={`resultados-${selected.id}`} students={data.students.filter((student) => roster.some((item) => item.studentId === student.id))} />}
         {selected && data && <GuardianPanel key={`vinculos-${selected.id}`} students={data.students.filter((student) => roster.some((item) => item.studentId === student.id))} guardians={data.guardians} links={data.guardianLinks} busy={busy} act={act} onLinkIssued={setIssued} issueLink={issueLink} />}
+        {selected && orphanSubjects.length > 0 && <ActivityManager key={`atividades-${selected.id}-${orphanSubjects.length}`} title="Atividades sem professor" scopes={orphanSubjects.map((subject) => ({ classId: selected.id, className: selected.name, subjectId: subject.id }))} />}
         {selected && <ImportPanel key={selected.id} classroomId={selected.id} classroomName={selected.name} onApplied={() => void refresh()} />}
       </div>
     </div>
