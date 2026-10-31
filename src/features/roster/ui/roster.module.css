@@ -30,6 +30,10 @@
 .notice svg{display:inline;vertical-align:-2px;margin-right:4px}
 .error{background:#fff0ed;color:#9a4036}
 .success{background:var(--mint);color:#1f6a53}
+.results{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin:14px 0 0}
+.results div{padding:12px 14px;border:1px solid var(--line);border-radius:12px;min-width:0}
+.results dt{color:var(--muted);font-size:12px}
+.results dd{margin:4px 0 0;color:var(--ink);font-size:20px;font-weight:700;overflow-wrap:anywhere}
 .hint{color:var(--muted);font-size:12px;line-height:1.5;margin:8px 0 0}
 .empty{color:var(--muted);font-size:14px;margin:14px 0 0}
 :global([data-theme="dark"]) .success,:global([data-theme="dark"]) .badge:not(.badgeWarn):not(.badgeError){color:#a8ecd2}

@@ -80,6 +80,9 @@ export function createRosterHttpHandler(dependencies: RosterHttpDependencies) {
         if (path.length === 1 && method === "POST") return respond(await service.allocateStudent(actor, await readJson(request)));
         if (path.length === 2 && method === "DELETE") return respond(await service.removeEnrollment(actor, uuid.parse(id)));
       }
+      if (method === "GET" && path.length === 3 && first === "students" && path[2] === "results") {
+        return respond(await service.studentResults(actor, uuid.parse(id)));
+      }
       if (first === "guardian-links") {
         if (path.length === 1 && method === "POST") return respond(await service.createGuardianLink(actor, await readJson(request)), 201);
         if (path.length === 2 && method === "PATCH") return respond(await service.setGuardianLinkStatus(actor, uuid.parse(id), await readJson(request)));

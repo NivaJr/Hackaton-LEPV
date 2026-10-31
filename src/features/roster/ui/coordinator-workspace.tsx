@@ -7,6 +7,7 @@ import type { SubjectId } from "@/contracts";
 import { rosterApi, type RosterOverview } from "./api";
 import { GuardianPanel } from "./guardian-panel";
 import { ImportPanel } from "./import-panel";
+import { StudentResultsPanel } from "./student-results-panel";
 import styles from "./roster.module.css";
 
 export function CoordinatorWorkspace({ fullName, schoolYear }: { fullName: string; schoolYear: number }) {
@@ -130,6 +131,7 @@ export function CoordinatorWorkspace({ fullName, schoolYear }: { fullName: strin
             <button type="submit" className="button button-outline" disabled={busy}>Atribuir</button>
           </form>
         </section>}
+        {selected && data && <StudentResultsPanel key={`resultados-${selected.id}`} students={data.students.filter((student) => roster.some((item) => item.studentId === student.id))} />}
         {selected && data && <GuardianPanel key={`vinculos-${selected.id}`} students={data.students.filter((student) => roster.some((item) => item.studentId === student.id))} guardians={data.guardians} links={data.guardianLinks} busy={busy} act={act} />}
         {selected && <ImportPanel key={selected.id} classroomId={selected.id} classroomName={selected.name} onApplied={() => void refresh()} />}
       </div>

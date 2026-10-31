@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
-import type { SessionContext } from "@/contracts";
+import type { SessionContext, StudentSummary } from "@/contracts";
 import { fixtureRosterMetrics } from "@/features/roster/fixtures";
+import { createLearningStudentResults } from "@/features/roster/server/learning-results";
 import { createRosterHttpHandler } from "@/features/roster/http";
 import { RosterService } from "@/features/roster/service";
 import { MemoryDirectory, MemoryRoster, OTHER_SCHOOL, SCHOOL } from "./helpers/roster-memory";
@@ -15,6 +16,12 @@ const teacher: SessionContext = { ...coordinator, roles: ["professor"], coordina
 const guardian: SessionContext = { ...coordinator, roles: ["responsavel"], coordinatorInstitutionIds: [] };
 const student: SessionContext = { ...coordinator, roles: ["aluno"], studentId: coordinator.userId, coordinatorInstitutionIds: [] };
 
+const realSummary: StudentSummary = {
+  studentId: "aluno", periodStart: "2026-10-01", periodEnd: "2026-10-30", accessDays: 5, activityDays: 4,
+  correctAnswers: 8, incorrectAnswers: 2, xp: 219, rankPoints: 219, rankName: "Bronze (proposta)", difficultSkillCodes: [],
+};
+const noResults = { studentResults: async () => ({ source: "unavailable" as const, summary: null }) };
+
 const file = (text: string, name = "alunos.csv") => ({ name, bytes: new TextEncoder().encode(text) });
 const header = "nome completo,email\n";
 
@@ -27,7 +34,7 @@ let classB: { id: string; name: string };
 beforeEach(() => {
   repository = new MemoryRoster();
   directory = new MemoryDirectory();
-  service = new RosterService({ repository, directory, metrics: fixtureRosterMetrics });
+  service = new RosterService({ repository, directory, metrics: fixtureRosterMetrics, results: noResults });
   classA = repository.addClassroom("6A");
   classB = repository.addClassroom("7B");
 });
@@ -79,6 +86,35 @@ describe("turmas e alocação", () => {
     const { metrics } = await service.overview(coordinator);
     expect(metrics.source).toBe("fixture");
     expect(Object.keys(metrics.classes[0]).sort()).toEqual(["classroomId", "correctPercent", "frequencyPercent"]);
+  });
+});
+
+describe("resultados por aluno", () => {
+  const studentId = randomUUID();
+  beforeEach(() => { repository.people.push({ id: studentId, fullName: "Aluno Exemplo", schoolId: SCHOOL, role: "aluno" }); });
+
+  it("repassa o ator e o período ao núcleo e devolve os valores sem alterar", async () => {
+    const calls: unknown[] = [];
+    const results = createLearningStudentResults(() => ({
+      summary: async (...args) => { calls.push(args); return { summary: realSummary }; },
+    }));
+    const real = new RosterService({ repository, directory, metrics: fixtureRosterMetrics, results, now: () => new Date("2026-10-30T15:00:00Z") });
+    expect(await real.studentResults(coordinator, studentId)).toEqual({ source: "real", summary: realSummary });
+    expect(calls[0]).toEqual([coordinator, studentId, "2026-10-01", "2026-10-30"]);
+  });
+
+  it("falha no núcleo vira indisponível, nunca número de exemplo", async () => {
+    const results = createLearningStudentResults(() => { throw new Error("sem configuração"); });
+    const real = new RosterService({ repository, directory, metrics: fixtureRosterMetrics, results });
+    expect(await real.studentResults(coordinator, studentId)).toEqual({ source: "unavailable", summary: null });
+  });
+
+  it("aluno de outra escola, outro ID e outros papéis não consultam", async () => {
+    await expect(service.studentResults(otherCoordinator, studentId)).rejects.toMatchObject({ status: 404 });
+    await expect(service.studentResults(coordinator, randomUUID())).rejects.toMatchObject({ status: 404 });
+    await expect(service.studentResults(teacher, studentId)).rejects.toMatchObject({ status: 403 });
+    await expect(service.studentResults(guardian, studentId)).rejects.toMatchObject({ status: 403 });
+    await expect(service.studentResults(student, studentId)).rejects.toMatchObject({ status: 403 });
   });
 });
 
@@ -156,7 +192,7 @@ describe("prévia da importação", () => {
   it("recusa turma de outra escola e não simula provisionamento sem a chave do servidor", async () => {
     await expect(service.previewImport(otherCoordinator, { kind: "students", classroomId: classA.id, file: file(`${header}Ana Lima,a@b.com\n`) }))
       .rejects.toMatchObject({ status: 404 });
-    const unconfigured = new RosterService({ repository, directory: null, metrics: fixtureRosterMetrics });
+    const unconfigured = new RosterService({ repository, directory: null, metrics: fixtureRosterMetrics, results: noResults });
     await expect(unconfigured.previewImport(coordinator, { kind: "students", classroomId: classA.id, file: file(`${header}Ana Lima,a@b.com\n`) }))
       .rejects.toMatchObject({ code: "PROVISIONING_UNAVAILABLE", status: 503 });
   });
@@ -290,6 +326,16 @@ describe("autorização e HTTP", () => {
     }), ["classrooms"]);
     expect((await call("http://eai.example")).status).toBe(201);
     expect((await call("http://outro.example")).status).toBe(403);
+  });
+
+  it("resultados por aluno respondem pelo handler e validam o ID", async () => {
+    const studentId = randomUUID();
+    repository.people.push({ id: studentId, fullName: "Aluno Exemplo", schoolId: SCHOOL, role: "aluno" });
+    const ok = await handlerFor(coordinator)(new Request("http://localhost/x"), ["students", studentId, "results"]);
+    expect(ok.status).toBe(200);
+    expect(await ok.json()).toEqual({ source: "unavailable", summary: null });
+    expect((await handlerFor(coordinator)(new Request("http://localhost/x"), ["students", "nao-uuid", "results"])).status).toBe(422);
+    expect((await handlerFor(teacher)(new Request("http://localhost/x"), ["students", studentId, "results"])).status).toBe(403);
   });
 
   it("prévia por formulário e modelos CSV funcionam pelo handler", async () => {

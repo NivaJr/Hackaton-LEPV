@@ -1,5 +1,5 @@
-import type { Role } from "@/contracts";
-import type { AccountRecord, AssignmentRecord, ClassMetrics, GuardianLinkRecord, ClassroomInput, ClassroomPatch, ClassroomRecord, EnrollmentRecord, PersonRecord } from "./model";
+import type { Role, SessionContext } from "@/contracts";
+import type { AccountRecord, AssignmentRecord, ClassMetrics, GuardianLinkRecord, ClassroomInput, ClassroomPatch, ClassroomRecord, EnrollmentRecord, PersonRecord, StudentResults } from "./model";
 
 /** Every method is scoped by a schoolId taken from the session, never from the request. */
 export interface RosterRepository {
@@ -33,6 +33,11 @@ export interface AccountDirectory {
   findByEmails(emails: string[]): Promise<Map<string, AccountRecord>>;
   /** Idempotent: resumes a partial provisioning instead of creating a second identity. */
   ensureAccount(input: { email: string; fullName: string; role: Role; schoolId: string; userId?: string }): Promise<string>;
+}
+
+/** The actor travels with the call so the learning core repeats its own authorization. */
+export interface StudentResultsGateway {
+  studentResults(actor: SessionContext, studentId: string, from: string, to: string): Promise<StudentResults>;
 }
 
 export interface RosterMetricsGateway {

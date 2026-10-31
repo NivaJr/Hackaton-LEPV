@@ -6,15 +6,18 @@ import {
   type AccountRecord, type AssignmentRecord, type ClassroomRecord, type ConfirmRowResult, type ConfirmStatus, type EnrollmentRecord,
   type ImportConfirmRow, type ImportKind, type ImportPreview, type ImportResult, type PreviewRow, type PreviewStatus, type RowIssue,
 } from "./model";
-import type { AccountDirectory, RosterMetricsGateway, RosterRepository } from "./ports";
+import type { AccountDirectory, RosterMetricsGateway, RosterRepository, StudentResultsGateway } from "./ports";
 
 export interface RosterDependencies {
   repository: RosterRepository;
   /** null when SUPABASE_SECRET_KEY is absent; imports then fail explicitly instead of simulating. */
   directory: AccountDirectory | null;
   metrics: RosterMetricsGateway;
+  results: StudentResultsGateway;
+  now?(): Date;
 }
 
+const RESULTS_PERIOD_DAYS = 30;
 const PREVIEW_STATUSES: PreviewStatus[] = ["new", "enroll_existing", "already_in_class", "transfer_available", "assign_existing", "already_assigned", "invalid"];
 const CONFIRM_STATUSES: ConfirmStatus[] = ["created", "enrolled", "transferred", "assigned", "kept", "already_applied", "failed"];
 
@@ -134,6 +137,16 @@ export class RosterService {
       throw new RosterError("NOT_FOUND", "Atribuição não encontrada nesta escola.", 404);
     }
     return { deleted: true };
+  }
+
+  /** Scores come straight from the learning core; this feature never computes or adjusts them. */
+  async studentResults(actor: SessionContext, studentId: string) {
+    const schoolId = this.schoolOf(actor);
+    const students = await this.repository.listPeople(schoolId, "aluno");
+    if (!students.some((student) => student.id === studentId)) throw new RosterError("NOT_FOUND", "Aluno não encontrado nesta escola.", 404);
+    const end = (this.dependencies.now ?? (() => new Date()))();
+    const start = new Date(end.getTime() - (RESULTS_PERIOD_DAYS - 1) * 86_400_000);
+    return this.dependencies.results.studentResults(actor, studentId, start.toISOString().slice(0, 10), end.toISOString().slice(0, 10));
   }
 
   /** New links start pending: only an explicit coordinator confirmation grants access to the student. */
