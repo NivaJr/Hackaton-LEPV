@@ -11,7 +11,7 @@ export default async function DemoPage({ params }: { params: Promise<{ role: str
   const { role } = await params;
   if (!isRole(role)) notFound();
   if (role === "aluno") {
-    return <AppShell role="aluno" fullName={DEMO_NAMES.aluno} mode="demo"><StudentLearningExperience fullName={DEMO_NAMES.aluno} mode="demo" /></AppShell>;
+    return <AppShell role="aluno" fullName={DEMO_NAMES.aluno} mode="demo"><StudentLearningExperience fullName={DEMO_NAMES.aluno} mode="demo" registeredAccessibilityNeeds={["reading", "focus", "predictability"]} /></AppShell>;
   }
   return <AppShell role={role} fullName={DEMO_NAMES[role]} mode="demo"><Dashboard role={role} fullName={DEMO_NAMES[role]} mode="demo" /></AppShell>;
 }

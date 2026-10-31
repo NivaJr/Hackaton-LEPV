@@ -91,7 +91,7 @@ describe("catálogo", () => {
   });
 });
 
-describe("pontuação proposta e teto não aprovado", () => {
+describe("pontuação e patentes confirmadas", () => {
   it("calcula 70% sobre a original e mantém ausência de teto como padrão", () => {
     expect(DEFAULT_RECOVERY_CAP_POINTS).toBeNull();
     expect(calculateRecoveryReward({ originalPoints: 100 })).toBe(70);
@@ -111,14 +111,14 @@ describe("pontuação proposta e teto não aprovado", () => {
     expect(() => getRankForPoints(Number.POSITIVE_INFINITY)).toThrow(RangeError);
   });
 
-  it("respeita todos os limiares e acumula acima de Desafiante", () => {
+  it("respeita todos os limiares cumulativos e acumula acima de Onisciente", () => {
     for (const rank of PROPOSED_RANK_THRESHOLDS) {
       expect(getRankForPoints(rank.minimumPoints).id).toBe(rank.id);
     }
-    expect(getRankForPoints(299).id).toBe("ferro");
-    expect(getRankForPoints(999).id).toBe("bronze");
-    expect(getRankForPoints(100_000).id).toBe("desafiante");
-    expect(getRankProgress(42_100)).toMatchObject({ next: null, pointsToNext: 0, progress: 1 });
+    expect(getRankForPoints(999).id).toBe("ferro");
+    expect(getRankForPoints(1_000).id).toBe("bronze");
+    expect(getRankForPoints(100_000).id).toBe("onisciente");
+    expect(getRankProgress(9_100)).toMatchObject({ next: null, pointsToNext: 0, progress: 1 });
   });
 });
 

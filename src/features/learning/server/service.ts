@@ -5,7 +5,11 @@ import {
   type SessionContext, type StudentPreferences, type SubjectId,
 } from "@/contracts";
 import type { LearningScoringPolicy } from "@/config/scoring";
-import { advanceRecovery, calculateRecoveryReward, canViewStudentData, createRecoveryState, getRankForPoints, interruptRecovery } from "@/features/learning/domain";
+import {
+  CONFIRMED_LEARNING_SCORING_POLICY, RECOVERY_RANK_POINTS, REGULAR_EXERCISE_RANK_POINTS,
+  WEEKLY_CHALLENGE_RANK_POINTS, WEEKLY_CHALLENGE_XP,
+} from "@/config/scoring";
+import { advanceRecovery, canViewStudentData, createRecoveryState, getRankForPoints, interruptRecovery } from "@/features/learning/domain";
 import type { LearningAiGateway } from "@/lib/llm/gateway";
 import {
   ActivitySchema, LearningError, ScoringPolicySchema, brazilDay, notFound,
@@ -105,6 +109,7 @@ export class LearningService {
       const recovery = loaded.state.recoveries.find((item) => item.classId === loaded.catalog.classId && item.rootQuestionId === activity.rootQuestionId);
       return {
         rootQuestionId: activity.rootQuestionId, subjectId: activity.body.subjectId,
+        activityType: activity.activityType,
         grade: activity.body.grade, skillCodes: activity.body.skillCodes,
         questionInstanceId: instance?.question.questionInstanceId ?? null,
         status: answered ? "answered" : instance ? "pending" : "not_started",
@@ -124,9 +129,10 @@ export class LearningService {
         && item.question.rootQuestionId === rootQuestionId && item.recoveryId === null);
       if (previous) return this.publicInstance(state, previous);
       if (!loaded.preferences) throw new LearningError("PREFERENCES_REQUIRED", "Salve a ficha antes de iniciar a atividade.");
-      if (!this.scoring) throw new LearningError("SCORING_NOT_CONFIGURED", "A equipe precisa configurar explicitamente a política de pontuação.", 503);
-      const policy = ScoringPolicySchema.parse(this.scoring);
-      const instance = this.makeInstance(loaded, root, loaded.preferences, policy.originalPoints, policy, null);
+      const policy = ScoringPolicySchema.parse(this.scoring ?? CONFIRMED_LEARNING_SCORING_POLICY);
+      const nominalPoints = root.activityType === "weekly_challenge"
+        ? WEEKLY_CHALLENGE_RANK_POINTS : REGULAR_EXERCISE_RANK_POINTS;
+      const instance = this.makeInstance(loaded, root, loaded.preferences, nominalPoints, policy, null);
       state.instances.push(instance);
       return this.publicInstance(state, instance);
     });
@@ -171,7 +177,7 @@ export class LearningService {
       }
       const instance = this.instance(loaded, submission.questionInstanceId);
       if (instance.classId !== loaded.catalog.classId) notFound();
-      this.activeRoot(loaded, instance.question.rootQuestionId);
+      const root = this.activeRoot(loaded, instance.question.rootQuestionId);
       if (!instance.question.options.some((option) => option.id === submission.selectedOptionId)) {
         throw new LearningError("INVALID_OPTION", "A alternativa não pertence a esta questão.", 422);
       }
@@ -188,10 +194,12 @@ export class LearningService {
         };
         state.recoveries.push(recovery);
       }
-      const awarded = isCorrect ? instance.nominalPoints : 0;
+      const rankPointsAwarded = isCorrect ? instance.nominalPoints : 0;
+      const xpAwarded = isCorrect && instance.recoveryId === null && root.activityType === "weekly_challenge"
+        ? WEEKLY_CHALLENGE_XP : 0;
       const result = AttemptResultSchema.parse({
         attemptId: randomUUID(), questionInstanceId: submission.questionInstanceId, isCorrect,
-        explanation: instance.answerKey.explanation, xpAwarded: awarded, rankPointsAwarded: awarded,
+        explanation: instance.answerKey.explanation, xpAwarded, rankPointsAwarded,
         consecutiveCorrect: recovery?.state.consecutiveCorrect ?? 0, recoveryStatus: recovery?.state.status ?? null,
       });
       state.attempts.push({
@@ -204,8 +212,8 @@ export class LearningService {
         state.ledger.push({
           id: randomUUID(), attemptId: result.attemptId, classId: instance.classId,
           rootQuestionId: instance.question.rootQuestionId, subjectId: instance.question.subjectId,
-          schoolYear: loaded.catalog.schoolYear, kind, points: awarded,
-          keepAfterRotation: kind === "annual" || (instance.recoveryId !== null && !instance.scoring.adaptiveXpFollowsRoot),
+          schoolYear: loaded.catalog.schoolYear, kind, points: kind === "xp" ? xpAwarded : rankPointsAwarded,
+          keepAfterRotation: kind === "annual",
         });
       }
       return { result, recoveryId: recovery?.id ?? null };
@@ -251,10 +259,7 @@ export class LearningService {
         if (state.instances.some((item) => normalizeStatement(item.question.statement) === normalizeStatement(body.statement))) {
           throw new LearningError("REPEATED_GENERATED_QUESTION", "A IA repetiu uma questão já atribuída. Solicite outra variante.", 503);
         }
-        const reference = claim.original.scoring.recoveryReference === "original"
-          ? claim.original.scoring.originalPoints : claim.previous.nominalPoints;
-        const nominal = calculateRecoveryReward({ originalPoints: reference, capPoints: claim.original.scoring.recoveryCapPoints });
-        const instance = this.makeInstance(loaded, { ...claim.root, body }, claim.preferences, nominal, claim.original.scoring, recoveryId);
+        const instance = this.makeInstance(loaded, { ...claim.root, body }, claim.preferences, RECOVERY_RANK_POINTS, claim.original.scoring, recoveryId);
         state.instances.push(instance);
         recovery.leaseToken = null;
         recovery.leaseUntil = null;
@@ -324,11 +329,11 @@ export class LearningService {
       activityDays: new Set(attempts.map((attempt) => brazilDay(new Date(attempt.createdAt)))).size,
       correctAnswers: attempts.filter((attempt) => attempt.result.isCorrect).length,
       incorrectAnswers: attempts.filter((attempt) => !attempt.result.isCorrect).length,
-      xp, rankPoints, rankName: `${getRankForPoints(rankPoints).name} (proposta)`,
+      xp, rankPoints, rankName: getRankForPoints(rankPoints).name,
       difficultSkillCodes: [...new Set(attempts.filter((attempt) => !attempt.result.isCorrect).flatMap((attempt) => attempt.skillCodes))],
     });
     return {
-      summary, rankCalibration: "proposed" as const, accessDaysScope: wholeStudent ? "student" : "not_available_for_subject",
+      summary, rankCalibration: "confirmed" as const, accessDaysScope: wholeStudent ? "student" : "not_available_for_subject",
       activityDates: [...new Set(attempts.map((attempt) => brazilDay(new Date(attempt.createdAt))))].sort(),
       originalAttempts: attempts.filter((item) => item.source === "original").length,
       recoveryAttempts: attempts.filter((item) => item.source === "recovery").length,
@@ -353,15 +358,15 @@ export class LearningService {
     await this.repository.loadCatalog(actor.institutionId, classId);
     const rows = await this.repository.ranking(actor.institutionId, classId);
     return {
-      classId, rankCalibration: "proposed" as const,
+      classId, rankCalibration: "confirmed" as const,
       top10: rows.sort((a, b) => b.xp - a.xp || b.rankPoints - a.rankPoints || a.studentId.localeCompare(b.studentId)).slice(0, 10)
-        .map((row, index) => ({ position: index + 1, ...row, rankName: `${getRankForPoints(row.rankPoints).name} (proposta)` })),
+        .map((row, index) => ({ position: index + 1, ...row, rankName: getRankForPoints(row.rankPoints).name })),
     };
   }
 
   /** Internal content handoff; review/BNCC verification remain with the content owner. */
-  async registerActivity(actor: SessionContext, classId: string, value: Pick<LearningActivity, "rootQuestionId" | "body" | "contentVersion" | "reviewed">) {
-    const activity = ActivitySchema.parse({ ...value, active: false, activatedAt: null });
+  async registerActivity(actor: SessionContext, classId: string, value: Pick<LearningActivity, "rootQuestionId" | "body" | "contentVersion" | "reviewed"> & { activityType?: LearningActivity["activityType"] }) {
+    const activity = ActivitySchema.parse({ activityType: "exercise", ...value, active: false, activatedAt: null });
     const coordinator = actor.roles.includes("coordenador") && actor.coordinatorInstitutionIds.includes(actor.institutionId);
     const teacher = actor.roles.includes("professor") && actor.teacherAssignments.some((item) => item.institutionId === actor.institutionId
       && item.classId === classId && item.subjectId === activity.body.subjectId);
@@ -378,16 +383,17 @@ export class LearningService {
     });
   }
 
-  async activate(actor: SessionContext, classId: string, subjectId: SubjectId, rootIds: string[]) {
+  async activate(actor: SessionContext, classId: string, _subjectId: SubjectId, rootIds: string[]) {
     this.requireCoordinator(actor);
-    if (rootIds.length !== 10 || new Set(rootIds).size !== 10) throw new LearningError("TEN_ORIGINALS_REQUIRED", "Selecione dez originais distintas.", 422);
+    if (rootIds.length !== 10 || new Set(rootIds).size !== 10) throw new LearningError("TEN_CHALLENGES_REQUIRED", "Selecione dez desafios semanais distintos.", 422);
     return this.catalogTransaction(actor, classId, (catalog) => {
-      const current = catalog.activities.filter((item) => item.active && item.body.subjectId === subjectId);
+      const current = catalog.activities.filter((item) => item.active && item.activityType === "weekly_challenge");
       if (current.length) {
         if (current.length === 10 && current.every((item) => rootIds.includes(item.rootQuestionId))) return { rootQuestionIds: rootIds };
         throw new LearningError("ALREADY_ACTIVATED", "A seleção inicial já existe. Use a rotação semanal.");
       }
-      const selected = rootIds.map((id) => catalog.activities.find((item) => item.rootQuestionId === id && item.body.subjectId === subjectId) ?? notFound());
+      const selected = rootIds.map((id) => catalog.activities.find((item) => item.rootQuestionId === id
+        && item.activityType === "weekly_challenge") ?? notFound());
       for (const item of selected) { item.active = true; item.activatedAt = this.now().toISOString(); }
       return { rootQuestionIds: rootIds };
     });
@@ -398,7 +404,7 @@ export class LearningService {
     const currentDay = brazilDay(this.now());
     const monday = new Date(`${currentDay}T12:00:00Z`);
     monday.setUTCDate(monday.getUTCDate() - (monday.getUTCDay() + 6) % 7);
-    if (incomingRootIds.length !== 2 || new Set(incomingRootIds).size !== 2) throw new LearningError("TWO_ORIGINALS_REQUIRED", "Selecione duas originais distintas.", 422);
+    if (incomingRootIds.length !== 2 || new Set(incomingRootIds).size !== 2) throw new LearningError("TWO_CHALLENGES_REQUIRED", "Selecione dois desafios semanais distintos.", 422);
     return this.catalogTransaction(actor, classId, (catalog) => {
       const previous = catalog.rotations.find((item) => item.subjectId === subjectId && item.weekStart === weekStart);
       if (previous) {
@@ -406,11 +412,11 @@ export class LearningService {
         return previous;
       }
       if (weekStart !== monday.toISOString().slice(0, 10)) throw new LearningError("INVALID_WEEK", "Use a segunda-feira da semana atual em Brasília.", 422);
-      const active = catalog.activities.filter((item) => item.active && item.body.subjectId === subjectId)
+      const active = catalog.activities.filter((item) => item.active && item.activityType === "weekly_challenge")
         .sort((a, b) => (a.activatedAt ?? "").localeCompare(b.activatedAt ?? "") || a.rootQuestionId.localeCompare(b.rootQuestionId));
-      if (active.length !== 10) throw new LearningError("TEN_ORIGINALS_REQUIRED", "A rotação exige dez originais ativas desta matéria.");
+      if (active.length !== 10) throw new LearningError("TEN_CHALLENGES_REQUIRED", "A rotação exige dez desafios semanais ativos na turma.");
       const incoming = incomingRootIds.map((id) => catalog.activities.find((item) => item.rootQuestionId === id
-        && item.body.subjectId === subjectId && !item.active && item.activatedAt === null) ?? notFound());
+        && item.activityType === "weekly_challenge" && item.body.subjectId === subjectId && !item.active && item.activatedAt === null) ?? notFound());
       const outgoing = active.slice(0, 2);
       for (const item of outgoing) item.active = false;
       for (const item of incoming) { item.active = true; item.activatedAt = this.now().toISOString(); }

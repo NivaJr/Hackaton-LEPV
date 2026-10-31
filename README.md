@@ -38,7 +38,7 @@ Preencher `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, a
 - Resolver de permissões que carrega vínculos confirmados e atribuições do banco, sem confiar no papel enviado pelo navegador.
 - `GET /api/me` autenticado; `GET /api/catalog` com anos/matérias; `GET /api/health` com estado de configuração, sem testar conexão externa.
 - Contratos Zod estritos que separam enunciado público, gabarito privado e submissão de resposta.
-- Domínio puro de recuperação, recompensa de 70%, patentes propostas e permissões, com testes.
+- Domínio de recuperação, pontuação confirmada, patentes cumulativas e permissões, com testes.
 - Migração de identidade, escola, turmas, vínculos, ficha, histórico, saúde e apoio; seed sem senhas.
 - Contrato do gateway de LLM, inicialmente desabilitado, com erro explícito em vez de geração fictícia.
 - Workflow de checks e registro de prompts em `PROMPTS/`.
@@ -80,9 +80,9 @@ O workflow `.github/workflows/checks.yml` executa esses comandos com Node 24. A 
 - Seis matérias: Matemática, Português, Inglês, História, Geografia e Biologia. Biologia usa o componente BNCC `CI` (Ciências).
 - Questões de múltipla escolha e associação a habilidades reais. A validação sintática dos códigos não substitui um catálogo oficial, que ainda será carregado.
 - Questão respondida não pode ser refeita. Erro produz outra questão e explicação; recuperação termina após dois acertos consecutivos ou interrupção.
-- A primeira adaptativa vale 70% da original. O teto por sequência e a fórmula de bônus continuam pendentes; `DEFAULT_RECOVERY_CAP_POINTS = null` não aprova um teto silenciosamente.
-- Base de 100 pontos e limites anuais das patentes são propostas identificadas em `src/config/scoring.ts`, não regras aprovadas.
-- XP ativo e pontos anuais são separados. A Tarefa 03 implementa persistência de tentativas, livro de pontos e rotação, com migrações aplicadas no Supabase LEPV. Integrar as telas às APIs existentes.
+- Exercício comum vale 50 pontos de patente e 0 XP; desafio semanal vale 100 de patente e 100 XP; acerto de recuperação vale 35 de patente e 0 XP.
+- Patentes são cumulativas e avançam a cada 1.000 pontos, de Ferro até Onisciente.
+- XP ativo e pontos anuais são separados. Dez desafios ficam ativos; entram dois por semana e saem os dois mais antigos. A saída remove o XP do ranking, não os pontos anuais.
 - Saúde e apoio: leitura por perfis vinculados e edição pelo responsável confirmado. Histórico: professor edita somente sua matéria/turma; coordenador edita na instituição.
 - A ficha é editada pelo próprio aluno. Consulta por outros perfis segue pendente e está restrita na base.
 

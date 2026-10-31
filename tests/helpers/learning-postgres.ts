@@ -54,7 +54,7 @@ export async function createLearningDatabase() {
     grant usage on schema auth to authenticated,service_role;
     grant execute on function auth.uid() to authenticated,service_role;
   `);
-  for (const file of ["supabase/migrations/20261030220000_foundation.sql", "supabase/seed.sql", "supabase/migrations/20261031030000_learning.sql", "supabase/migrations/20261031050000_learning_classroom_name.sql"]) {
+  for (const file of ["supabase/migrations/20261030220000_foundation.sql", "supabase/seed.sql", "supabase/migrations/20261031030000_learning.sql", "supabase/migrations/20261031050000_learning_classroom_name.sql", "supabase/migrations/20261031110000_learning_scoring_confirmed.sql"]) {
     await db.exec(await readFile(resolve(process.cwd(), file), "utf8"));
   }
   await db.exec(`

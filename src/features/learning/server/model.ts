@@ -16,6 +16,7 @@ export const ScoringPolicySchema = z.object({
 
 export const ActivitySchema = z.object({
   rootQuestionId: IdSchema,
+  activityType: z.enum(["exercise", "weekly_challenge"]).default("weekly_challenge"),
   body: GeneratedQuestionSchema,
   contentVersion: z.number().int().positive(),
   reviewed: z.literal(true),

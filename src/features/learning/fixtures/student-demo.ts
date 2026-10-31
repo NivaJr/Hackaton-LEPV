@@ -17,12 +17,16 @@ export const demoActivities: ActivityList = {
   grade: 7,
   schoolYear: 2026,
   activities: [
-    { rootQuestionId: "math-root-01", subjectId: "matematica", grade: 7, skillCodes: ["EF07MA01"], questionInstanceId: null, status: "not_started", recoveryId: null, recoveryStatus: null },
-    { rootQuestionId: "port-root-01", subjectId: "portugues", grade: 7, skillCodes: ["EF07LP01"], questionInstanceId: null, status: "not_started", recoveryId: null, recoveryStatus: null },
-    { rootQuestionId: "eng-root-01", subjectId: "ingles", grade: 7, skillCodes: ["EF07LI01"], questionInstanceId: null, status: "not_started", recoveryId: null, recoveryStatus: null },
-    { rootQuestionId: "hist-root-01", subjectId: "historia", grade: 7, skillCodes: ["EF07HI01"], questionInstanceId: null, status: "not_started", recoveryId: null, recoveryStatus: null },
-    { rootQuestionId: "geo-root-01", subjectId: "geografia", grade: 7, skillCodes: ["EF07GE01"], questionInstanceId: null, status: "not_started", recoveryId: null, recoveryStatus: null },
-    { rootQuestionId: "bio-root-01", subjectId: "biologia", grade: 7, skillCodes: ["EF07CI01"], questionInstanceId: null, status: "not_started", recoveryId: null, recoveryStatus: null },
+    { rootQuestionId: "math-root-01", activityType: "weekly_challenge", subjectId: "matematica", grade: 7, skillCodes: ["EF07MA01"], questionInstanceId: null, status: "not_started", recoveryId: null, recoveryStatus: null },
+    { rootQuestionId: "port-root-01", activityType: "weekly_challenge", subjectId: "portugues", grade: 7, skillCodes: ["EF07LP01"], questionInstanceId: null, status: "not_started", recoveryId: null, recoveryStatus: null },
+    { rootQuestionId: "eng-root-01", activityType: "weekly_challenge", subjectId: "ingles", grade: 7, skillCodes: ["EF07LI01"], questionInstanceId: null, status: "not_started", recoveryId: null, recoveryStatus: null },
+    { rootQuestionId: "hist-root-01", activityType: "weekly_challenge", subjectId: "historia", grade: 7, skillCodes: ["EF07HI01"], questionInstanceId: null, status: "not_started", recoveryId: null, recoveryStatus: null },
+    { rootQuestionId: "geo-root-01", activityType: "weekly_challenge", subjectId: "geografia", grade: 7, skillCodes: ["EF07GE01"], questionInstanceId: null, status: "not_started", recoveryId: null, recoveryStatus: null },
+    { rootQuestionId: "bio-root-01", activityType: "weekly_challenge", subjectId: "biologia", grade: 7, skillCodes: ["EF07CI01"], questionInstanceId: null, status: "not_started", recoveryId: null, recoveryStatus: null },
+    { rootQuestionId: "math-root-02", activityType: "weekly_challenge", subjectId: "matematica", grade: 7, skillCodes: ["EF07MA01"], questionInstanceId: null, status: "not_started", recoveryId: null, recoveryStatus: null },
+    { rootQuestionId: "port-root-02", activityType: "weekly_challenge", subjectId: "portugues", grade: 7, skillCodes: ["EF07LP01"], questionInstanceId: null, status: "not_started", recoveryId: null, recoveryStatus: null },
+    { rootQuestionId: "eng-root-02", activityType: "weekly_challenge", subjectId: "ingles", grade: 7, skillCodes: ["EF07LI01"], questionInstanceId: null, status: "not_started", recoveryId: null, recoveryStatus: null },
+    { rootQuestionId: "hist-root-02", activityType: "weekly_challenge", subjectId: "historia", grade: 7, skillCodes: ["EF07HI01"], questionInstanceId: null, status: "not_started", recoveryId: null, recoveryStatus: null },
   ],
 };
 
@@ -64,20 +68,20 @@ export const demoSummary: StudentSummary = {
   activityDays: 6,
   correctAnswers: 12,
   incorrectAnswers: 4,
-  xp: 1240,
-  rankPoints: 860,
-  rankName: "Bronze (proposta)",
+  xp: 600,
+  rankPoints: 1_850,
+  rankName: "Bronze",
   difficultSkillCodes: ["EF07MA01"],
 };
 
 export const demoRanking: RankingResponse = {
   classId: demoActivities.classId,
-  rankCalibration: "proposed",
+  rankCalibration: "confirmed",
   top10: [
-    { position: 1, studentId: "student-1", name: "Lucas Martins", xp: 1560, rankPoints: 1040, rankName: "Prata (proposta)" },
-    { position: 2, studentId: "student-2", name: "Beatriz Souza", xp: 1420, rankPoints: 950, rankName: "Bronze (proposta)" },
-    { position: 3, studentId: DEMO_STUDENT_ID, name: "Ana Lima", xp: 1240, rankPoints: 860, rankName: "Bronze (proposta)" },
-    { position: 4, studentId: "student-4", name: "Rafael Costa", xp: 1170, rankPoints: 790, rankName: "Bronze (proposta)" },
-    { position: 5, studentId: "student-5", name: "Mariana Alves", xp: 1080, rankPoints: 740, rankName: "Bronze (proposta)" },
+    { position: 1, studentId: "student-1", name: "Lucas Martins", xp: 900, rankPoints: 2_300, rankName: "Prata" },
+    { position: 2, studentId: "student-2", name: "Beatriz Souza", xp: 700, rankPoints: 1_950, rankName: "Bronze" },
+    { position: 3, studentId: DEMO_STUDENT_ID, name: "Ana Lima", xp: 600, rankPoints: 1_850, rankName: "Bronze" },
+    { position: 4, studentId: "student-4", name: "Rafael Costa", xp: 500, rankPoints: 1_700, rankName: "Bronze" },
+    { position: 5, studentId: "student-5", name: "Mariana Alves", xp: 400, rankPoints: 1_550, rankName: "Bronze" },
   ],
 };

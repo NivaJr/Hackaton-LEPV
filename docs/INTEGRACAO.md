@@ -55,8 +55,9 @@ Assinaturas vêm do código. Regex de BNCC não comprova existência de habilida
 - Quatro perfis desde o início; professor importa listas PDF/Word; responsável vê apenas filhos vinculados.
 - 6º–9º ano e Matemática, Português, Inglês, História, Geografia e Biologia. Verificar BNCC oficial, inclusive componente Ciências para o rótulo Biologia.
 - Questão respondida não pode ser refeita. Erro mostra explicação e gera nova análoga/adaptada; dica na questão nova. Dois acertos consecutivos ou interrupção encerram recuperação.
-- 70% confirmados. Base de 100, limiares, teto/fórmula e referência de adaptações sucessivas continuam propostas. O teto na base é null; não ativar silenciosamente.
-- XP soma matérias dos exercícios ativos; retirada não apaga pontos anuais. TOP 10 da turma. Política final de rotação/empate/XP adaptativo deve ficar explícita no núcleo.
+- Exercício comum: 50 patente/0 XP; desafio semanal: 100 patente/100 XP; recuperação correta: 35 patente/0 XP. Dois acertos consecutivos encerram a recuperação.
+- Dez desafios ficam ativos; dois entram por semana e os dois mais antigos saem por timestamp. A retirada remove o XP do ranking e preserva pontos anuais. TOP 10 da turma.
+- Patentes são cumulativas a cada 1.000 pontos: Ferro, Bronze, Prata, Ouro, Platina, Esmeralda, Diamante, Mestre, Grão-Mestre e Onisciente.
 - Aluno edita interesses; professor histórico da sua matéria/turma e coordenador seu escopo. Responsável edita saúde/apoio. Leitura por tipos de perfil continua limitada ao vínculo, nunca aos colegas.
 - Chaves só no servidor; fornecedor configurável não equivale a aprovado para o público. Não enviar dados pessoais/sensíveis automaticamente.
 

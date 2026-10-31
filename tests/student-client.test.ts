@@ -10,6 +10,7 @@ describe("StudentLearningClient fake", () => {
     const snapshot = await client.loadSnapshot();
 
     expect(snapshot.activities.grade).toBe(7);
+    expect(snapshot.activities.activities).toHaveLength(10);
     expect(new Set(snapshot.activities.activities.map((item) => item.grade))).toEqual(new Set([7]));
     expect(new Set(snapshot.activities.activities.map((item) => item.subjectId)).size).toBe(6);
   });

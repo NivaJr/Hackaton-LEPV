@@ -95,8 +95,8 @@ export function createFakeStudentLearningClient(): StudentLearningClient {
         questionInstanceId: parsed.questionInstanceId,
         isCorrect,
         explanation: isCorrect ? "Boa! Você aplicou a habilidade corretamente." : "Ainda não. Observe os dados principais do enunciado e tente a mesma habilidade em um novo desafio.",
-        xpAwarded: isCorrect ? (isRecovery ? 70 : 100) : 0,
-        rankPointsAwarded: isCorrect ? (isRecovery ? 70 : 100) : 0,
+        xpAwarded: isCorrect && !isRecovery ? 100 : 0,
+        rankPointsAwarded: isCorrect ? (isRecovery ? 35 : 100) : 0,
         consecutiveCorrect: Math.min(consecutiveCorrect, 2),
         recoveryStatus,
       };

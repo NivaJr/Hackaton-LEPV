@@ -14,6 +14,7 @@ export type ActivityStatus = "not_started" | "pending" | "answered";
 
 export interface StudentActivity {
   rootQuestionId: string;
+  activityType: "exercise" | "weekly_challenge";
   subjectId: SubjectId;
   grade: Grade;
   skillCodes: string[];
@@ -59,7 +60,7 @@ export interface RankingEntry {
 
 export interface RankingResponse {
   classId: string;
-  rankCalibration: "proposed" | string;
+  rankCalibration: "confirmed" | string;
   top10: RankingEntry[];
 }
 
