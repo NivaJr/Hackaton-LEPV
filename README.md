@@ -2,9 +2,11 @@
 
 Aplicação web de educação adaptativa para o 6º ao 9º ano. Esta entrega estabelece a fundação para quatro pessoas trabalharem em paralelo; os fluxos de negócio completos continuam nas tarefas individuais.
 
+Ambiente publicado: **https://eai-lepv.vercel.app**. Configuração e evidências em [Supabase](docs/CONFIGURACAO_SUPABASE_LEPV.md) e [Vercel](docs/CONFIGURACAO_VERCEL_LEPV.md).
+
 ## Executar
 
-Requisitos: Node.js 22 ou superior e npm. As versões instaladas ficam no `package-lock.json`.
+Requisitos: Node.js 24 LTS e npm. As versões instaladas ficam no `package-lock.json`.
 
 ```sh
 npm ci
@@ -40,8 +42,9 @@ Preencher `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, a
 - Migração de identidade, escola, turmas, vínculos, ficha, histórico, saúde e apoio; seed sem senhas.
 - Contrato do gateway de LLM, inicialmente desabilitado, com erro explícito em vez de geração fictícia.
 - Workflow de checks e registro de prompts em `PROMPTS/`.
+- Tarefa 03: APIs de ficha, atividades, resposta, recuperação, dica, interrupção, resumo e TOP 10; migração aditiva com tentativas/créditos atômicos e rotação protegida. Contratos em [Rotas da Tarefa 03](docs/ROTAS_REAIS_TAREFA_03_NIVALDO.md), validação em [Entrega de Nivaldo](docs/ENTREGA_NIVALDO_CORE.md) e ambiente real em [Configuração do Supabase](docs/CONFIGURACAO_SUPABASE_LEPV.md).
 
-Login, convites e permissões ainda precisam ser exercitados contra o projeto Supabase da equipe. As rotas `/aluno`, `/coordenador`, `/professor` e `/responsavel` são protegidas; os dados mostrados nelas serão preenchidos pelos módulos individuais. O envio administrativo de convites ainda não está implementado.
+Login e permissões foram exercitados com contas fictícias no projeto Supabase LEPV; as evidências estão no registro de configuração. As rotas `/aluno`, `/coordenador`, `/professor` e `/responsavel` são protegidas; os dados mostrados nelas serão preenchidos pelos módulos individuais. O envio administrativo de convites ainda não está implementado ou validado.
 
 ## Quatro tarefas individuais
 
@@ -66,7 +69,7 @@ npm test
 npm run build
 ```
 
-O workflow `.github/workflows/checks.yml` executa esses comandos com Node 22. A validação do banco remoto, convite por email, armazenamento e fornecedor de IA exige os serviços reais da equipe; configuração presente não significa conexão validada.
+O workflow `.github/workflows/checks.yml` executa esses comandos com Node 24. A validação do banco remoto, convite por email, armazenamento e fornecedor de IA exige os serviços reais da equipe; configuração presente não significa conexão validada.
 
 `tests/database.test.ts` aplica a migração e o seed reais em PostgreSQL/WASM (PGlite), com esquema Auth mínimo emulado e operações sob papéis não proprietários. Isso exercita RLS, grants e vínculos sem credenciais externas; não substitui os testes no Supabase hospedado. A prévia gerenciada disponível nesta sessão não iniciou o Next.js por incompatibilidade dos argumentos injetados, portanto a inspeção visual no navegador ficou pendente.
 
@@ -77,13 +80,13 @@ O workflow `.github/workflows/checks.yml` executa esses comandos com Node 22. A 
 - Questão respondida não pode ser refeita. Erro produz outra questão e explicação; recuperação termina após dois acertos consecutivos ou interrupção.
 - A primeira adaptativa vale 70% da original. O teto por sequência e a fórmula de bônus continuam pendentes; `DEFAULT_RECOVERY_CAP_POINTS = null` não aprova um teto silenciosamente.
 - Base de 100 pontos e limites anuais das patentes são propostas identificadas em `src/config/scoring.ts`, não regras aprovadas.
-- XP ativo e pontos anuais são separados. Persistência de tentativas, livro de pontos e rotação continuam na tarefa de Nivaldo.
+- XP ativo e pontos anuais são separados. A Tarefa 03 implementa persistência de tentativas, livro de pontos e rotação, com migrações aplicadas no Supabase LEPV. Integrar as telas às APIs existentes.
 - Saúde e apoio: leitura por perfis vinculados e edição pelo responsável confirmado. Histórico: professor edita somente sua matéria/turma; coordenador edita na instituição.
 - A ficha é editada pelo próprio aluno. Consulta por outros perfis segue pendente e está restrita na base.
 
 ## O que falta implementar
 
-As quatro fichas cobrem CRUD/importação de alunos, convites administrativos, listas PDF/Word e armazenamento, banco e variantes de questões, catálogo BNCC, API de tentativas, livro de pontos, rotação semanal, frequência, amizades e feedback da IA. A base não contém 240 questões curriculares prontas nem uma LLM integrada.
+As demais frentes ainda cobrem CRUD/importação de alunos, convites administrativos, listas PDF/Word e armazenamento, banco de conteúdo, catálogo BNCC, interfaces, amizades e feedback da IA. Integrar essas frentes às APIs de aprendizagem e ao registro explícito de acesso. A base não contém 240 questões curriculares prontas nem uma LLM integrada. A Tarefa 03 validou Supabase e APIs hospedadas na Vercel com dados sintéticos; IA real e integração das telas continuam pendentes.
 
 ## Configuração de IA
 
