@@ -4,7 +4,7 @@ Aplicação web de educação adaptativa para o 6º ao 9º ano. Esta entrega est
 
 ## Executar
 
-Requisitos: Node.js 22 ou superior e npm. As versões instaladas ficam no `package-lock.json`.
+Requisitos: Node.js 24 LTS e npm. As versões instaladas ficam no `package-lock.json`.
 
 ```sh
 npm ci
@@ -65,7 +65,7 @@ npm test
 npm run build
 ```
 
-O workflow `.github/workflows/checks.yml` executa esses comandos com Node 22. A validação do banco remoto, convite por email, armazenamento e fornecedor de IA exige os serviços reais da equipe; configuração presente não significa conexão validada.
+O workflow `.github/workflows/checks.yml` executa esses comandos com Node 24. A validação do banco remoto, convite por email, armazenamento e fornecedor de IA exige os serviços reais da equipe; configuração presente não significa conexão validada.
 
 `tests/database.test.ts` aplica a migração e o seed reais em PostgreSQL/WASM (PGlite), com esquema Auth mínimo emulado e operações sob papéis não proprietários. Isso exercita RLS, grants e vínculos sem credenciais externas; não substitui os testes no Supabase hospedado. A prévia gerenciada disponível nesta sessão não iniciou o Next.js por incompatibilidade dos argumentos injetados, portanto a inspeção visual no navegador ficou pendente.
 

@@ -9,6 +9,7 @@ coverage/
 *.log
 .DS_Store
 .openai/
+.vercel/
 PROMPTS/.archive-lock/
 PROMPTS/.archive-tmp-*
 supabase/.temp/

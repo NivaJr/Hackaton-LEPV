@@ -1,0 +1,9 @@
+.git/
+node_modules/
+.next/
+.env*
+supabase/.temp/
+supabase/.branches/
+.vercel/
+.openai/
+*.log
