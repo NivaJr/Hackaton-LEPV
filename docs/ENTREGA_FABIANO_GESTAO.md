@@ -36,7 +36,8 @@ Todos usam a sessão por cookie e respondem `{ error: { code, message } }` em fa
 | POST `/api/roster/imports/preview` | coordenador | multipart `kind, classroomId, file` | `ImportPreview`, sem gravar |
 | POST `/api/roster/imports/confirm` | coordenador | `ImportConfirm` | `ImportResult` por linha |
 | GET `/api/roster/students/:id/results` | coordenador | — | resumo real de 30 dias ou `source: "unavailable"` |
-| POST `/api/roster/guardian-links` | coordenador | `studentId, fullName, email` | vínculo `pending`; convida se a conta não existir |
+| POST `/api/roster/guardian-links` | coordenador | `studentId, fullName, email` | vínculo `pending`; `accessLink` se a conta for nova |
+| POST `/api/roster/access-links` | coordenador | `personId` | `{ accessLink }`; 409 `ACCOUNT_ALREADY_ACTIVE` se a pessoa já ativou a conta |
 | PATCH `/api/roster/guardian-links/:id` | coordenador | `status: confirmed` ou `revoked` | vínculo |
 | GET `/api/roster/templates/:arquivo` | coordenador | `modelo-alunos.csv`, `modelo-professores.csv` | CSV |
 | GET `/api/family/children` | responsável | — | filhos confirmados |
@@ -92,7 +93,9 @@ Resultados no commit desta entrega:
 - Login real da conta fictícia de coordenador em produção: `/api/me` retornou o papel `coordenador`. `/api/roster/overview` retornou 404 naquele momento; em 31/10/2026, após a publicação, a rota de gestão responde 401 sem sessão. O painel autenticado em produção não foi reexecutado.
 - Leitor XLSX testado com arquivo gerado por openpyxl, além dos arquivos sintéticos dos testes.
 
-**Não executado:** Supabase hospedado, PostgREST, adaptadores Supabase contra servidor real, envio de convite, login real, arquivo salvo pelo Excel e fornecedor de IA.
+Importação real em produção com `inviteUserByEmail`, em 31/10/2026: a planilha foi lida e todas as linhas falharam no envio do convite, inclusive com dois endereços Gmail. A causa exata não foi lida no log do Auth; a documentação do Supabase restringe o email padrão aos membros da organização e a cerca de 2 envios por hora.
+
+**Não executado:** `generateLink`, `/convite` com token real e o restante do cadastro por link contra o Supabase hospedado, PostgREST, adaptadores Supabase contra servidor real, arquivo salvo pelo Excel e fornecedor de IA.
 
 ## Configuração externa necessária
 
@@ -103,6 +106,19 @@ Resultados no commit desta entrega:
 Registradas em 31/10/2026, sem decisão tomada:
 
 1. **Ativação e rotação de atividades:** hoje só o coordenador pode executá-las pelas APIs, e nenhuma tela as chama. Fabiano entende que a função interessa ao professor e ao aluno; a passagem das APIs ao professor segue por definir com a equipe.
+
+## Cadastro por link
+
+Decidido por Fabiano em 31/10/2026, depois da falha dos convites por email. Aluno, professor e responsável usam o mesmo fluxo, sem envio de email:
+
+1. Ao confirmar a importação ou criar um vínculo com email novo, `generateLink` cria a conta e devolve um token. A resposta traz `accessLink`.
+2. O coordenador copia o link ou baixa um CSV com nome, email e link. O link não é gravado: fora daquela resposta, só gerando outro.
+3. O link abre `/convite`, e o token só é validado no botão "Continuar". Prévias de link de aplicativos fazem GET e gastariam um token de uso único.
+4. Em `/primeiro-acesso` a pessoa define a senha. O aluno escolhe preencher a ficha agora (`/aluno#perfil`) ou depois.
+
+"Novo link" gera outro link para quem ainda não ativou a conta. A conta fica com `app_metadata.access_pending` até a senha ser definida; contas ativadas e coordenadores são recusados, para que o link nunca sirva para assumir a conta de alguém. A validade segue o limite de OTP do projeto, 1 hora por padrão no Supabase. O email não é verificado neste fluxo: quem recebe o link confirma ter a conta. Com SMTP próprio, o convite por email pode voltar.
+
+Falhas do Supabase Auth registram apenas código e status no log do servidor, sem email nem link.
 
 ## Menu do coordenador
 

@@ -92,6 +92,7 @@ export class MemoryDirectory implements AccountDirectory {
   accounts = new Map<string, AccountRecord>();
   invites: string[] = [];
   failInviteFor = new Set<string>();
+  pending = new Set<string>();
 
   add(email: string, schoolId: string | null, roles: Role[], fullName: string | null = "Pessoa Existente") {
     const userId = randomUUID();
@@ -104,12 +105,17 @@ export class MemoryDirectory implements AccountDirectory {
   async ensureAccount(input: { email: string; fullName: string; role: Role; schoolId: string; userId?: string }) {
     if (this.failInviteFor.has(input.email)) {
       this.failInviteFor.delete(input.email);
-      throw new RosterError("PROVISIONING_FAILED", "Não foi possível enviar o convite.", 502);
+      throw new RosterError("PROVISIONING_FAILED", "Não foi possível gerar o link de cadastro.", 502);
     }
     const existing = this.accounts.get(input.email);
     const userId = input.userId ?? existing?.userId ?? randomUUID();
     if (!input.userId && !existing) this.invites.push(input.email);
     this.accounts.set(input.email, { userId, schoolId: input.schoolId, fullName: input.fullName, roles: [input.role] });
-    return userId;
+    this.pending.add(userId);
+    return { userId, accessLink: `https://escola.example/convite?usuario=${userId}` };
+  }
+  async issueAccessLink(userId: string) {
+    if (!this.pending.has(userId)) throw new RosterError("ACCOUNT_ALREADY_ACTIVE", "Esta pessoa já ativou a conta e entra com a própria senha.", 409);
+    return `https://escola.example/convite?usuario=${userId}&novo=1`;
   }
 }

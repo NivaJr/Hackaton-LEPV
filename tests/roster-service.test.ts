@@ -131,6 +131,12 @@ describe("vínculos de responsável", () => {
     expect(repository.links).toHaveLength(1);
   });
 
+  it("devolve o link de cadastro só para conta nova", async () => {
+    const created = await service.createGuardianLink(coordinator, input);
+    expect(created).toHaveProperty("accessLink");
+    expect(await service.createGuardianLink(coordinator, input)).not.toHaveProperty("accessLink");
+  });
+
   it("reutiliza responsável existente; recusa outra escola, outro papel e dados inválidos", async () => {
     const guardianId = directory.add("resp@b.com", SCHOOL, ["responsavel"]);
     expect(await service.createGuardianLink(coordinator, input)).toMatchObject({ guardianId });
@@ -220,7 +226,7 @@ describe("confirmação da importação", () => {
       [2, "created", undefined], [3, "failed", "PROVISIONING_FAILED"], [4, "failed", "INVALID_EMAIL"],
     ]);
     const retry = await confirm(first.rows.filter((item) => item.status === "failed" && item.line === 3).map(() => rows[1]));
-    expect(retry.rows).toEqual([{ line: 3, email: "b@b.com", status: "created" }]);
+    expect(retry.rows).toMatchObject([{ line: 3, email: "b@b.com", status: "created" }]);
     expect(repository.enrollments).toHaveLength(2);
   });
 
@@ -286,6 +292,37 @@ describe("confirmação da importação", () => {
     expect(directory.invites).toEqual(["p@b.com"]);
     expect(new Set(repository.assignments.map((item) => item.teacherId)).size).toBe(1);
     expect(repository.assignments).toHaveLength(2);
+  });
+});
+
+describe("links de cadastro", () => {
+  it("devolve um link por conta nova e nenhum para conta existente", async () => {
+    const existing = "existe@b.com";
+    directory.add(existing, SCHOOL, ["aluno"]);
+    const result = await service.confirmImport(coordinator, {
+      kind: "students", classroomId: classA.id,
+      rows: [existing, "novo@b.com"].map((email, index) => ({ line: index + 2, fullName: "Aluno Teste", email, decision: "apply" })),
+    });
+    expect(result.rows.map((row) => [row.status, Boolean(row.accessLink)])).toEqual([["enrolled", false], ["created", true]]);
+  });
+
+  it("gera novo link para pessoa pendente da própria escola", async () => {
+    const { userId } = await directory.ensureAccount({ email: "p@b.com", fullName: "Pessoa Pendente", role: "aluno", schoolId: SCHOOL });
+    repository.people.push({ id: userId, fullName: "Pessoa Pendente", schoolId: SCHOOL, role: "aluno" });
+    expect((await service.issueAccessLink(coordinator, { personId: userId })).accessLink).toContain(userId);
+  });
+
+  it("recusa conta já ativada, pessoa de outra escola e outros perfis", async () => {
+    const active = directory.add("ativo@b.com", SCHOOL, ["aluno"]);
+    repository.people.push({ id: active, fullName: "Conta Ativa", schoolId: SCHOOL, role: "aluno" });
+    await expect(service.issueAccessLink(coordinator, { personId: active })).rejects.toMatchObject({ code: "ACCOUNT_ALREADY_ACTIVE", status: 409 });
+    await expect(service.issueAccessLink(otherCoordinator, { personId: active })).rejects.toMatchObject({ status: 404 });
+    await expect(service.issueAccessLink({ ...coordinator, roles: ["professor"] }, { personId: active })).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  it("não aceita coordenador como destino do link", async () => {
+    const other = directory.add("coord@b.com", SCHOOL, ["coordenador"]);
+    await expect(service.issueAccessLink(coordinator, { personId: other })).rejects.toMatchObject({ status: 404 });
   });
 });
 

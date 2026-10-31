@@ -87,6 +87,7 @@ export function createRosterHttpHandler(dependencies: RosterHttpDependencies) {
         if (path.length === 1 && method === "POST") return respond(await service.createGuardianLink(actor, await readJson(request)), 201);
         if (path.length === 2 && method === "PATCH") return respond(await service.setGuardianLinkStatus(actor, uuid.parse(id), await readJson(request)));
       }
+      if (first === "access-links" && path.length === 1 && method === "POST") return respond(await service.issueAccessLink(actor, await readJson(request)), 201);
       if (first === "imports" && path.length === 2 && method === "POST") {
         if (id === "preview") {
           // Role first: other profiles must not make the server buffer an upload.
