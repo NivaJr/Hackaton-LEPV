@@ -98,7 +98,7 @@ Escolher um fornecedor cujas condições atendam ao público-alvo antes de uso r
 
 ## Git e estado da publicação
 
-Repositório solicitado: `https://github.com/VivasLasViegas/Hackaton-LEPV`.
+Repositório atual: `https://github.com/NivaJr/Hackaton-LEPV`. O histórico do repositório anterior, `VivasLasViegas/Hackaton-LEPV`, foi preservado; neste checkout, o remoto anterior é `upstream` e o novo é `origin`.
 
 A base foi preparada em diretório isolado porque o conteúdo remoto não pôde ser lido pela conexão disponível. Não sobrescrever a branch principal nem usar push forçado. Se o push desta entrega não estiver disponível, usar o pacote/bundle e seguir [Integração](docs/INTEGRACAO.md) depois que o acesso estiver liberado. Uma revisão em branch separada preserva qualquer código já existente.
 
