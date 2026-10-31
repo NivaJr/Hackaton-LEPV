@@ -37,6 +37,7 @@ Todos usam a sessão por cookie e respondem `{ error: { code, message } }` em fa
 | POST `/api/roster/imports/confirm` | coordenador | `ImportConfirm` | `ImportResult` por linha |
 | GET `/api/roster/students/:id/results` | coordenador | — | resumo real de 30 dias ou `source: "unavailable"` |
 | POST `/api/roster/guardian-links` | coordenador | `studentId, fullName, email` | vínculo `pending`; `accessLink` se a conta for nova |
+| POST `/api/roster/classrooms/:id/access-links` | coordenador | — | `{ links, activeCount }`: links novos de quem está na turma e não ativou a conta |
 | POST `/api/roster/access-links` | coordenador | `personId` | `{ accessLink }`; 409 `ACCOUNT_ALREADY_ACTIVE` se a pessoa já ativou a conta |
 | PATCH `/api/roster/guardian-links/:id` | coordenador | `status: confirmed` ou `revoked` | vínculo |
 | GET `/api/roster/templates/:arquivo` | coordenador | `modelo-alunos.csv`, `modelo-professores.csv` | CSV |
@@ -116,7 +117,7 @@ Decidido por Fabiano em 31/10/2026, depois da falha dos convites por email. Alun
 3. O link abre `/convite`, e o token só é validado no botão "Continuar". Prévias de link de aplicativos fazem GET e gastariam um token de uso único.
 4. Em `/primeiro-acesso` a pessoa define a senha. O aluno escolhe preencher a ficha agora (`/aluno#perfil`) ou depois.
 
-"Novo link" gera outro link para quem ainda não ativou a conta. A conta fica com `app_metadata.access_pending` até a senha ser definida; contas ativadas e coordenadores são recusados, para que o link nunca sirva para assumir a conta de alguém. A validade segue o limite de OTP do projeto, 1 hora por padrão no Supabase. O email não é verificado neste fluxo: quem recebe o link confirma ter a conta. Com SMTP próprio, o convite por email pode voltar.
+Na tela da turma, "Gerar links da turma" lista e baixa em CSV os links de alunos e professores que ainda não ativaram a conta. Como os links não são salvos, cada geração cria novos e invalida os anteriores dessas pessoas; a tela pede confirmação. "Novo link" faz o mesmo para uma pessoa. A conta fica com `app_metadata.access_pending` até a senha ser definida; contas ativadas e coordenadores são recusados, para que o link nunca sirva para assumir a conta de alguém. A validade segue o limite de OTP do projeto, 1 hora por padrão no Supabase. O email não é verificado neste fluxo: quem recebe o link confirma ter a conta. Com SMTP próprio, o convite por email pode voltar.
 
 Falhas do Supabase Auth registram apenas código e status no log do servidor, sem email nem link.
 

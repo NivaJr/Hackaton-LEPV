@@ -320,6 +320,22 @@ describe("links de cadastro", () => {
     await expect(service.issueAccessLink({ ...coordinator, roles: ["professor"] }, { personId: active })).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 
+  it("gera os links da turma só para quem está nela e ainda não ativou", async () => {
+    const { userId } = await directory.ensureAccount({ email: "p@b.com", fullName: "Pessoa Pendente", role: "aluno", schoolId: SCHOOL });
+    repository.people.push({ id: userId, fullName: "Pessoa Pendente", schoolId: SCHOOL, role: "aluno" });
+    await repository.enroll(SCHOOL, classA.id, userId);
+    const fora = await directory.ensureAccount({ email: "fora@b.com", fullName: "Outra Turma", role: "aluno", schoolId: SCHOOL });
+    await repository.enroll(SCHOOL, classB.id, fora.userId);
+    await enrolledStudent("ativo@b.com", classA.id);
+    const result = await service.classAccessLinks(coordinator, classA.id);
+    expect(result.links.map((item) => [item.fullName, item.email])).toEqual([["Pessoa Pendente", "p@b.com"]]);
+    expect(result.activeCount).toBe(1);
+  });
+
+  it("recusa links de turma de outra escola", async () => {
+    await expect(service.classAccessLinks(otherCoordinator, classA.id)).rejects.toMatchObject({ status: 404 });
+  });
+
   it("não aceita coordenador como destino do link", async () => {
     const other = directory.add("coord@b.com", SCHOOL, ["coordenador"]);
     await expect(service.issueAccessLink(coordinator, { personId: other })).rejects.toMatchObject({ status: 404 });

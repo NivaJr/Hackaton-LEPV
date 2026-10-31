@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Flag, GraduationCap, TrendingUp, Users } from "lucide-react";
 import { GRADES, SUBJECTS, getSubject } from "@/config/catalog";
 import type { SubjectId } from "@/contracts";
-import { AccessLinkNotice, type IssuedLink } from "./access-link";
+import { AccessLinkNotice, ClassAccessLinksPanel, type IssuedLink } from "./access-link";
 import { rosterApi, type RosterOverview } from "./api";
 import { GuardianPanel } from "./guardian-panel";
 import { ImportPanel } from "./import-panel";
@@ -127,6 +127,7 @@ export function CoordinatorWorkspace({ fullName, schoolYear }: { fullName: strin
             <label className={styles.field}>Ano letivo<input name="schoolYear" type="number" min={2000} max={2200} defaultValue={selected.schoolYear} required /></label>
             <button type="submit" className="button button-outline" disabled={busy}>Salvar turma</button>
           </form>
+          <ClassAccessLinksPanel key={`links-${selected.id}`} classroomId={selected.id} classroomName={selected.name} />
           <h3>Alunos ({roster.length})</h3>
           {roster.map((item) => <div className={styles.row} key={item.id}><span>{nameOf(item.studentId)}</span><span><button type="button" className={styles.link} disabled={busy} onClick={() => issueLink({ id: item.studentId, name: nameOf(item.studentId) })}>Novo link</button><button type="button" className={styles.link} disabled={busy} onClick={() => { if (window.confirm("Encerrar esta matrícula?")) void act(() => rosterApi.removeEnrollment(item.id), "Matrícula encerrada."); }}>Remover</button></span></div>)}
           <form className={styles.form} onSubmit={allocate}>

@@ -3,7 +3,7 @@ import { parseImportRows, markDuplicates, validateRow, type ParsedRow } from "./
 import { readSpreadsheet } from "./import/spreadsheet";
 import {
   AccessLinkInputSchema, AssignmentInputSchema, ClassroomInputSchema, ClassroomPatchSchema, EnrollmentInputSchema, GuardianLinkInputSchema, GuardianLinkStatusSchema, ImportConfirmSchema, ImportKindSchema, RosterError,
-  type AccountRecord, type AssignmentRecord, type ClassroomRecord, type ConfirmRowResult, type ConfirmStatus, type EnrollmentRecord,
+  type AccountRecord, type AssignmentRecord, type ClassAccessLinks, type ClassroomRecord, type ConfirmRowResult, type ConfirmStatus, type EnrollmentRecord,
   type ImportConfirmRow, type ImportKind, type ImportPreview, type ImportResult, type PreviewRow, type PreviewStatus, type ProvisionedAccount, type RowIssue,
 } from "./model";
 import type { AccountDirectory, RosterMetricsGateway, RosterRepository, StudentResultsGateway } from "./ports";
@@ -145,6 +145,26 @@ export class RosterService {
       throw new RosterError("NOT_FOUND", "Atribuição não encontrada nesta escola.", 404);
     }
     return { deleted: true };
+  }
+
+  /** Lets the class screen hand out links at any time, since they are never stored. */
+  async classAccessLinks(actor: SessionContext, classroomId: string): Promise<ClassAccessLinks> {
+    const schoolId = this.schoolOf(actor);
+    await this.classroom(schoolId, classroomId);
+    const [enrollments, assignments, students, teachers] = await Promise.all([
+      this.repository.listEnrollments(schoolId), this.repository.listAssignments(schoolId),
+      this.repository.listPeople(schoolId, "aluno"), this.repository.listPeople(schoolId, "professor"),
+    ]);
+    const ids = new Set([
+      ...enrollments.filter((item) => item.classroomId === classroomId).map((item) => item.studentId),
+      ...assignments.filter((item) => item.classroomId === classroomId).map((item) => item.teacherId),
+    ]);
+    const names = new Map([...students, ...teachers].map((person) => [person.id, person.fullName]));
+    const pending = await this.directory.issuePendingAccessLinks([...ids]);
+    return {
+      links: pending.map(({ userId, email, accessLink }) => ({ fullName: names.get(userId) ?? email, email, accessLink })),
+      activeCount: ids.size - pending.length,
+    };
   }
 
   /** Scores come straight from the learning core; this feature never computes or adjusts them. */

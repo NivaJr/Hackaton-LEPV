@@ -1,5 +1,5 @@
 import type { Role, SessionContext } from "@/contracts";
-import type { AccountRecord, AssignmentRecord, ClassMetrics, GuardianLinkRecord, ClassroomInput, ClassroomPatch, ClassroomRecord, EnrollmentRecord, PersonRecord, ProvisionedAccount, StudentResults } from "./model";
+import type { AccountRecord, AssignmentRecord, ClassMetrics, GuardianLinkRecord, ClassroomInput, ClassroomPatch, ClassroomRecord, EnrollmentRecord, PendingAccessLink, PersonRecord, ProvisionedAccount, StudentResults } from "./model";
 
 /** Every method is scoped by a schoolId taken from the session, never from the request. */
 export interface RosterRepository {
@@ -35,6 +35,8 @@ export interface AccountDirectory {
   ensureAccount(input: { email: string; fullName: string; role: Role; schoolId: string; userId?: string }): Promise<ProvisionedAccount>;
   /** Refuses accounts already activated, so a link can never take over a person's account. */
   issueAccessLink(userId: string): Promise<string>;
+  /** Skips activated accounts. Each new link replaces the previous one of that person. */
+  issuePendingAccessLinks(userIds: string[]): Promise<PendingAccessLink[]>;
 }
 
 /** The actor travels with the call so the learning core repeats its own authorization. */

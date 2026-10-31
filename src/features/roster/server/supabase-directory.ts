@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isRole } from "@/lib/auth/navigation";
 import type { Role } from "@/contracts";
-import { RosterError, type AccountRecord } from "../model";
+import { RosterError, type AccountRecord, type PendingAccessLink } from "../model";
 import type { AccountDirectory } from "../ports";
 
 const PAGE_SIZE = 1_000;
@@ -56,7 +56,7 @@ export function createSupabaseAccountDirectory(admin: SupabaseClient, appUrl: st
   }
 
   /** Null for activated accounts: access_pending is cleared when the password is defined. */
-  async function linkForPendingAccount(userId: string): Promise<string | null> {
+  async function pendingAccess(userId: string): Promise<{ email: string; link: string } | null> {
     const { data, error } = await admin.auth.admin.getUserById(userId);
     if (error || !data.user?.email) {
       if (error) reportAuthError("consultar conta", error);
@@ -69,7 +69,7 @@ export function createSupabaseAccountDirectory(admin: SupabaseClient, appUrl: st
       reportAuthError("gerar novo link", link.error);
       fail("Não foi possível gerar o link de cadastro.");
     }
-    return accessUrl(link.data.properties.hashed_token, "recovery");
+    return { email: data.user.email, link: accessUrl(link.data.properties.hashed_token, "recovery") };
   }
 
   return {
@@ -111,13 +111,22 @@ export function createSupabaseAccountDirectory(admin: SupabaseClient, appUrl: st
       if (profile.error) fail("Não foi possível criar o perfil.");
       const roleRow = await admin.from("user_roles").upsert({ user_id: id, school_id: schoolId, role }, { onConflict: "user_id,school_id,role", ignoreDuplicates: true });
       if (roleRow.error) fail("Não foi possível atribuir o papel.");
-      return { userId: id, accessLink: accessLink ?? await linkForPendingAccount(id) };
+      return { userId: id, accessLink: accessLink ?? (await pendingAccess(id))?.link ?? null };
     },
 
     async issueAccessLink(userId) {
-      const link = await linkForPendingAccount(userId);
-      if (!link) throw new RosterError("ACCOUNT_ALREADY_ACTIVE", "Esta pessoa já ativou a conta e entra com a própria senha.", 409);
-      return link;
+      const pending = await pendingAccess(userId);
+      if (!pending) throw new RosterError("ACCOUNT_ALREADY_ACTIVE", "Esta pessoa já ativou a conta e entra com a própria senha.", 409);
+      return pending.link;
+    },
+
+    async issuePendingAccessLinks(userIds) {
+      const links: PendingAccessLink[] = [];
+      for (const userId of userIds) {
+        const pending = await pendingAccess(userId);
+        if (pending) links.push({ userId, email: pending.email, accessLink: pending.link });
+      }
+      return links;
     },
   };
 }
