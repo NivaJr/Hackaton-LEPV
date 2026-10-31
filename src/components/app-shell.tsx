@@ -35,7 +35,7 @@ export function AppShell({ role, fullName, mode, children }: { role: Role; fullN
     </aside>
     <div className="workspace-main">
       <header className="topbar"><div className="breadcrumb"><span>Meu espaço</span><ChevronRight size={14} /><strong>Visão geral</strong></div><div className="topbar-right"><span className={`mode-pill ${mode === "demo" ? "demo-pill" : "real-pill"}`}>{mode === "demo" ? <Flag size={13} /> : <ShieldCheck size={13} />}{mode === "demo" ? "Demonstração" : "Acesso autenticado"}</span><span className="topbar-divider" /><span className="user-avatar">{initials || "LP"}</span><div className="user-summary"><strong>{fullName}</strong><small>{ROLE_LABELS[role]}</small></div></div></header>
-      <main id="conteudo" className="dashboard-content">{mode === "demo" && <div className="demo-notice"><span><span className="live-dot" />Você está explorando uma demonstração. Dados fictícios, sem persistência e sem IA integrada.</span><Link href="/login">Acessar conta real<ArrowUpRight size={14} /></Link></div>}{children}<footer className="workspace-footer"><span>LEPV · Cada aluno, uma jornada.</span><span>{mode === "demo" ? "Ambiente de demonstração" : "Base inicial da plataforma"}</span></footer></main>
+      <main id="conteudo" className="dashboard-content">{mode === "demo" && <div className="demo-notice"><span><span className="live-dot" />Você está explorando uma demonstração. Dados fictícios, sem persistência e sem IA integrada.</span><Link href="/login">Acessar conta real<ArrowUpRight size={14} /></Link></div>}{children}<footer className="workspace-footer"><span>EAI · Educational Artificial Intelligence</span><span>{mode === "demo" ? "Ambiente de demonstração" : "Plataforma educacional"}</span></footer></main>
     </div>
   </div>;
 }
