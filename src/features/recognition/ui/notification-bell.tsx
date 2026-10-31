@@ -25,6 +25,8 @@ export function NotificationBell({ pollMs = 60_000, toast = true }: Notification
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fresh, setFresh] = useState<NotificationView | null>(null);
+  const [unavailable, setUnavailable] = useState(false);
+  const stopped = useRef(false);
   const seen = useRef<Set<string> | null>(null);
   const wrapper = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
@@ -41,6 +43,13 @@ export function NotificationBell({ pollMs = 60_000, toast = true }: Notification
       }
       seen.current = new Set(data.notifications.map((item) => item.id));
     } catch (failure) {
+      // 503 means the feature is not enabled yet (tables or store missing); 401/403/404 means
+      // this account cannot read notices. Hide the bell and stop polling instead of retrying.
+      if (failure instanceof RecognitionApiError && [401, 403, 404, 503].includes(failure.status)) {
+        stopped.current = true;
+        setUnavailable(true);
+        return;
+      }
       setError(failure instanceof RecognitionApiError ? failure.message : "Não foi possível carregar os avisos.");
     }
   }, [toast]);
@@ -49,6 +58,7 @@ export function NotificationBell({ pollMs = 60_000, toast = true }: Notification
     void load();
     if (!pollMs) return;
     const timer = window.setInterval(() => {
+      if (stopped.current) return window.clearInterval(timer);
       if (document.visibilityState === "visible") void load();
     }, pollMs);
     return () => window.clearInterval(timer);
@@ -86,6 +96,8 @@ export function NotificationBell({ pollMs = 60_000, toast = true }: Notification
 
   const closeToast = useCallback(() => setFresh(null), []);
   const label = unread === 0 ? "Avisos, nenhum novo" : unread === 1 ? "Avisos, 1 novo" : `Avisos, ${unread} novos`;
+
+  if (unavailable) return null;
 
   return <div className={styles.bellWrap} ref={wrapper}>
     <button
