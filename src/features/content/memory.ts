@@ -52,11 +52,7 @@ export class InMemoryClassDirectory implements ClassDirectory {
   }
 }
 
-/**
- * Stand-in for the learning catalogue. When feat/nivaldo-core is merged, replace it in
- * server/runtime.ts with an adapter that calls LearningService.registerActivity and maps
- * LearningError (code/status) to ContentError.
- */
+/** Stand-in for the learning catalogue when Supabase is not configured (tests, local demo). */
 export class InMemoryActivityPublisher implements ActivityPublisher {
   readonly delivery = "memoria" as const;
   readonly activities = new Map<string, ActivitySnapshot & { classId: string }>();
@@ -77,7 +73,7 @@ export class InMemoryActivityPublisher implements ActivityPublisher {
   }
 }
 
-/** Production stand-in until LearningService is connected: refuses instead of pretending students got the question. */
+/** Production without Supabase: refuses instead of pretending students got the question. */
 export class UnconnectedActivityPublisher implements ActivityPublisher {
   readonly delivery = "desligada" as const;
 

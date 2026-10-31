@@ -19,7 +19,7 @@ export interface ClassDirectory {
   listClasses(institutionId: string, classIds?: string[]): Promise<ContentClass[]>;
 }
 
-/** Same shape as LearningService.registerActivity in feat/nivaldo-core. */
+/** Same shape as LearningService.registerActivity. */
 export type ActivitySnapshot = {
   rootQuestionId: string;
   body: GeneratedQuestion;

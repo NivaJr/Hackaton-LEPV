@@ -1,20 +1,9 @@
 import "server-only";
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { getPublicSupabaseConfig } from "@/lib/supabase/config";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { RecognitionError } from "../model";
 import { MemoryRecognitionStore } from "../memory-repository";
 import { RecognitionService } from "../service";
 import { SupabaseRecognitionStore, SupabaseRosterReader } from "./supabase-repository";
-
-// Same shape as src/lib/supabase/admin.ts on feat/nivaldo-core. Switch to that import after the merge.
-function createAdminClient(): SupabaseClient | null {
-  const config = getPublicSupabaseConfig();
-  const secret = process.env.SUPABASE_SECRET_KEY;
-  if (!config || !secret) return null;
-  return createClient(config.url, secret, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-  });
-}
 
 const globalStore = globalThis as typeof globalThis & { __recognitionMemoryStore?: MemoryRecognitionStore };
 
@@ -26,7 +15,7 @@ export function getRecognitionStoreMode(): "memory" | "supabase" {
 
 export function createRecognitionService(): RecognitionService {
   const mode = getRecognitionStoreMode();
-  const admin = createAdminClient();
+  const admin = createSupabaseAdminClient();
   if (!admin) {
     throw new RecognitionError("NOT_CONFIGURED", "Configure o Supabase no servidor para usar os elogios.", 503);
   }
