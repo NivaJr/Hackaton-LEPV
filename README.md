@@ -4,6 +4,23 @@ Aplicação web de educação adaptativa para o 6º ao 9º ano. Esta entrega est
 
 Ambiente publicado: **https://eai-lepv.vercel.app**. Configuração e evidências em [Supabase](docs/CONFIGURACAO_SUPABASE_LEPV.md) e [Vercel](docs/CONFIGURACAO_VERCEL_LEPV.md).
 
+## Acessar a plataforma
+
+1. Abra https://eai-lepv.vercel.app/login. A página inicial também tem o link para o login.
+2. Entre com o e-mail e a senha de um dos perfis da tabela abaixo.
+3. Depois do login, a plataforma abre a área do perfil: `/aluno`, `/professor`, `/coordenador` ou `/responsavel`. Para ver outro perfil, saia da conta e entre com o e-mail dele.
+
+| Perfil | E-mail | Senha |
+| --- | --- | --- |
+| Aluno | `student@demo.lepv.test` | `OQ15-5NV80Fvsq0Tf-Qf8px9HutOcUtw` |
+| Professor | `teacher@demo.lepv.test` | `jQUpFbbgECVK_pa7f2ww3bz-ng75j2-O` |
+| Coordenador | `coordinator@demo.lepv.test` | `TKlLGfsUBry3D0ZHiqM0B0tI3qO4rUMp` |
+| Responsável | `guardian@demo.lepv.test` | `hn6HL2smflhNZFySuA0L2yUw-h0KSDM8` |
+
+São contas de demonstração criadas para a avaliação do hackathon, com dados fictícios. Não cadastre dados reais de alunos nelas. Sem login, as páginas `/demo/aluno`, `/demo/professor`, `/demo/coordenador` e `/demo/responsavel` mostram os quatro perfis com dados de exemplo.
+
+O plano de negócio está em [plano-de-negocio/EAI-plano-de-negocio.pdf](plano-de-negocio/EAI-plano-de-negocio.pdf).
+
 ## Executar
 
 Requisitos: Node.js 24 LTS e npm. As versões instaladas ficam no `package-lock.json`.
