@@ -11,12 +11,18 @@ export type DashboardMode = "demo" | "real";
 export function AppShell({ role, fullName, mode, children }: { role: Role; fullName: string; mode: DashboardMode; children: ReactNode }) {
   const isStudent = role === "aluno";
   const home = mode === "demo" ? `/demo/${role}` : `/${role}`;
-  const items = [
+  const items = isStudent ? [
     { label: "Visão geral", icon: LayoutDashboard, href: home },
-    { label: isStudent ? "Minhas atividades" : role === "responsavel" ? "Atividades do aluno" : "Atividades", icon: BookOpen, href: "/tarefas" },
-    { label: isStudent ? "Meu progresso" : "Acompanhamento", icon: Compass, href: "/tarefas" },
-    { label: isStudent ? "Ranking da turma" : role === "coordenador" ? "Turmas e pessoas" : "Minha turma", icon: isStudent ? Trophy : Users, href: "/tarefas" },
-    { label: isStudent ? "Meu perfil" : "Meu espaço", icon: GraduationCap, href: "/tarefas" },
+    { label: "Minhas atividades", icon: BookOpen, href: `${home}#atividade` },
+    { label: "Meu progresso", icon: Compass, href: `${home}#progresso` },
+    { label: "Ranking da turma", icon: Trophy, href: `${home}#ranking-turma` },
+    { label: "Meu perfil", icon: GraduationCap, href: `${home}#perfil` },
+  ] : [
+    { label: "Visão geral", icon: LayoutDashboard, href: home },
+    { label: role === "responsavel" ? "Atividades do aluno" : "Atividades", icon: BookOpen, href: "/tarefas" },
+    { label: "Acompanhamento", icon: Compass, href: "/tarefas" },
+    { label: role === "coordenador" ? "Turmas e pessoas" : "Minha turma", icon: Users, href: "/tarefas" },
+    { label: "Meu espaço", icon: GraduationCap, href: "/tarefas" },
   ];
   const initials = fullName.split(" ").filter(Boolean).slice(0, 2).map(part => part[0]).join("");
   return <div className="app-shell">
@@ -35,7 +41,7 @@ export function AppShell({ role, fullName, mode, children }: { role: Role; fullN
     </aside>
     <div className="workspace-main">
       <header className="topbar"><div className="breadcrumb"><span>Meu espaço</span><ChevronRight size={14} /><strong>Visão geral</strong></div><div className="topbar-right"><span className={`mode-pill ${mode === "demo" ? "demo-pill" : "real-pill"}`}>{mode === "demo" ? <Flag size={13} /> : <ShieldCheck size={13} />}{mode === "demo" ? "Demonstração" : "Acesso autenticado"}</span><span className="topbar-divider" /><span className="user-avatar">{initials || "LP"}</span><div className="user-summary"><strong>{fullName}</strong><small>{ROLE_LABELS[role]}</small></div></div></header>
-      <main id="conteudo" className="dashboard-content">{mode === "demo" && <div className="demo-notice"><span><span className="live-dot" />Você está explorando uma demonstração. Dados fictícios, sem persistência e sem IA integrada.</span><Link href="/login">Acessar conta real<ArrowUpRight size={14} /></Link></div>}{children}<footer className="workspace-footer"><span>LEPV · Cada aluno, uma jornada.</span><span>{mode === "demo" ? "Ambiente de demonstração" : "Base inicial da plataforma"}</span></footer></main>
+      <main id="conteudo" className="dashboard-content">{mode === "demo" && <div className="demo-notice"><span><span className="live-dot" />Você está explorando uma demonstração. Dados fictícios, sem persistência e sem IA integrada.</span><Link href="/login">Acessar conta real<ArrowUpRight size={14} /></Link></div>}{children}<footer className="workspace-footer"><span>EAI · Educational Artificial Intelligence</span><span>{mode === "demo" ? "Ambiente de demonstração" : "Plataforma educacional"}</span></footer></main>
     </div>
   </div>;
 }
