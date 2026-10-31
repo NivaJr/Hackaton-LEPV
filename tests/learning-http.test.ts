@@ -18,6 +18,16 @@ function setup() {
 }
 
 describe("contratos HTTP reais consumidos pela interface", () => {
+  it("usa Host para requisições legítimas quando a URL interna do Next é diferente e recusa origem externa", async () => {
+    const { handle } = setup();
+    const call = (origin: string) => handle(new Request("http://localhost:3000/api/learning/access", {
+      method: "POST", headers: { Host: "127.0.0.1:3000", Origin: origin, "X-Forwarded-Host": "outro-site.example" }, body: "{}",
+    }), ["access"]);
+    expect((await call("http://127.0.0.1:3000")).status).toBe(200);
+    expect((await call("http://outro-site.example")).status).toBe(403);
+    expect((await call("https://127.0.0.1:3000")).status).toBe(403);
+    expect((await call("null")).status).toBe(403);
+  });
   it("ficha e atividades usam os schemas existentes e a questão pública não contém dados protegidos", async () => {
     const { request } = setup();
     const preferences = await (await request("GET", "preferences")).json();
@@ -27,6 +37,7 @@ describe("contratos HTTP reais consumidos pela interface", () => {
     expect(StudentPreferencesSchema.safeParse(await saved.json()).success).toBe(true);
     const list = await (await request("GET", "activities")).json();
     expect(list.activities).toHaveLength(10);
+    expect(list.className).toBe("6A fictícia");
     expect(list.activities[0]).toMatchObject({ rootQuestionId: "root-01", questionInstanceId: null, status: "not_started", recoveryId: null });
     const openedResponse = await request("POST", "activities/root-01/open");
     const opened = await openedResponse.json();
@@ -56,6 +67,7 @@ describe("contratos HTTP reais consumidos pela interface", () => {
     expect(ranking.top10[0]).toMatchObject({ studentId: fixtureIds.student, position: 1, xp: 70, rankPoints: 70 });
     const summary = await (await request("GET", "summary?from=2026-10-01&to=2026-10-31")).json();
     expect(StudentSummarySchema.safeParse(summary.summary).success).toBe(true);
+    expect(summary.activityDates).toEqual(["2026-10-30"]);
     const ended = await request("POST", `recoveries/${answered.recoveryId}/next`);
     expect(ended.status).toBe(409);
     expect((await ended.json()).error.code).toBe("RECOVERY_CLOSED");

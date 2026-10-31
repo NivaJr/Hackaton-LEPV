@@ -25,7 +25,11 @@ export function createLearningHttpHandler(dependencies: LearningHttpDependencies
       if (!actor) throw new LearningError("UNAUTHENTICATED", "Entre na sua conta para continuar.", 401);
       const url = new URL(request.url);
       const method = request.method;
-      if (method !== "GET" && request.headers.get("origin") && request.headers.get("origin") !== url.origin) {
+      // Next can use its listening address in request.url. Host is the browser's
+      // requested authority; unlike a forwarded-host header it cannot be set by fetch.
+      const target = new URL(url);
+      if (request.headers.get("host")) target.host = request.headers.get("host")!;
+      if (method !== "GET" && request.headers.get("origin") && request.headers.get("origin") !== target.origin) {
         throw new LearningError("INVALID_ORIGIN", "A origem desta operação não é permitida.", 403);
       }
       let body: unknown = {};

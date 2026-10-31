@@ -6,6 +6,7 @@ Esta pasta contém migrações para um projeto Supabase vazio, configuração de
 
 - `migrations/20261030220000_foundation.sql`: esquema, chaves, índices, triggers, grants e RLS.
 - `migrations/20261031030000_learning.sql`: snapshots privados, tentativas, livro de pontos e persistência por RPC.
+- `migrations/20261031050000_learning_classroom_name.sql`: leitura administrativa do nome atual da turma para a lista de atividades, sem alterar os payloads das RPCs existentes.
 - `seed.sql`: uma escola fictícia e as seis matérias; não cria usuários Auth, senhas, notas ou dados de saúde.
 - `config.toml`: configuração local, PostgreSQL 17, autenticação por contas provisionadas e cadastro público desativado.
 

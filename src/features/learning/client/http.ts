@@ -1,5 +1,6 @@
 import {
   AttemptResultSchema,
+  AttemptSubmissionSchema,
   QuestionForStudentSchema,
   RecoveryStateSchema,
   StudentPreferencesSchema,
@@ -19,12 +20,17 @@ import type {
 import { LearningClientError } from "./types";
 
 async function learning(path: string, method = "GET", body?: unknown): Promise<unknown> {
-  const response = await fetch(`/api/learning/${path}`, {
-    method,
-    credentials: "same-origin",
-    cache: "no-store",
-    ...(body === undefined ? {} : { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`/api/learning/${path}`, {
+      method,
+      credentials: "same-origin",
+      cache: "no-store",
+      ...(body === undefined ? {} : { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }),
+    });
+  } catch {
+    throw new LearningClientError("Não foi possível confirmar a conexão. Tente novamente; uma resposta já salva não receberá créditos duplicados.", "NETWORK_ERROR", 0);
+  }
   const payload = await response.json().catch(() => ({})) as { error?: { code?: string; message?: string } };
   if (!response.ok) {
     throw new LearningClientError(payload.error?.message ?? "Não foi possível concluir a operação.", payload.error?.code ?? "UNKNOWN_ERROR", response.status);
@@ -45,6 +51,7 @@ function brazilDate() {
 
 export function createHttpStudentLearningClient(): StudentLearningClient {
   return {
+    async recordAccess() { await learning("access", "POST", {}); },
     async loadSnapshot(): Promise<StudentLearningSnapshot> {
       const [preferencesPayload, activitiesPayload] = await Promise.all([
         learning("preferences"), learning("activities"),
@@ -61,13 +68,14 @@ export function createHttpStudentLearningClient(): StudentLearningClient {
         learning(`summary?from=${periodStart}&to=${periodEnd}`),
         this.getRanking(activities.classId),
       ]);
-      const summaryEnvelope = summaryPayload as { summary: unknown };
+      const summaryEnvelope = summaryPayload as { summary: unknown; activityDates?: string[] };
       return {
         preferences: StudentPreferencesSchema.parse(preferenceEnvelope.preferences),
         preferencesSaved: preferenceEnvelope.saved,
         activities,
         summary: StudentSummarySchema.parse(summaryEnvelope.summary),
         ranking,
+        activityDates: summaryEnvelope.activityDates ?? [],
       };
     },
     async savePreferences(input: StudentPreferencesUpdate) {
@@ -81,7 +89,7 @@ export function createHttpStudentLearningClient(): StudentLearningClient {
       return asQuestionState(await learning(`instances/${encodeURIComponent(questionInstanceId)}`));
     },
     async submitAttempt(input: AttemptSubmission): Promise<AttemptResponse> {
-      const payload = await learning("attempts", "POST", input) as { result: unknown; recoveryId: string | null };
+      const payload = await learning("attempts", "POST", AttemptSubmissionSchema.parse(input)) as { result: unknown; recoveryId: string | null };
       return { result: AttemptResultSchema.parse(payload.result), recoveryId: payload.recoveryId };
     },
     async getNextRecoveryQuestion(recoveryId: string) {

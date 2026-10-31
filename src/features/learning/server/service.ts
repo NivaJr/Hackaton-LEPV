@@ -109,9 +109,11 @@ export class LearningService {
         questionInstanceId: instance?.question.questionInstanceId ?? null,
         status: answered ? "answered" : instance ? "pending" : "not_started",
         recoveryId: recovery?.id ?? null, recoveryStatus: recovery?.state.status ?? null,
+        recoveryConsecutiveCorrect: recovery?.state.consecutiveCorrect ?? 0,
       };
     });
-    return { classId: loaded.catalog.classId, grade: loaded.catalog.grade, schoolYear: loaded.catalog.schoolYear, activities };
+    const className = await this.repository.classroomName(actor.institutionId, loaded.catalog.classId);
+    return { classId: loaded.catalog.classId, className, grade: loaded.catalog.grade, schoolYear: loaded.catalog.schoolYear, activities };
   }
 
   async openActivity(actor: SessionContext, rootQuestionId: string) {
@@ -327,6 +329,7 @@ export class LearningService {
     });
     return {
       summary, rankCalibration: "proposed" as const, accessDaysScope: wholeStudent ? "student" : "not_available_for_subject",
+      activityDates: [...new Set(attempts.map((attempt) => brazilDay(new Date(attempt.createdAt))))].sort(),
       originalAttempts: attempts.filter((item) => item.source === "original").length,
       recoveryAttempts: attempts.filter((item) => item.source === "recovery").length,
     };

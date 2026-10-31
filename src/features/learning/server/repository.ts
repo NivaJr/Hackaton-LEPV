@@ -3,6 +3,7 @@ import type { LearningState, LoadedStudent, RankingRow, VersionedCatalog } from 
 
 /** All IDs in this port are derived/authorized by the server, never a client-supplied actor. */
 export interface LearningRepository {
+  classroomName(institutionId: string, classId: string): Promise<string>;
   loadStudent(institutionId: string, studentId: string): Promise<LoadedStudent>;
   commitStudent(before: LoadedStudent, state: LearningState): Promise<boolean>;
   savePreferences(institutionId: string, studentId: string, value: StudentPreferencesUpdate): Promise<StudentPreferences>;

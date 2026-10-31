@@ -21,6 +21,7 @@ export interface StudentActivity {
   status: ActivityStatus;
   recoveryId: string | null;
   recoveryStatus: "in_progress" | "recovered" | "interrupted" | null;
+  recoveryConsecutiveCorrect?: number;
 }
 
 export interface ActivityList {
@@ -63,6 +64,7 @@ export interface RankingResponse {
 }
 
 export interface StudentLearningSnapshot {
+  activityDates?: string[];
   preferences: StudentPreferences;
   preferencesSaved: boolean;
   activities: ActivityList;
@@ -71,6 +73,7 @@ export interface StudentLearningSnapshot {
 }
 
 export interface StudentLearningClient {
+  recordAccess(): Promise<void>;
   loadSnapshot(): Promise<StudentLearningSnapshot>;
   savePreferences(input: StudentPreferencesUpdate): Promise<StudentPreferences>;
   openActivity(rootQuestionId: string): Promise<QuestionState>;

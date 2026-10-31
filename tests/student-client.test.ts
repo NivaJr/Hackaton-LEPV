@@ -76,4 +76,21 @@ describe("StudentLearningClient fake", () => {
     expect(urls.some((url) => url.includes("summary?from=2026-01-01&to="))).toBe(true);
     expect(urls.some((url) => url.includes("ranking?classId=class-7a-demo"))).toBe(true);
   });
+
+  it("retoma a mesma questão fake pendente e recusa dica/resposta após interrupção", async () => {
+    const client = createFakeStudentLearningClient();
+    const original = await client.openActivity("math-root-01");
+    const wrong = await client.submitAttempt({ questionInstanceId: original.question.questionInstanceId, selectedOptionId: "a", idempotencyKey: "fake-interruption-original" });
+    const next = await client.getNextRecoveryQuestion(wrong.recoveryId!);
+    expect(await client.getNextRecoveryQuestion(wrong.recoveryId!)).toEqual(next);
+    await client.interruptRecovery(wrong.recoveryId!);
+    await expect(client.getHint(next.question.questionInstanceId)).rejects.toMatchObject({ code: "HINT_UNAVAILABLE" });
+    await expect(client.getNextRecoveryQuestion(wrong.recoveryId!)).rejects.toMatchObject({ code: "RECOVERY_CLOSED" });
+    await expect(client.submitAttempt({ questionInstanceId: next.question.questionInstanceId, selectedOptionId: "b", idempotencyKey: "fake-interruption-attempt" })).rejects.toMatchObject({ code: "RECOVERY_CLOSED" });
+  });
+
+  it("informa falha de transporte sem tratar a tentativa como descartada", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("Failed to fetch"); }));
+    await expect(createHttpStudentLearningClient().submitAttempt({ questionInstanceId: "instance-01", selectedOptionId: "a", idempotencyKey: "network-unknown-result" })).rejects.toMatchObject({ code: "NETWORK_ERROR", status: 0 });
+  });
 });

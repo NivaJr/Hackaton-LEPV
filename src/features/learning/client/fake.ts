@@ -26,8 +26,10 @@ export function createFakeStudentLearningClient(): StudentLearningClient {
   const idempotencyRequests = new Map<string, string>();
   const recoveryRoots = new Map<string, string>();
   const recoveryCorrect = new Map<string, number>();
+  const closedRecoveries = new Set<string>();
 
   return {
+    async recordAccess() { /* Demonstration has no remote persistence. */ },
     async loadSnapshot(): Promise<StudentLearningSnapshot> {
       await pause();
       return { preferences: structuredClone(preferences), preferencesSaved: true, activities: structuredClone(activities), summary: structuredClone(summary), ranking: structuredClone(ranking) };
@@ -79,6 +81,7 @@ export function createFakeStudentLearningClient(): StudentLearningClient {
       const isCorrect = parsed.selectedOptionId === answer;
       const isRecovery = state.question.sourceType === "recuperacao";
       const recoveryId = isCorrect && !isRecovery ? null : `recovery-${state.question.rootQuestionId}`;
+      if (isRecovery && recoveryId && closedRecoveries.has(recoveryId)) throw new LearningClientError("A recuperação já foi encerrada.", "RECOVERY_CLOSED", 409);
       let consecutiveCorrect = 0;
       let recoveryStatus: AttemptResult["recoveryStatus"] = null;
       if (recoveryId) {
@@ -122,6 +125,7 @@ export function createFakeStudentLearningClient(): StudentLearningClient {
         activity.status = "answered";
         activity.recoveryId = recoveryId;
         activity.recoveryStatus = recoveryStatus;
+        activity.recoveryConsecutiveCorrect = Math.min(consecutiveCorrect, 2);
       }
       return structuredClone(response);
     },
@@ -129,7 +133,9 @@ export function createFakeStudentLearningClient(): StudentLearningClient {
       await pause(450);
       const rootQuestionId = recoveryRoots.get(recoveryId);
       if (!rootQuestionId) throw new LearningClientError("Recuperação não encontrada.", "NOT_FOUND", 404);
-      if ((recoveryCorrect.get(recoveryId) ?? 0) >= 2) throw new LearningClientError("A recuperação já foi concluída.", "RECOVERY_CLOSED", 409);
+      if (closedRecoveries.has(recoveryId) || (recoveryCorrect.get(recoveryId) ?? 0) >= 2) throw new LearningClientError("A recuperação já foi encerrada.", "RECOVERY_CLOSED", 409);
+      const pending = [...questions.values()].find((item) => item.question.rootQuestionId === rootQuestionId && item.question.sourceType === "recuperacao" && item.status === "pending");
+      if (pending) return structuredClone(pending);
       const base = createDemoQuestion(rootQuestionId, true);
       const count = [...questions.values()].filter((item) => item.question.rootQuestionId === rootQuestionId && item.question.sourceType === "recuperacao").length + 1;
       const question = { ...base, questionInstanceId: `${base.questionInstanceId}-${count}`, questionId: `${base.questionId}-${count}` };
@@ -140,12 +146,13 @@ export function createFakeStudentLearningClient(): StudentLearningClient {
     async getHint(questionInstanceId: string) {
       await pause();
       const state = questions.get(questionInstanceId);
-      if (!state || state.status !== "pending" || state.question.sourceType !== "recuperacao") throw new LearningClientError("A dica não está disponível para esta questão.", "HINT_UNAVAILABLE", 409);
+      if (!state || state.status !== "pending" || state.question.sourceType !== "recuperacao" || closedRecoveries.has(`recovery-${state.question.rootQuestionId}`)) throw new LearningClientError("A dica não está disponível para esta questão.", "HINT_UNAVAILABLE", 409);
       return { questionInstanceId, text: "Separe as informações importantes e elimine primeiro as alternativas que não combinam com o enunciado." };
     },
     async interruptRecovery(recoveryId: string) {
       await pause();
       if (!recoveryRoots.has(recoveryId)) throw new LearningClientError("Recuperação não encontrada.", "NOT_FOUND", 404);
+      closedRecoveries.add(recoveryId);
       const state: RecoveryState = { status: "interrupted", consecutiveCorrect: Math.min(recoveryCorrect.get(recoveryId) ?? 0, 1), answeredCount: [...attempts.values()].filter((item) => item.recoveryId === recoveryId).length };
       const activity = activities.activities.find((item) => item.recoveryId === recoveryId);
       if (activity) activity.recoveryStatus = "interrupted";

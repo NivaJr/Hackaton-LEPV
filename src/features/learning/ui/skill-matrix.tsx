@@ -23,10 +23,16 @@ function polygon(values: readonly number[]) {
   return values.map((value, index) => point(index, value).join(",")).join(" ");
 }
 
-export function SkillMatrix() {
+export function SkillMatrix({ mode = "demo", difficultSkillCodes = [] }: { mode?: "demo" | "real"; difficultSkillCodes?: string[] }) {
   const [profile, setProfile] = useState<Profile>("geral");
   const values = profiles[profile];
   const grids = useMemo(() => [25, 50, 75, 100].map((level) => polygon(axes.map(() => level))), []);
+
+  if (mode === "real") return <section className="panel skill-matrix-panel">
+    <div className="panel-heading"><div><span className="eyebrow">HABILIDADES PARA PRATICAR</span><h2>Seu mapa de aprendizagem</h2></div></div>
+    <p className="panel-description">Habilidades associadas a respostas incorretas no período. Este registro não representa um diagnóstico de domínio.</p>
+    {difficultSkillCodes.length ? <ul>{difficultSkillCodes.map((code) => <li key={code}>{code}</li>)}</ul> : <p>Nenhuma habilidade com erro registrada no período.</p>}
+  </section>;
 
   return <section className="panel skill-matrix-panel">
     <div className="panel-heading"><div><span className="eyebrow">MATRIZ DE HABILIDADES</span><h2>Seu mapa de aprendizagem</h2></div><span className="subtle-pill"><Sparkles size={13} />Demo</span></div>

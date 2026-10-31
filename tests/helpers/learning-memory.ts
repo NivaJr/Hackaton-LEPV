@@ -43,6 +43,10 @@ export function catalog(): VersionedCatalog {
 
 /** Test adapter only. Production always uses the database adapter. */
 export class MemoryLearningRepository implements LearningRepository {
+  async classroomName(institutionId: string, classId: string) {
+    await this.loadCatalog(institutionId, classId);
+    return classId === fixtureIds.classId ? "6A fictícia" : "6B fictícia";
+  }
   readonly catalogs = new Map<string, VersionedCatalog>([[fixtureIds.classId, catalog()]]);
   readonly students = new Map<string, LoadedStudent>();
 

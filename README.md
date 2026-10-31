@@ -44,7 +44,7 @@ Preencher `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, a
 - Workflow de checks e registro de prompts em `PROMPTS/`.
 - Tarefa 03: APIs de ficha, atividades, resposta, recuperação, dica, interrupção, resumo e TOP 10; migração aditiva com tentativas/créditos atômicos e rotação protegida. Contratos em [Rotas da Tarefa 03](docs/ROTAS_REAIS_TAREFA_03_NIVALDO.md), validação em [Entrega de Nivaldo](docs/ENTREGA_NIVALDO_CORE.md) e ambiente real em [Configuração do Supabase](docs/CONFIGURACAO_SUPABASE_LEPV.md).
 
-Login e permissões foram exercitados com contas fictícias no projeto Supabase LEPV; as evidências estão no registro de configuração. As rotas `/aluno`, `/coordenador`, `/professor` e `/responsavel` são protegidas; os dados mostrados nelas serão preenchidos pelos módulos individuais. O envio administrativo de convites ainda não está implementado ou validado.
+Login e permissões foram exercitados com contas fictícias no projeto Supabase LEPV; as evidências estão no registro de configuração. As rotas `/aluno`, `/coordenador`, `/professor` e `/responsavel` são protegidas. A área do aluno já consome as APIs reais de aprendizagem; as frentes individuais mantêm os demais fluxos.
 
 ## Quatro tarefas individuais
 
@@ -60,6 +60,8 @@ As telas de professor ficam com Gallotte, e as do responsável com Fabiano, reap
 Ler [Divisão da equipe](docs/DIVISAO_EQUIPE.md) e [Integração](docs/INTEGRACAO.md) antes de começar. Cada tarefa inclui arquivos de propriedade, contratos, critérios de aceite e um prompt para usar na LLM.
 
 Tarefa 02: escopo, validação e limites em [Entrega da Tarefa 02](docs/ENTREGA_FABIANO_GESTAO.md).
+
+Tarefa 01: `/aluno` integrado às APIs e ao Supabase real; `/demo/aluno` preserva o cliente fake. Fluxos, migração e validação no navegador em [Área do aluno integrada](docs/ENTREGA_ALUNO_INTEGRADO.md).
 
 ## Validação
 

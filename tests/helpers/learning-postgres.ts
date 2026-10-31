@@ -5,6 +5,7 @@ import type { LearningRpcClient } from "@/features/learning/server/supabase-repo
 import { catalog, fixtureIds as ids } from "./learning-memory";
 
 const definitions: Record<string, Array<[string, string]>> = {
+  learning_classroom_name: [["p_school", "uuid"], ["p_class", "uuid"]],
   learning_read_catalog: [["p_school", "uuid"], ["p_class", "uuid"]],
   learning_read_student: [["p_school", "uuid"], ["p_student", "uuid"]],
   learning_commit_catalog: [["p_school", "uuid"], ["p_class", "uuid"], ["p_expected_version", "bigint"], ["p_catalog", "jsonb"]],
@@ -53,7 +54,7 @@ export async function createLearningDatabase() {
     grant usage on schema auth to authenticated,service_role;
     grant execute on function auth.uid() to authenticated,service_role;
   `);
-  for (const file of ["supabase/migrations/20261030220000_foundation.sql", "supabase/seed.sql", "supabase/migrations/20261031030000_learning.sql"]) {
+  for (const file of ["supabase/migrations/20261030220000_foundation.sql", "supabase/seed.sql", "supabase/migrations/20261031030000_learning.sql", "supabase/migrations/20261031050000_learning_classroom_name.sql"]) {
     await db.exec(await readFile(resolve(process.cwd(), file), "utf8"));
   }
   await db.exec(`

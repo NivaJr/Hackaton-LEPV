@@ -69,6 +69,7 @@ Aceita até 20 interesses, cada um com 1 a 100 caracteres, e contexto de até 2.
 ```json
 {
   "classId": "10000000-0000-4000-8000-000000000001",
+  "className": "6º A — Integral",
   "grade": 6,
   "schoolYear": 2026,
   "activities": [{
@@ -79,12 +80,13 @@ Aceita até 20 interesses, cada um com 1 a 100 caracteres, e contexto de até 2.
     "questionInstanceId": null,
     "status": "not_started",
     "recoveryId": null,
-    "recoveryStatus": null
+    "recoveryStatus": null,
+    "recoveryConsecutiveCorrect": 0
   }]
 }
 ```
 
-`status`: `not_started`, `pending` ou `answered`. `recoveryStatus`: `null`, `in_progress`, `recovered` ou `interrupted`. A lista contém somente raízes ativas da turma atual, de todas as matérias; uma seleção vazia retorna `activities: []`. Usar o `classId` retornado para consultar o ranking.
+`status`: `not_started`, `pending` ou `answered`. `recoveryStatus`: `null`, `in_progress`, `recovered` ou `interrupted`. `recoveryConsecutiveCorrect` informa o progresso atual da recuperação, inclusive ao reabrir uma original já respondida. `className` vem do nome atual da turma no banco. A lista contém somente raízes ativas da turma atual, de todas as matérias; uma seleção vazia retorna `activities: []`. Usar o `classId` retornado para consultar o ranking.
 
 ### POST `/api/learning/activities/:rootQuestionId/open`
 
@@ -218,7 +220,7 @@ O aluno acessa a própria turma; professor, responsável e coordenador precisam 
 | Método e URL | Uso |
 | --- | --- |
 | POST `/api/learning/access` com `{}` | Registrar um dia de acesso em Brasília, sem duplicar o dia |
-| GET `/api/learning/summary?from=2026-10-01&to=2026-10-31&studentId=:id` | Retorna `{ summary, rankCalibration, accessDaysScope, originalAttempts, recoveryAttempts }`; validar `summary` com `StudentSummarySchema`. O próprio aluno pode omitir `studentId`. Professor recebe somente suas matérias atribuídas; os demais precisam de vínculo |
+| GET `/api/learning/summary?from=2026-10-01&to=2026-10-31&studentId=:id` | Retorna `{ summary, rankCalibration, accessDaysScope, originalAttempts, recoveryAttempts, activityDates }`; validar `summary` com `StudentSummarySchema`. `activityDates` contém as datas únicas das respostas autorizadas no período, em Brasília. O próprio aluno pode omitir `studentId`. Professor recebe somente suas matérias atribuídas; os demais precisam de vínculo |
 | POST `/api/learning/activation` | Coordenador seleciona inicialmente dez raízes distintas: `{ classId, subjectId, rootQuestionIds }` |
 | POST `/api/learning/rotation` | Coordenador troca duas raízes na semana atual: `{ classId, subjectId, weekStart, incomingRootIds }`; `weekStart` é a segunda-feira em Brasília |
 

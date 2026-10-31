@@ -17,6 +17,10 @@ export interface LearningRpcClient {
 export class SupabaseLearningRepository implements LearningRepository {
   constructor(private readonly client: LearningRpcClient) {}
 
+  classroomName(institutionId: string, classId: string) {
+    return this.rpc("learning_classroom_name", { p_school: institutionId, p_class: classId }, z.string().trim().min(1));
+  }
+
   private async rpc<T>(name: string, args: Record<string, unknown>, schema: z.ZodType<T>): Promise<T> {
     const { data, error } = await this.client.rpc(name, args);
     if (error) {

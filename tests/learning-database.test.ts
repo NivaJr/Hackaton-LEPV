@@ -19,6 +19,15 @@ beforeEach(async () => {
 });
 
 describe.sequential("serviço + migrações reais em Postgres/WASM (Auth emulado)", () => {
+  it("lê o nome atual da turma por escola e mantém a RPC inacessível ao navegador", async () => {
+    expect((await service.listActivities(actor())).className).toBe("6A fictícia");
+    await db.query("update public.classrooms set name = $1 where id = $2", ["6º A — Integral", ids.classId]);
+    try { expect((await service.listActivities(actor())).className).toBe("6º A — Integral"); }
+    finally { await db.query("update public.classrooms set name = $1 where id = $2", ["6A fictícia", ids.classId]); }
+    await expect(repository.classroomName(ids.otherSchool, ids.classId)).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(queryAs(db, "authenticated", ids.student, "select public.learning_classroom_name($1,$2)", [ids.school, ids.classId])).rejects.toMatchObject({ code: "42501" });
+    await expect(queryAs(db, "anon", null, "select public.learning_classroom_name($1,$2)", [ids.school, ids.classId])).rejects.toMatchObject({ code: "42501" });
+  });
   it("persiste recuperação e créditos atomicamente e permite retomar em outra instância do serviço", async () => {
     const original = await service.openActivity(actor(), "root-01");
     const first = await service.submitAttempt(actor(), { questionInstanceId: original.question.questionInstanceId, selectedOptionId: "b", idempotencyKey: "database-wrong" });
