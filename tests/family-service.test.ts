@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import type { SessionContext, StudentSummary } from "@/contracts";
 import { fixtureFamilyMetrics } from "@/features/family/fixtures";
 import { createFamilyHttpHandler } from "@/features/family/http";
+import { createLearningFamilyMetrics } from "@/features/family/server/learning-metrics";
 import type { FamilyRecord, FamilyRecordCategory, MetricsResult } from "@/features/family/model";
 import type { FamilyRepository } from "@/features/family/ports";
 import { FamilyService } from "@/features/family/service";
@@ -118,6 +119,26 @@ describe("feedback", () => {
   });
 });
 
+describe("métricas do núcleo de aprendizagem", () => {
+  it("repassa o ator ao núcleo, marca como reais e usa o resumo no feedback", async () => {
+    const calls: unknown[] = [];
+    const metrics = createLearningFamilyMetrics(() => ({
+      summary: async (...args) => { calls.push(args); return { summary: realSummary }; },
+    }));
+    const real = new FamilyService({ repository, metrics, summarize: async () => ({ text: "Texto da IA" }), now: () => new Date("2026-10-30T15:00:00Z") });
+    expect((await real.overview(guardian, child)).metrics).toEqual({ source: "real", summary: realSummary });
+    expect(calls[0]).toEqual([guardian, child, "2026-10-01", "2026-10-30"]);
+  });
+
+  it("falha no núcleo vira indisponível, nunca número de exemplo", async () => {
+    const metrics = createLearningFamilyMetrics(() => { throw new Error("sem configuração"); });
+    const real = new FamilyService({ repository, metrics, summarize: async (input) => { summarized.push(input); return { text: "x" }; } });
+    expect((await real.overview(guardian, child)).metrics).toEqual({ source: "unavailable", summary: null });
+    expect(await real.feedback(guardian, child)).toMatchObject({ origin: "automatica", metricsSource: "unavailable" });
+    expect(summarized).toEqual([]);
+  });
+});
+
 describe("HTTP da família", () => {
   const handlerFor = (actor: SessionContext | null) => createFamilyHttpHandler({ getSessionContext: async () => actor, createService: async () => service });
   const put = (body: string, origin?: string) => new Request("http://localhost/x", { method: "PUT", body, headers: origin ? { origin } : {} });
@@ -132,5 +153,14 @@ describe("HTTP da família", () => {
     expect((await handle(put(JSON.stringify({ details: "x" })), ["students", child, "academic_history"])).status).toBe(422);
     expect((await handle(new Request("http://localhost/x"), ["students", "nao-uuid"])).status).toBe(422);
     expect((await handlerFor(null)(new Request("http://localhost/x"), ["children"])).status).toBe(401);
+  });
+
+  it("compara a origem com o Host pedido, não com a URL interna do Next", async () => {
+    const handle = handlerFor(guardian);
+    const call = (origin: string) => handle(new Request("http://localhost:3000/x", {
+      method: "PUT", headers: { Host: "eai.example", Origin: origin, "X-Forwarded-Host": "outro.example" }, body: JSON.stringify({ details: "ok" }),
+    }), ["students", child, "support"]);
+    expect((await call("http://eai.example")).status).toBe(200);
+    expect((await call("http://outro.example")).status).toBe(403);
   });
 });

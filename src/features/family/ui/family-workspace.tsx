@@ -66,17 +66,18 @@ function ChildPanel({ studentId }: { studentId: string }) {
   if (error) return <p role="alert" className={`${styles.notice} ${styles.error}`}>{error}</p>;
   if (!overview) return <p className={styles.empty}>Carregando…</p>;
   const { summary, source } = overview.metrics;
-  const answers = summary.correctAnswers + summary.incorrectAnswers;
+  const answers = summary ? summary.correctAnswers + summary.incorrectAnswers : 0;
   const isFixture = source === "fixture";
   const note = isFixture ? "Dado de exemplo" : "Neste período";
 
   return <>
     {isFixture && <p className={styles.notice}><Flag size={13} /> Frequência e resultados abaixo são dados de exemplo, não medidos. Saúde, apoio e histórico são os registros reais da escola.</p>}
-    <div className="stats-grid" id="resultados">
+    {!summary && <p id="resultados" className={styles.notice}>Os resultados ainda não estão disponíveis. Saúde, apoio e histórico seguem abaixo.</p>}
+    {summary && <div className="stats-grid" id="resultados">
       <div className="stat-card"><span className="stat-icon tone-amber"><Flame size={21} /></span><div><span className="stat-label">Dias com atividades</span><strong className="stat-value">{summary.activityDays}</strong><span className="stat-note">{note}</span></div></div>
       <div className="stat-card"><span className="stat-icon tone-teal"><Check size={21} /></span><div><span className="stat-label">Respostas corretas</span><strong className="stat-value">{summary.correctAnswers} de {answers}</strong><span className="stat-note">{note}</span></div></div>
       <div className="stat-card"><span className="stat-icon tone-violet"><TrendingUp size={21} /></span><div><span className="stat-label">Dias de acesso</span><strong className="stat-value">{summary.accessDays}</strong><span className="stat-note">{note}</span></div></div>
-    </div>
+    </div>}
     {feedback && <section className="panel">
       <div className="panel-heading"><div><span className="eyebrow">PARA CONVERSAR EM CASA</span><h2>Resumo do período</h2></div><MessageSquareText size={21} /></div>
       <p className={styles.feedback}>{feedback.text}</p>

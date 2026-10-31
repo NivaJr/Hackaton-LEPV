@@ -284,6 +284,14 @@ describe("autorização e HTTP", () => {
     expect((await handlerFor(coordinator)(new Request("http://localhost/x"), ["nada"])).status).toBe(404);
   });
 
+  it("compara a origem com o Host pedido, não com a URL interna do Next", async () => {
+    const call = (origin: string) => handlerFor(coordinator)(new Request("http://localhost:3000/x", {
+      method: "POST", headers: { Host: "eai.example", Origin: origin, "X-Forwarded-Host": "outro.example" }, body: JSON.stringify({ name: "Host", grade: 6, schoolYear: 2026 }),
+    }), ["classrooms"]);
+    expect((await call("http://eai.example")).status).toBe(201);
+    expect((await call("http://outro.example")).status).toBe(403);
+  });
+
   it("prévia por formulário e modelos CSV funcionam pelo handler", async () => {
     const form = new FormData();
     form.set("kind", "students");

@@ -15,7 +15,10 @@ interface RosterHttpDependencies {
 
 function assertSameOrigin(request: Request, url: URL) {
   const origin = request.headers.get("origin");
-  if (origin && origin !== url.origin) throw new RosterError("INVALID_ORIGIN", "A origem desta operação não é permitida.", 403);
+  // Next may expose an internal listen address in request.url; Host is what the browser requested.
+  const host = request.headers.get("host");
+  const expected = host ? `${url.protocol}//${host}` : url.origin;
+  if (origin && origin !== expected) throw new RosterError("INVALID_ORIGIN", "A origem desta operação não é permitida.", 403);
 }
 
 async function readJson(request: Request): Promise<unknown> {
