@@ -86,7 +86,7 @@ O workflow `.github/workflows/checks.yml` executa esses comandos com Node 24. A 
 - Patentes são cumulativas e avançam a cada 1.000 pontos, de Ferro até Onisciente.
 - XP ativo e pontos anuais são separados. Dez desafios ficam ativos; entram dois por semana e saem os dois mais antigos. A saída remove o XP do ranking, não os pontos anuais.
 - Saúde e apoio: leitura por perfis vinculados e edição pelo responsável confirmado. Histórico: professor edita somente sua matéria/turma; coordenador edita na instituição.
-- A ficha é editada pelo próprio aluno. Consulta por outros perfis segue pendente e está restrita na base.
+- A ficha é editada pelo próprio aluno. Os interesses são escolhidos em uma lista pedagógica previamente aprovada e o mesmo contrato é validado no servidor. Consulta por outros perfis segue pendente e está restrita na base.
 
 ## O que falta implementar
 

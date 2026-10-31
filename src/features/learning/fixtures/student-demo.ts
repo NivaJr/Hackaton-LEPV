@@ -5,7 +5,7 @@ export const DEMO_STUDENT_ID = "student-viegas-demo";
 
 export const demoPreferences: StudentPreferences = {
   studentId: DEMO_STUDENT_ID,
-  interests: ["futebol", "jogos", "música"],
+  interests: ["futebol", "jogos educativos", "música"],
   context: "Gosto de exemplos diretos e desafios curtos.",
   version: 1,
   updatedAt: "2026-10-30T23:00:00.000Z",
@@ -27,6 +27,12 @@ export const demoActivities: ActivityList = {
     { rootQuestionId: "port-root-02", activityType: "weekly_challenge", contentId: "interpretacao", contentTitle: "Interpretação de texto", contentDefinedBy: "professor", subjectId: "portugues", grade: 7, skillCodes: ["EF07LP01"], questionInstanceId: null, status: "not_started", recoveryId: null, recoveryStatus: null },
     { rootQuestionId: "eng-root-02", activityType: "weekly_challenge", contentId: "vocabulary", contentTitle: "Vocabulário e contexto", contentDefinedBy: "professor", subjectId: "ingles", grade: 7, skillCodes: ["EF07LI01"], questionInstanceId: null, status: "not_started", recoveryId: null, recoveryStatus: null },
     { rootQuestionId: "hist-root-02", activityType: "weekly_challenge", contentId: "brasil-colonia", contentTitle: "Brasil Colônia", contentDefinedBy: "professor", subjectId: "historia", grade: 7, skillCodes: ["EF07HI01"], questionInstanceId: null, status: "not_started", recoveryId: null, recoveryStatus: null },
+    { rootQuestionId: "math-list-01", activityType: "exercise", contentId: "operacoes", contentTitle: "Operações com números", contentDefinedBy: "professor", subjectId: "matematica", grade: 7, skillCodes: ["EF07MA01"], questionInstanceId: null, status: "not_started", recoveryId: null, recoveryStatus: null },
+    { rootQuestionId: "port-list-01", activityType: "exercise", contentId: "verbos", contentTitle: "Verbos", contentDefinedBy: "professor", subjectId: "portugues", grade: 7, skillCodes: ["EF07LP01"], questionInstanceId: null, status: "not_started", recoveryId: null, recoveryStatus: null },
+    { rootQuestionId: "eng-list-01", activityType: "exercise", contentId: "simple-present", contentTitle: "Simple present", contentDefinedBy: "professor", subjectId: "ingles", grade: 7, skillCodes: ["EF07LI01"], questionInstanceId: null, status: "not_started", recoveryId: null, recoveryStatus: null },
+    { rootQuestionId: "hist-list-01", activityType: "exercise", contentId: "fontes-historicas", contentTitle: "Fontes históricas", contentDefinedBy: "professor", subjectId: "historia", grade: 7, skillCodes: ["EF07HI01"], questionInstanceId: null, status: "not_started", recoveryId: null, recoveryStatus: null },
+    { rootQuestionId: "geo-list-01", activityType: "exercise", contentId: "cartografia", contentTitle: "Cartografia", contentDefinedBy: "professor", subjectId: "geografia", grade: 7, skillCodes: ["EF07GE01"], questionInstanceId: null, status: "not_started", recoveryId: null, recoveryStatus: null },
+    { rootQuestionId: "bio-list-01", activityType: "exercise", contentId: "celulas", contentTitle: "Células", contentDefinedBy: "coordenador", subjectId: "biologia", grade: 7, skillCodes: ["EF07CI01"], questionInstanceId: null, status: "not_started", recoveryId: null, recoveryStatus: null },
   ],
 };
 

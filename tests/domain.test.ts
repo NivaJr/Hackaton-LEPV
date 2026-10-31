@@ -79,6 +79,11 @@ describe("contratos de questões e solicitações públicas", () => {
     expect(AttemptSubmissionSchema.safeParse({ ...request, points: 100 }).success).toBe(false);
     expect(StudentPreferencesUpdateSchema.safeParse({ interests: ["futebol"], context: "Gosto de campeonatos.", version: 90 }).success).toBe(false);
   });
+
+  it("aceita somente interesses saudáveis sugeridos pela plataforma", () => {
+    expect(StudentPreferencesUpdateSchema.safeParse({ interests: ["música", "xadrez"], context: "Prefiro exemplos visuais." }).success).toBe(true);
+    expect(StudentPreferencesUpdateSchema.safeParse({ interests: ["tema não aprovado"], context: "" }).success).toBe(false);
+  });
 });
 
 describe("catálogo", () => {

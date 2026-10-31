@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isSkillCompatible, SUBJECT_IDS } from "@/config/catalog";
+import { APPROVED_STUDENT_INTERESTS } from "@/config/student-interests";
 
 export const IdSchema = z.string().trim().min(1).max(128);
 export const RoleSchema = z.enum(["aluno", "coordenador", "professor", "responsavel"]);
@@ -48,7 +49,7 @@ export type StudentPreferences = z.infer<typeof StudentPreferencesSchema>;
 
 /** Writable fields only; student ID and version come from the authenticated server context. */
 export const StudentPreferencesUpdateSchema = z.object({
-  interests: z.array(text.max(100)).max(20),
+  interests: z.array(z.enum(APPROVED_STUDENT_INTERESTS, { error: "Escolha somente interesses saudáveis sugeridos pela plataforma." })).max(20),
   context: z.string().trim().max(2_000),
 }).strict();
 export type StudentPreferencesUpdate = z.infer<typeof StudentPreferencesUpdateSchema>;

@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import {
-  ArrowRight, BookOpen, Check, CheckCircle2, CircleAlert, Edit3, GraduationCap, Layers3,
+  ArrowRight, BookOpen, Check, CheckCircle2, CircleAlert, ClipboardList, Edit3, GraduationCap, Layers3,
   Lightbulb, LoaderCircle, RotateCcw, Save, Sparkles, Square, Target,
-  Trophy, UserRound, X, XCircle,
+  Trophy, UserRound, X, XCircle, Zap,
 } from "lucide-react";
 import { SUBJECTS, getSubject, type SubjectId } from "@/config/catalog";
+import { APPROVED_STUDENT_INTERESTS, isApprovedStudentInterest, type ApprovedStudentInterest } from "@/config/student-interests";
 import type { AttemptSubmission, QuestionForStudent, StudentPreferencesUpdate } from "@/contracts";
 import { createFakeStudentLearningClient, createHttpStudentLearningClient, LearningClientError, type StudentActivity, type StudentLearningClient, type StudentLearningSnapshot } from "@/features/learning/client";
 import { ActivityHeatmap } from "./activity-heatmap";
@@ -77,7 +78,7 @@ export function StudentLearningExperience({ fullName, mode, registeredAccessibil
     client.recordAccess().then(() => client.loadSnapshot()).then((data) => {
       if (!active) return;
       setSnapshot(data);
-      setInterestsText(data.preferences.interests.join(", "));
+      setInterestsText(data.preferences.interests.filter(isApprovedStudentInterest).join(", "));
       setContext(data.preferences.context);
       setEditingProfile(!data.preferencesSaved);
     }).catch((error) => active && setNotice(messageFor(error))).finally(() => active && finish());
@@ -90,6 +91,9 @@ export function StudentLearningExperience({ fullName, mode, registeredAccessibil
     count: subjectActivities.filter((candidate) => contentKey(candidate) === contentKey(activity)).length,
   }])).values()], [subjectActivities]);
   const activities = useMemo(() => content ? subjectActivities.filter((activity) => contentKey(activity) === content) : [], [content, subjectActivities]);
+  const weeklyChallenges = useMemo(() => activities.filter((activity) => activity.activityType === "weekly_challenge"), [activities]);
+  const teacherExercises = useMemo(() => activities.filter((activity) => activity.activityType === "exercise"), [activities]);
+  const selectedInterests = useMemo(() => interestsText.split(",").map((item) => item.trim()).filter(isApprovedStudentInterest), [interestsText]);
   const studentId = snapshot?.summary.studentId;
 
   useEffect(() => {
@@ -184,7 +188,7 @@ export function StudentLearningExperience({ fullName, mode, registeredAccessibil
 
   async function saveProfile() {
     if (!snapshot || !begin("profile")) return;
-    const input: StudentPreferencesUpdate = { interests: interestsText.split(",").map((item) => item.trim()).filter(Boolean).slice(0, 20), context };
+    const input: StudentPreferencesUpdate = { interests: selectedInterests, context };
     try {
       const preferences = await client.savePreferences(input);
       setSnapshot((current) => current && { ...current, preferences, preferencesSaved: true }); setEditingProfile(false);
@@ -196,10 +200,17 @@ export function StudentLearningExperience({ fullName, mode, registeredAccessibil
 
   function cancelProfileEdit() {
     if (snapshot) {
-      setInterestsText(snapshot.preferences.interests.join(", "));
+      setInterestsText(snapshot.preferences.interests.filter(isApprovedStudentInterest).join(", "));
       setContext(snapshot.preferences.context);
     }
     setEditingProfile(false);
+  }
+
+  function toggleInterest(interest: ApprovedStudentInterest) {
+    const current = new Set(selectedInterests);
+    if (current.has(interest)) current.delete(interest);
+    else current.add(interest);
+    setInterestsText([...current].join(", "));
   }
 
   function persistAccessibility(next: StudentAccessibilityPreferences, message: string) {
@@ -278,9 +289,18 @@ export function StudentLearningExperience({ fullName, mode, registeredAccessibil
       <section className="panel student-question-panel">
         <div className="panel-heading"><div><span className="eyebrow">ÁREA DE TREINO</span><h2>{content ? contents.find((item) => item.id === content)?.title : getSubject(subject).name}</h2></div><span className="subject-label">{snapshot.activities.grade}º ano · {question?.skillCodes[0] ?? `${activities.length} atividades`}</span></div>
         {!question ? <>
-          <div className="student-question-empty"><span><BookOpen size={37} /></span><h3>{!content ? "Escolha um conteúdo" : activities.length ? (accessibleMode ? "Escolha uma atividade" : "Escolha seu próximo desafio") : "Nenhuma atividade disponível"}</h3><p>{!content ? `Selecione acima um conteúdo de ${getSubject(subject).name} para ver os exercícios.` : activities.length ? "Continue uma questão ou consulte suas respostas. Questões respondidas ficam disponíveis apenas para leitura." : "Sua turma ainda não tem questões ativas neste conteúdo."}</p></div>
+          <div className="student-question-empty"><span><BookOpen size={37} /></span><h3>{!content ? "Escolha um conteúdo" : activities.length ? "Escolha o que quer fazer" : "Nenhuma atividade disponível"}</h3><p>{!content ? `Selecione acima um conteúdo de ${getSubject(subject).name} para ver os exercícios.` : activities.length ? "O desafio semanal e as listas do professor aparecem separados logo abaixo." : "Sua turma ainda não tem questões ativas neste conteúdo."}</p></div>
           {!snapshot.preferencesSaved && <p role="status">Antes de começar, <a href="#perfil">salve seus interesses na ficha</a>.</p>}
-          <ol className={styles.activities} aria-label="Atividades da matéria">{activities.map((activity, index) => <li key={activity.rootQuestionId}><button disabled={busy !== null || !snapshot.preferencesSaved} onClick={() => openActivity(activity)}><span><strong>{activity.activityType === "weekly_challenge" ? `Desafio semanal ${index + 1}` : `Exercício ${index + 1}`}</strong><small>{activity.skillCodes.join(" · ")}</small></span><span>{activity.recoveryStatus === "in_progress" ? "Retomar recuperação" : activity.recoveryStatus === "recovered" ? "Recuperação concluída" : activity.recoveryStatus === "interrupted" ? "Recuperação interrompida" : activity.status === "answered" ? "Ver resposta" : activity.status === "pending" ? "Continuar questão" : "Abrir atividade"}<ArrowRight size={16} aria-hidden="true" /></span></button></li>)}</ol>
+          {content && activities.length > 0 && <div className={styles.activitySections}>
+            <section className={styles.weeklySection} aria-labelledby="weekly-heading">
+              <div className={styles.activitySectionHeading}><span><Zap size={20} /></span><div><strong id="weekly-heading">Desafio semanal em destaque</strong><small>Questões especiais · 100 XP + 100 pontos de patente por acerto</small></div></div>
+              {weeklyChallenges.length ? <ol className={`${styles.activities} ${styles.weeklyActivities}`} aria-label="Desafios semanais">{weeklyChallenges.map((activity, index) => <li key={activity.rootQuestionId}><button disabled={busy !== null || !snapshot.preferencesSaved} onClick={() => openActivity(activity)}><span><strong>Desafio semanal {index + 1}</strong><small>{activity.skillCodes.join(" · ")}</small></span><span>{activity.recoveryStatus === "in_progress" ? "Retomar recuperação" : activity.status === "answered" ? "Ver resposta" : activity.status === "pending" ? "Continuar desafio" : "Começar desafio"}<ArrowRight size={16} aria-hidden="true" /></span></button></li>)}</ol> : <p className={styles.activityEmpty}>Nenhum desafio semanal neste conteúdo.</p>}
+            </section>
+            <section className={styles.teacherSection} aria-labelledby="teacher-lists-heading">
+              <div className={styles.activitySectionHeading}><span><ClipboardList size={20} /></span><div><strong id="teacher-lists-heading">Listas do professor</strong><small>Exercícios da disciplina · 50 pontos de patente por acerto</small></div></div>
+              {teacherExercises.length ? <ol className={styles.activities} aria-label="Listas do professor">{teacherExercises.map((activity, index) => <li key={activity.rootQuestionId}><button disabled={busy !== null || !snapshot.preferencesSaved} onClick={() => openActivity(activity)}><span><strong>Lista do professor {index + 1}</strong><small>{activity.skillCodes.join(" · ")} · {activity.contentDefinedBy === "coordenador" ? "publicada pela coordenação" : "publicada pelo professor"}</small></span><span>{activity.recoveryStatus === "in_progress" ? "Retomar recuperação" : activity.status === "answered" ? "Ver resposta" : activity.status === "pending" ? "Continuar lista" : "Abrir lista"}<ArrowRight size={16} aria-hidden="true" /></span></button></li>)}</ol> : <p className={styles.activityEmpty}>Nenhuma lista do professor neste conteúdo.</p>}
+            </section>
+          </div>}
           {busy === "opening" && <p role="status">Abrindo atividade...</p>}
         </> : <>
           <button className="text-button" disabled={busy !== null} onClick={resetTraining}>Voltar às atividades</button>
@@ -300,8 +320,8 @@ export function StudentLearningExperience({ fullName, mode, registeredAccessibil
 
       <section className="panel student-profile-panel" id="perfil">
         <div className="panel-heading"><div><span className="eyebrow">MINHA FICHA</span><h2>Interesses e contexto</h2></div><button className="icon-button" disabled={busy !== null} onClick={() => editingProfile ? cancelProfileEdit() : setEditingProfile(true)} aria-label={editingProfile ? "Cancelar edição da ficha" : "Editar ficha"}><Edit3 size={17} /></button></div>
-        <p className="panel-description">Esses dados ajudam a adaptar exemplos futuros. Saúde e apoio não são editáveis aqui.</p>
-        {editingProfile ? <div className="student-profile-form"><label>Interesses <small>separe por vírgulas</small><input value={interestsText} onChange={(event) => setInterestsText(event.target.value)} maxLength={500} /></label><label>Como você prefere aprender?<textarea value={context} onChange={(event) => setContext(event.target.value)} maxLength={2000} rows={5} /></label><div><button className="button button-primary" onClick={saveProfile} disabled={busy !== null}><Save size={15} />Salvar ficha</button><button className="text-button" disabled={busy !== null} onClick={cancelProfileEdit}>Cancelar</button></div></div> : <><div className="interest-tags">{snapshot.preferences.interests.map((interest) => <span key={interest}>{interest}</span>)}</div><div className="student-context"><UserRound size={18} /><p>{snapshot.preferences.context || "Nenhum contexto informado."}</p></div><small className="profile-version">Versão {snapshot.preferences.version} · {mode === "demo" ? "demonstração mantida durante esta sessão" : "dados vinculados à sua conta"}</small></>}
+        <p className="panel-description">Escolha somente entre sugestões saudáveis e adequadas ao ambiente escolar. Saúde e apoio não são editáveis aqui.</p>
+        {editingProfile ? <div className="student-profile-form"><fieldset className={styles.interestFieldset}><legend>Escolha seus interesses <small>{selectedInterests.length} selecionados</small></legend><div className={styles.interestSuggestions}>{APPROVED_STUDENT_INTERESTS.map((interest) => <button type="button" key={interest} aria-pressed={selectedInterests.includes(interest)} onClick={() => toggleInterest(interest)}>{selectedInterests.includes(interest) && <Check size={14} />}{interest}</button>)}</div><p>As opções são previamente aprovadas para manter a personalização segura.</p></fieldset><label>Como você prefere aprender?<textarea value={context} onChange={(event) => setContext(event.target.value)} placeholder="Ex.: prefiro exemplos visuais e atividades curtas." maxLength={2000} rows={5} /></label><div><button className="button button-primary" onClick={saveProfile} disabled={busy !== null}><Save size={15} />Salvar ficha</button><button className="text-button" disabled={busy !== null} onClick={cancelProfileEdit}>Cancelar</button></div></div> : <><div className="interest-tags">{snapshot.preferences.interests.filter(isApprovedStudentInterest).map((interest) => <span key={interest}>{interest}</span>)}</div><div className="student-context"><UserRound size={18} /><p>{snapshot.preferences.context || "Nenhum contexto informado."}</p></div><small className="profile-version">Versão {snapshot.preferences.version} · {mode === "demo" ? "demonstração mantida durante esta sessão" : "dados vinculados à sua conta"}</small></>}
 
       </section>
     </div>
