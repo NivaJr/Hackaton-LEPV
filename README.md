@@ -48,13 +48,15 @@ Login, convites e permissões ainda precisam ser exercitados contra o projeto Su
 | Pessoa | Responsabilidade | Ficha para executar |
 | --- | --- | --- |
 | **Viegas** | Telas e fluxo do aluno; integra os contratos de conteúdo, tentativas e ranking | [Tarefa 01](docs/TAREFA_01_VIEGAS.md) |
-| **Fabia** | Coordenador, turmas, importação de alunos e painel do responsável | [Tarefa 02](docs/TAREFA_02_FABIA.md) |
+| **Fabiano** | Coordenador, turmas, importação de alunos e painel do responsável | [Tarefa 02](docs/TAREFA_02_FABIANO.md) |
 | **Nivaldo** | Banco, autenticação, permissões, tentativas e pontuação | [Tarefa 03](docs/TAREFA_03_NIVALDO.md) |
 | **Gallotte** | Professor, importação das questões, IA e validação do fluxo completo | [Tarefa 04](docs/TAREFA_04_GALLOTTE.md) |
 
-As telas de professor ficam com Gallotte, e as do responsável com Fabia, reaproveitando os layouts-base. Nivaldo mantém a fundação de dados/auth/pontuação; os demais podem implementar os endpoints de seu domínio usando essa fundação, sem duplicar autenticação ou cálculo de pontos.
+As telas de professor ficam com Gallotte, e as do responsável com Fabiano, reaproveitando os layouts-base. Nivaldo mantém a fundação de dados/auth/pontuação; os demais podem implementar os endpoints de seu domínio usando essa fundação, sem duplicar autenticação ou cálculo de pontos.
 
 Ler [Divisão da equipe](docs/DIVISAO_EQUIPE.md) e [Integração](docs/INTEGRACAO.md) antes de começar. Cada tarefa inclui arquivos de propriedade, contratos, critérios de aceite e um prompt para usar na LLM.
+
+Tarefa 02: escopo, validação e limites em [Entrega da Tarefa 02](docs/ENTREGA_FABIANO_GESTAO.md).
 
 ## Validação
 

@@ -1,4 +1,4 @@
-# Tarefa 02 — Fabia: coordenador, turmas, importações e responsável
+# Tarefa 02 — Fabiano: coordenador, turmas, importações e responsável
 
 ## Objetivo e limites
 
@@ -9,7 +9,7 @@ Entregar gestão de turmas/alunos/professores, importação CSV/XLSX com prévia
 - `src/features/roster/**` e `src/features/family/**`: UI, serviços, ports, adapters, fixtures e testes.
 - `src/app/api/roster/**` e `src/app/api/family/**`.
 - Conteúdo das páginas `src/app/(workspace)/coordenador/page.tsx` e `responsavel/page.tsx`, preservando guards.
-- `PROMPTS/` com prefixo `02-fabia-`.
+- `PROMPTS/` com prefixo `02-fabiano-`.
 
 Não editar SQL, auth, scoring/domínio de aprendizagem, drivers LLM, schemas centrais, shell/demo global, `package.json` ou lockfiles sem coordenação. Solicitações de novas tabelas/colunas vão a Nivaldo; não criar migração paralela.
 
@@ -28,7 +28,7 @@ Criar `RosterMetricsGateway` e `FamilyMetricsGateway` locais com fake para pain�
 
 ## Passos executáveis
 
-1. Ler instruções, migração e contratos, arquivar prompt e usar `feat/fabia-gestao` em checkout próprio.
+1. Ler instruções, migração e contratos, arquivar prompt e usar `feat/fabiano-gestao` em checkout próprio.
 2. Implementar CRUD mínimo de turmas e alocação de alunos/professores por matéria no escopo da escola autenticada.
 3. Disponibilizar modelos CSV e aceitar CSV/XLSX. Validar tamanho, cabeçalhos, nomes, emails e linhas; não executar fórmulas/macros. Pacote novo de XLSX depende de coordenação do lockfile.
 4. Separar parser da gravação. Prévia devolve linhas válidas, erros por linha, duplicatas internas, aluno já na turma e transferência possível.
@@ -56,8 +56,8 @@ Rodar `npm run typecheck`, `npm test` e `npm run build`. Testar parsing/aliases,
 ## Prompt pronto para Claude/ChatGPT
 
 ```text
-Você trabalhará com Fabia na Tarefa 02 do Hackaton-LEPV. Leia AGENTS.md, README.md, docs/INTEGRACAO.md e docs/TAREFA_02_FABIA.md; inspecione contratos, sessão, permissões e migração-base.
-Use feat/fabia-gestao no commit-base comum e checkout/worktree próprio. Sem sobrescrita alheia, last-writer-wins ou force-push. Arquive este prompt e novos em PROMPTS/ com prefixo 02-fabia-, sem chaves/dados reais/instruções internas.
+Você trabalhará com Fabiano na Tarefa 02 do Hackaton-LEPV. Leia AGENTS.md, README.md, docs/INTEGRACAO.md e docs/TAREFA_02_FABIANO.md; inspecione contratos, sessão, permissões e migração-base.
+Use feat/fabiano-gestao no commit-base comum e checkout/worktree próprio. Sem sobrescrita alheia, last-writer-wins ou force-push. Arquive este prompt e novos em PROMPTS/ com prefixo 02-fabiano-, sem chaves/dados reais/instruções internas.
 Implemente roster, family, APIs dessas áreas e conteúdo das páginas coordenador/responsavel mantendo guards. CSV/XLSX exige prévia, duplicatas e transferência só por confirmação. Saúde/apoio só são editáveis pelo responsável vinculado; histórico/interesses preservam donos. Use ports/fakes para começar sem outras branches e LearningAiGateway para feedback, sem SDK direto.
 Nivaldo é dono de banco, auth e pontos. Não crie implementação paralela nem edite SQL, schemas comuns, IA, shell/demo global, package.json ou lockfiles sem coordenação. Proponha mudanças necessárias com motivo/impacto.
 Preserve regras e execute npm run typecheck, npm test e npm run build. Entregue checkpoint com endpoints, alterações de banco solicitadas, testes, fixtures e limites.

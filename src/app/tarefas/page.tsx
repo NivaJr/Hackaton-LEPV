@@ -4,7 +4,7 @@ import { Brand } from "@/components/brand";
 
 const tasks = [
   { number: "01", owner: "Viegas", name: "Experiência do aluno", icon: GraduationCap, color: "violet", description: "Ficha de interesses, jornada de atividades, resolução de questões e visualização de progresso.", file: "docs/TAREFA_01_VIEGAS.md", demo: "aluno" },
-  { number: "02", owner: "Fabia", name: "Coordenação e responsáveis", icon: Users, color: "teal", description: "Gestão de turmas e pessoas, importação de planilhas e acompanhamento pelos responsáveis vinculados.", file: "docs/TAREFA_02_FABIA.md", demo: "coordenador" },
+  { number: "02", owner: "Fabiano", name: "Coordenação e responsáveis", icon: Users, color: "teal", description: "Gestão de turmas e pessoas, importação de planilhas e acompanhamento pelos responsáveis vinculados.", file: "docs/TAREFA_02_FABIANO.md", demo: "coordenador" },
   { number: "03", owner: "Nivaldo", name: "Dados, acesso e pontuação", icon: Database, color: "blue", description: "Persistência, permissões por vínculo, cálculo da classificação e regras de patente e recuperação.", file: "docs/TAREFA_03_NIVALDO.md", demo: "aluno" },
   { number: "04", owner: "Gallotte", name: "Professor, importação e IA", icon: BookOpen, color: "amber", description: "Fluxo do professor, listas em PDF/Word, revisão do conteúdo e integração configurável de LLM.", file: "docs/TAREFA_04_GALLOTTE.md", demo: "professor" },
 ];
