@@ -92,6 +92,8 @@ export interface EnrollmentRecord extends CurrentEnrollment { studentId: string;
 export interface AssignmentRecord { id: string; classroomId: string; teacherId: string; subjectId: SubjectId; }
 export interface AccountRecord { userId: string; schoolId: string | null; fullName: string | null; roles: Role[]; }
 export interface ProvisionedAccount { userId: string; accessLink: string | null; }
+export interface PendingAccessLink { userId: string; email: string; accessLink: string; }
+export interface ClassAccessLinks { links: { fullName: string; email: string; accessLink: string }[]; activeCount: number; }
 export interface GuardianLinkRecord { id: string; guardianId: string; studentId: string; status: "pending" | "confirmed" | "revoked"; }
 export type StudentResults = { source: "real"; summary: StudentSummary } | { source: "unavailable"; summary: null };
 export interface ClassMetrics { classroomId: string; frequencyPercent: number; correctPercent: number; }

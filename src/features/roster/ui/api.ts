@@ -1,6 +1,6 @@
 import type { SubjectId } from "@/contracts";
 import type { ImportConfirm, ImportKind, ImportPreview, ImportResult } from "../model";
-import type { AssignmentRecord, ClassMetrics, ClassroomRecord, EnrollmentRecord, GuardianLinkRecord, PersonRecord, StudentResults } from "../model";
+import type { AssignmentRecord, ClassAccessLinks, ClassMetrics, ClassroomRecord, EnrollmentRecord, GuardianLinkRecord, PersonRecord, StudentResults } from "../model";
 
 export interface RosterOverview {
   classrooms: ClassroomRecord[];
@@ -35,6 +35,7 @@ export const rosterApi = {
   removeEnrollment: (id: string) => call(`enrollments/${id}`, send("DELETE")),
   studentResults: (id: string) => call<StudentResults>(`students/${id}/results`),
   linkGuardian: (input: { studentId: string; fullName: string; email: string }) => call<GuardianLinkRecord & { accessLink?: string }>("guardian-links", send("POST", input)),
+  classAccessLinks: (classroomId: string) => call<ClassAccessLinks>(`classrooms/${classroomId}/access-links`, send("POST")),
   issueAccessLink: (personId: string) => call<{ accessLink: string }>("access-links", send("POST", { personId })),
   setGuardianLink: (id: string, status: "confirmed" | "revoked") => call<GuardianLinkRecord>(`guardian-links/${id}`, send("PATCH", { status })),
   preview: (kind: ImportKind, classroomId: string, file: File) => {

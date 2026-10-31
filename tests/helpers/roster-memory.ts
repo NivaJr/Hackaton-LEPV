@@ -114,6 +114,10 @@ export class MemoryDirectory implements AccountDirectory {
     this.pending.add(userId);
     return { userId, accessLink: `https://escola.example/convite?usuario=${userId}` };
   }
+  async issuePendingAccessLinks(userIds: string[]) {
+    return [...this.accounts].filter(([, account]) => userIds.includes(account.userId) && this.pending.has(account.userId))
+      .map(([email, account]) => ({ userId: account.userId, email, accessLink: `https://escola.example/convite?usuario=${account.userId}` }));
+  }
   async issueAccessLink(userId: string) {
     if (!this.pending.has(userId)) throw new RosterError("ACCOUNT_ALREADY_ACTIVE", "Esta pessoa já ativou a conta e entra com a própria senha.", 409);
     return `https://escola.example/convite?usuario=${userId}&novo=1`;

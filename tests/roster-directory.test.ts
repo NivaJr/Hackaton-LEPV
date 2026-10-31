@@ -9,10 +9,11 @@ let authUser: { id: string; email: string; app_metadata: Record<string, unknown>
 const generateLink = vi.fn();
 const updateUserById = vi.fn();
 const inviteUserByEmail = vi.fn();
+const getUserById = vi.fn();
 
 function directory(appUrl: string | undefined = APP) {
   const admin = {
-    auth: { admin: { generateLink, updateUserById, inviteUserByEmail, getUserById: async () => ({ data: { user: authUser }, error: null }) } },
+    auth: { admin: { generateLink, updateUserById, inviteUserByEmail, getUserById } },
     from: () => ({ upsert: async () => ({ error: null }) }),
   };
   return createSupabaseAccountDirectory(admin as unknown as SupabaseClient, appUrl);
@@ -23,6 +24,7 @@ beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
   authUser = { id: USER, email: "pessoa@b.com", app_metadata: { access_pending: true } };
   updateUserById.mockResolvedValue({ error: null });
+  getUserById.mockImplementation(async () => ({ data: { user: authUser }, error: null }));
   generateLink.mockResolvedValue({ data: { user: authUser, properties: { hashed_token: "abc123" } }, error: null });
 });
 
@@ -50,6 +52,14 @@ describe("provisionamento por link", () => {
     authUser.last_sign_in_at = "2026-10-31T10:00:00Z";
     await expect(directory().issueAccessLink(USER)).rejects.toMatchObject({ code: "ACCOUNT_ALREADY_ACTIVE", status: 409 });
     expect(generateLink).not.toHaveBeenCalled();
+  });
+
+  it("pula contas ativadas no lote da turma", async () => {
+    const active = { ...authUser, id: "ativo", app_metadata: { access_pending: false }, last_sign_in_at: "2026-10-31T10:00:00Z" };
+    getUserById.mockImplementation(async (id: string) => ({ data: { user: id === "ativo" ? active : authUser }, error: null }));
+    expect(await directory().issuePendingAccessLinks([USER, "ativo"])).toEqual([
+      { userId: USER, email: "pessoa@b.com", accessLink: `${APP}/convite?token_hash=abc123&type=recovery` },
+    ]);
   });
 
   it("explica a falta do endereço da aplicação", async () => {

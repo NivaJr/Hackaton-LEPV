@@ -2,9 +2,9 @@
 
 import { useState, type FormEvent } from "react";
 import { Download, UploadCloud } from "lucide-react";
-import { accessLinksCsv, TEMPLATES } from "../import/rows";
+import { TEMPLATES } from "../import/rows";
 import type { ConfirmStatus, ImportConfirmRow, ImportKind, ImportPreview, ImportResult, PreviewRow, PreviewStatus } from "../model";
-import { ACCESS_LINK_WARNING, CopyLinkButton } from "./access-link";
+import { ACCESS_LINK_WARNING, CopyLinkButton, downloadAccessLinks } from "./access-link";
 import { rosterApi } from "./api";
 import styles from "./roster.module.css";
 
@@ -87,15 +87,6 @@ export function ImportPanel({ classroomId, classroomName, onApplied }: { classro
     return row.accessLink && person ? [{ fullName: person.fullName, email: row.email, accessLink: row.accessLink }] : [];
   }) ?? [];
 
-  function downloadLinks() {
-    const url = URL.createObjectURL(new Blob(["\uFEFF", accessLinksCsv(issuedLinks)], { type: "text/csv;charset=utf-8" }));
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `links-de-cadastro-${classroomName}.csv`;
-    anchor.click();
-    URL.revokeObjectURL(url);
-  }
-
   return <section className="panel" id="importacao">
     <div className="panel-heading"><div><span className="eyebrow">IMPORTAÇÃO</span><h2>Importar para {classroomName}</h2></div><UploadCloud size={22} /></div>
     <p className="panel-description">Nada é gravado na prévia. Contas, links de cadastro e matrículas só são criados depois da confirmação.</p>
@@ -135,7 +126,7 @@ export function ImportPanel({ classroomId, classroomName, onApplied }: { classro
     </>}
     {issuedLinks.length > 0 && <>
       <p className={styles.notice}>{ACCESS_LINK_WARNING}</p>
-      <div className={styles.actions}><button type="button" className="button button-outline" onClick={downloadLinks}><Download size={14} /> Baixar {issuedLinks.length} link(s) em CSV</button></div>
+      <div className={styles.actions}><button type="button" className="button button-outline" onClick={() => downloadAccessLinks(issuedLinks, classroomName)}><Download size={14} /> Baixar {issuedLinks.length} link(s) em CSV</button></div>
     </>}
     {result && <div className={styles.tableWrap}><table className={styles.table}>
       <thead><tr><th>Linha</th><th>Email</th><th>Resultado</th><th>Link de cadastro</th></tr></thead>
