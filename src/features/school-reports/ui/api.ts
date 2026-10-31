@@ -10,6 +10,7 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
 export const reportFileUrl = (studentId: string, fileId: string) => `/api/school-reports/students/${studentId}/files/${fileId}`;
 
 export const schoolReportsApi = {
+  classStudents: (classId: string) => call<{ students: { id: string; fullName: string }[] }>(`classes/${classId}/students`),
   list: (studentId: string) => call<{ reports: SchoolReportFile[] }>(`students/${studentId}`),
   upload: (studentId: string, label: string, file: File) => {
     const form = new FormData();

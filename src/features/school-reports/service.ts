@@ -11,7 +11,7 @@ function isCoordinator(actor: SessionContext) {
   return actor.roles.includes("coordenador") && actor.coordinatorInstitutionIds.includes(actor.institutionId);
 }
 
-/** School reports are official documents: only the coordination publishes, and only families read. */
+/** School reports are official documents: only the coordination publishes; the others only read. */
 export class SchoolReportService {
   constructor(private readonly store: SchoolReportStore, private readonly newId: () => string = randomUUID) {}
 
@@ -20,11 +20,22 @@ export class SchoolReportService {
     if (!await this.store.isStudentOfSchool(actor.institutionId, studentId)) throw notFound();
   }
 
+  private teachesClass(actor: SessionContext, classId: string) {
+    return actor.roles.includes("professor") && actor.teacherAssignments.some((item) => item.institutionId === actor.institutionId && item.classId === classId);
+  }
+
   /** Unlinked IDs get the same 404 as nonexistent ones. */
   private async assertReader(actor: SessionContext, studentId: string) {
+    if (actor.roles.includes("aluno") && actor.studentId === studentId) return;
     if (actor.roles.includes("responsavel") && actor.guardianStudentIds.includes(studentId)) return;
-    if (!isCoordinator(actor)) throw notFound();
-    await this.assertCoordinatorOf(actor, studentId);
+    if (isCoordinator(actor)) return this.assertCoordinatorOf(actor, studentId);
+    const classId = actor.roles.includes("professor") ? await this.store.activeClassId(actor.institutionId, studentId) : null;
+    if (!classId || !this.teachesClass(actor, classId)) throw notFound();
+  }
+
+  async classStudents(actor: SessionContext, classId: string) {
+    if (!this.teachesClass(actor, classId)) throw new SchoolReportError("NOT_FOUND", "Turma não encontrada.", 404);
+    return { students: await this.store.listClassStudents(actor.institutionId, classId) };
   }
 
   async list(actor: SessionContext, studentId: string) {

@@ -18,12 +18,19 @@ const otherCoordinator: SessionContext = { ...coordinator, institutionId: OTHER_
 const guardian: SessionContext = { ...base, roles: ["responsavel"], guardianStudentIds: [child] };
 const otherGuardian: SessionContext = { ...base, roles: ["responsavel"], guardianStudentIds: [stranger] };
 const student: SessionContext = { ...base, roles: ["aluno"], userId: child, studentId: child };
-const teacher: SessionContext = { ...base, roles: ["professor"] };
+const classA = "44444444-4444-4444-8444-444444444444";
+const classB = "55555555-5555-4555-8555-555555555555";
+const assignment = (classId: string) => ({ institutionId: SCHOOL, classId, subjectId: "matematica" as const });
+const teacher: SessionContext = { ...base, roles: ["professor"], teacherAssignments: [assignment(classA)] };
+const otherTeacher: SessionContext = { ...base, roles: ["professor"], teacherAssignments: [assignment(classB)] };
+const otherStudent: SessionContext = { ...base, roles: ["aluno"], userId: stranger, studentId: stranger };
 const pdf = new TextEncoder().encode("%PDF-1.7 boletim");
 
 class MemoryStore implements SchoolReportStore {
   files = new Map<string, { report: SchoolReportFile; bytes: Uint8Array; schoolId: string }>();
   async isStudentOfSchool(schoolId: string, studentId: string) { return schoolId === SCHOOL && studentId === child; }
+  async activeClassId(schoolId: string, studentId: string) { return schoolId === SCHOOL && studentId === child ? classA : null; }
+  async listClassStudents(_schoolId: string, classId: string) { return classId === classA ? [{ id: child, fullName: "Aluno Vinculado" }] : []; }
   async list(schoolId: string, studentId: string) {
     return [...this.files].filter(([key, item]) => key.startsWith(studentId) && item.schoolId === schoolId).map(([, item]) => item.report);
   }
@@ -52,6 +59,20 @@ describe("boletins em PDF", () => {
     expect(await service.read(guardian, child, report.id)).toEqual(pdf);
   });
 
+  it("o próprio aluno e o professor da turma leem", async () => {
+    const report = await upload(coordinator);
+    for (const actor of [student, teacher]) {
+      expect((await service.list(actor, child)).reports).toHaveLength(1);
+      expect(await service.read(actor, child, report.id)).toEqual(pdf);
+    }
+  });
+
+  it("professor lista alunos só das próprias turmas", async () => {
+    expect((await service.classStudents(teacher, classA)).students).toHaveLength(1);
+    await expect(service.classStudents(teacher, classB)).rejects.toMatchObject({ status: 404 });
+    await expect(service.classStudents(student, classA)).rejects.toMatchObject({ status: 404 });
+  });
+
   it("só a coordenação da escola envia e remove", async () => {
     const report = await upload(coordinator);
     for (const actor of [guardian, teacher, student]) {
@@ -66,7 +87,7 @@ describe("boletins em PDF", () => {
 
   it("outros perfis recebem o mesmo 404 de aluno inexistente", async () => {
     const report = await upload(coordinator);
-    for (const actor of [otherGuardian, teacher, student, otherCoordinator]) {
+    for (const actor of [otherGuardian, otherTeacher, otherStudent, otherCoordinator]) {
       await expect(service.list(actor, child)).rejects.toMatchObject({ status: 404 });
       await expect(service.read(actor, child, report.id)).rejects.toMatchObject({ status: 404 });
     }

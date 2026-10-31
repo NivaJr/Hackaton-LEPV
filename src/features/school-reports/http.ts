@@ -40,6 +40,9 @@ export function createSchoolReportHttpHandler(dependencies: SchoolReportHttpDepe
         throw new SchoolReportError("INVALID_ORIGIN", "A origem desta operação não é permitida.", 403);
       }
       const [first, id, files, fileId] = path;
+      if (first === "classes" && path.length === 3 && files === "students" && method === "GET") {
+        return respond(await dependencies.createService().classStudents(actor, uuid.parse(id)));
+      }
       if (first === "students" && path.length === 2) {
         const studentId = uuid.parse(id);
         const service = dependencies.createService();

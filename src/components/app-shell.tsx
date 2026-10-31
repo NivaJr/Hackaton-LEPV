@@ -32,6 +32,7 @@ export function AppShell({ role, fullName, mode, children }: { role: Role; fullN
     { label: "Meu progresso", icon: Compass, href: `${home}#progresso` },
     { label: "Ranking da turma", icon: Trophy, href: `${home}#ranking-turma` },
     { label: "Meu perfil", icon: GraduationCap, href: `${home}#perfil` },
+    ...(mode === "real" ? [{ label: "Boletins", icon: FileText, href: `${home}#boletins` }] : []),
   ] : [
     { label: "Visão geral", icon: LayoutDashboard, href: home },
     { label: role === "responsavel" ? "Atividades do aluno" : "Atividades", icon: BookOpen, href: "/tarefas" },

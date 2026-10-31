@@ -82,7 +82,7 @@ Quatro séries e seis matérias vêm do catálogo. Esta tarefa não envolve ques
 Resultados no commit desta entrega:
 
 - `npm run typecheck`: passou.
-- `npm test`: 339 de 340 testes passaram em 29 arquivos, incluindo `roster-import`, `roster-service`, `roster-directory`, `family-service`, `family-recognitions` e `roster-database`. A falha é `llm-prompts`, somente em checkout Windows, que converte `PROMPTS/04-gallotte-templates-ia.md` para CRLF.
+- `npm test`: 341 de 342 testes passaram em 29 arquivos, incluindo `roster-import`, `roster-service`, `roster-directory`, `family-service`, `family-recognitions` e `roster-database`. A falha é `llm-prompts`, somente em checkout Windows, que converte `PROMPTS/04-gallotte-templates-ia.md` para CRLF.
 - `npm run build`: passou.
 
 ## Percurso realmente executado
@@ -110,9 +110,9 @@ Nenhuma decisão desta entrega permanece em aberto.
 
 ## Boletins em PDF
 
-Por decisão de Fabiano em 31/10/2026, o histórico escolar vem das provas da escola, em PDF, e não das atividades da plataforma. O coordenador envia, abre e remove boletins por aluno na turma (`#boletins`); o responsável confirmado abre em "Histórico escolar". Aluno e professor não têm acesso.
+Por decisão de Fabiano em 31/10/2026, o histórico escolar vem das provas da escola, em PDF, e não das atividades da plataforma. O coordenador envia, abre e remove boletins por aluno na turma (`#boletins`); o responsável confirmado abre em "Histórico escolar", o aluno vê os próprios em `/aluno#boletins` e o professor vê os dos alunos das suas turmas em `/professor#boletins`. Esses três perfis só consultam.
 
-O módulo `src/features/school-reports` tem rota própria, `/api/school-reports/students/:id` (GET, POST) e `/files/:fileId` (GET, DELETE). Limite de 4 MB, assinatura `%PDF` conferida no servidor. Os arquivos ficam no bucket privado `boletins`, criado no primeiro envio, sem migração: o título fica no nome do objeto e todo acesso passa pelo servidor. Não há registro de quem enviou cada arquivo.
+O módulo `src/features/school-reports` tem rota própria, `/api/school-reports/students/:id` (GET, POST), `/files/:fileId` (GET, DELETE) e `/api/school-reports/classes/:id/students` (GET, professor da turma). Limite de 4 MB, assinatura `%PDF` conferida no servidor. Os arquivos ficam no bucket privado `boletins`, criado no primeiro envio, sem migração: o título fica no nome do objeto e todo acesso passa pelo servidor. Não há registro de quem enviou cada arquivo.
 
 ## Cadastro sem email
 
