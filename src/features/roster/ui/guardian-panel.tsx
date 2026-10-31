@@ -2,6 +2,7 @@
 
 import type { FormEvent } from "react";
 import type { GuardianLinkRecord, PersonRecord } from "../model";
+import type { IssuedLink } from "./access-link";
 import { rosterApi } from "./api";
 import styles from "./roster.module.css";
 
@@ -13,9 +14,11 @@ interface GuardianPanelProps {
   links: GuardianLinkRecord[];
   busy: boolean;
   act(work: () => Promise<unknown>, success: string): Promise<void>;
+  onLinkIssued(issued: IssuedLink): void;
+  issueLink(person: { id: string; name: string }): void;
 }
 
-export function GuardianPanel({ students, guardians, links, busy, act }: GuardianPanelProps) {
+export function GuardianPanel({ students, guardians, links, busy, act, onLinkIssued, issueLink }: GuardianPanelProps) {
   const visible = links.filter((link) => students.some((student) => student.id === link.studentId));
   const nameOf = (people: PersonRecord[], id: string) => people.find((person) => person.id === id)?.fullName ?? "Pessoa";
 
@@ -24,7 +27,9 @@ export function GuardianPanel({ students, guardians, links, busy, act }: Guardia
     const form = event.currentTarget;
     const fields = new FormData(form);
     void act(async () => {
-      await rosterApi.linkGuardian({ studentId: String(fields.get("studentId")), fullName: String(fields.get("fullName")), email: String(fields.get("email")) });
+      const fullName = String(fields.get("fullName"));
+      const created = await rosterApi.linkGuardian({ studentId: String(fields.get("studentId")), fullName, email: String(fields.get("email")) });
+      if (created.accessLink) onLinkIssued({ name: fullName, link: created.accessLink });
       form.reset();
     }, "Vínculo criado como pendente.");
   }
@@ -36,11 +41,12 @@ export function GuardianPanel({ students, guardians, links, busy, act }: Guardia
 
   return <section className="panel" id="vinculos">
     <div className="panel-heading"><div><span className="eyebrow">FAMÍLIA</span><h2>Responsáveis da turma</h2></div></div>
-    <p className="panel-description">O acesso aos dados do aluno só começa depois que a escola confirma o vínculo. Um email novo recebe convite.</p>
+    <p className="panel-description">O acesso aos dados do aluno só começa depois que a escola confirma o vínculo. Um email novo gera um link de cadastro.</p>
     {visible.length === 0 && <p className={styles.empty}>Nenhum vínculo nesta turma.</p>}
     {visible.map((link) => <div className={styles.row} key={link.id}>
       <span>{nameOf(guardians, link.guardianId)}<small>{nameOf(students, link.studentId)} · {STATUS_LABELS[link.status]}</small></span>
       <span>
+        <button type="button" className={styles.link} disabled={busy} onClick={() => issueLink({ id: link.guardianId, name: nameOf(guardians, link.guardianId) })}>Novo link</button>
         {link.status !== "confirmed" && <button type="button" className={styles.link} disabled={busy} onClick={() => setStatus(link, "confirmed")}>Confirmar</button>}
         {link.status !== "revoked" && <button type="button" className={`${styles.link} ${styles.danger}`} disabled={busy} onClick={() => setStatus(link, "revoked")}>Revogar</button>}
       </span>

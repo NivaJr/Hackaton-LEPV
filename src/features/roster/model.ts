@@ -33,6 +33,8 @@ export const GuardianLinkInputSchema = z.object({
 /** Confirmation is a human check by the school; "pending" is only the initial state. */
 export const GuardianLinkStatusSchema = z.object({ status: z.enum(["confirmed", "revoked"]) }).strict();
 
+export const AccessLinkInputSchema = z.object({ personId: z.uuid() }).strict();
+
 export const ImportKindSchema = z.enum(["students", "teachers"]);
 export type ImportKind = z.infer<typeof ImportKindSchema>;
 export const MAX_IMPORT_ROWS = 1_000;
@@ -77,7 +79,8 @@ export interface ImportPreview {
 }
 
 export type ConfirmStatus = "created" | "enrolled" | "transferred" | "assigned" | "kept" | "already_applied" | "failed";
-export interface ConfirmRowResult { line: number; email: string; status: ConfirmStatus; issue?: RowIssue; }
+/** accessLink is a one-time credential: it is returned once and never stored. */
+export interface ConfirmRowResult { line: number; email: string; status: ConfirmStatus; issue?: RowIssue; accessLink?: string; }
 export interface ImportResult {
   rows: ConfirmRowResult[];
   counts: Record<ConfirmStatus, number>;
@@ -88,6 +91,7 @@ export interface PersonRecord { id: string; fullName: string; }
 export interface EnrollmentRecord extends CurrentEnrollment { studentId: string; }
 export interface AssignmentRecord { id: string; classroomId: string; teacherId: string; subjectId: SubjectId; }
 export interface AccountRecord { userId: string; schoolId: string | null; fullName: string | null; roles: Role[]; }
+export interface ProvisionedAccount { userId: string; accessLink: string | null; }
 export interface GuardianLinkRecord { id: string; guardianId: string; studentId: string; status: "pending" | "confirmed" | "revoked"; }
 export type StudentResults = { source: "real"; summary: StudentSummary } | { source: "unavailable"; summary: null };
 export interface ClassMetrics { classroomId: string; frequencyPercent: number; correctPercent: number; }

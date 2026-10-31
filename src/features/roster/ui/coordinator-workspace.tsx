@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Flag, GraduationCap, TrendingUp, Users } from "lucide-react";
 import { GRADES, SUBJECTS, getSubject } from "@/config/catalog";
 import type { SubjectId } from "@/contracts";
+import { AccessLinkNotice, type IssuedLink } from "./access-link";
 import { rosterApi, type RosterOverview } from "./api";
 import { GuardianPanel } from "./guardian-panel";
 import { ImportPanel } from "./import-panel";
@@ -15,6 +16,7 @@ export function CoordinatorWorkspace({ fullName, schoolYear }: { fullName: strin
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [message, setMessage] = useState<{ tone: "error" | "success"; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [issued, setIssued] = useState<IssuedLink | null>(null);
 
   const refresh = useCallback(async () => {
     try { setData(await rosterApi.overview()); }
@@ -34,6 +36,13 @@ export function CoordinatorWorkspace({ fullName, schoolYear }: { fullName: strin
     } finally {
       setBusy(false);
     }
+  }
+
+  function issueLink({ id, name }: { id: string; name: string }) {
+    void act(async () => {
+      const { accessLink } = await rosterApi.issueAccessLink(id);
+      setIssued({ name, link: accessLink });
+    }, "Novo link gerado.");
   }
 
   function createClassroom(event: FormEvent<HTMLFormElement>) {
@@ -106,6 +115,7 @@ export function CoordinatorWorkspace({ fullName, schoolYear }: { fullName: strin
         </form>
       </section>
       <div className={styles.stack}>
+        {issued && <AccessLinkNotice issued={issued} onClose={() => setIssued(null)} />}
         {!selected && <section className="panel"><span id="acompanhamento" /><span id="vinculos" /><span id="importacao" /><p className={styles.empty}>Selecione uma turma para ver alunos, professores, resultados, responsáveis e importações.</p></section>}
         {selected && <section className="panel">
           <div className="panel-heading"><div><span className="eyebrow">TURMA</span><h2>{selected.name}</h2></div>
@@ -118,13 +128,13 @@ export function CoordinatorWorkspace({ fullName, schoolYear }: { fullName: strin
             <button type="submit" className="button button-outline" disabled={busy}>Salvar turma</button>
           </form>
           <h3>Alunos ({roster.length})</h3>
-          {roster.map((item) => <div className={styles.row} key={item.id}><span>{nameOf(item.studentId)}</span><button type="button" className={styles.link} disabled={busy} onClick={() => { if (window.confirm("Encerrar esta matrícula?")) void act(() => rosterApi.removeEnrollment(item.id), "Matrícula encerrada."); }}>Remover</button></div>)}
+          {roster.map((item) => <div className={styles.row} key={item.id}><span>{nameOf(item.studentId)}</span><span><button type="button" className={styles.link} disabled={busy} onClick={() => issueLink({ id: item.studentId, name: nameOf(item.studentId) })}>Novo link</button><button type="button" className={styles.link} disabled={busy} onClick={() => { if (window.confirm("Encerrar esta matrícula?")) void act(() => rosterApi.removeEnrollment(item.id), "Matrícula encerrada."); }}>Remover</button></span></div>)}
           <form className={styles.form} onSubmit={allocate}>
             <label className={styles.field}>Aluno da escola<select name="studentId" defaultValue="" required><option value="" disabled>Selecionar…</option>{available.map((student) => { const current = data?.enrollments.find((item) => item.studentId === student.id); return <option key={student.id} value={student.id}>{student.fullName}{current ? ` (${current.classroomName})` : ""}</option>; })}</select></label>
             <button type="submit" className="button button-outline" disabled={busy}>Matricular</button>
           </form>
           <h3>Professores ({staff.length})</h3>
-          {staff.map((item) => <div className={styles.row} key={item.id}><span>{nameOf(item.teacherId)}<small>{getSubject(item.subjectId).name}</small></span><button type="button" className={styles.link} disabled={busy} onClick={() => void act(() => rosterApi.unassign(item.id), "Atribuição removida.")}>Remover</button></div>)}
+          {staff.map((item) => <div className={styles.row} key={item.id}><span>{nameOf(item.teacherId)}<small>{getSubject(item.subjectId).name}</small></span><span><button type="button" className={styles.link} disabled={busy} onClick={() => issueLink({ id: item.teacherId, name: nameOf(item.teacherId) })}>Novo link</button><button type="button" className={styles.link} disabled={busy} onClick={() => void act(() => rosterApi.unassign(item.id), "Atribuição removida.")}>Remover</button></span></div>)}
           <form className={styles.form} onSubmit={assign}>
             <label className={styles.field}>Professor<select name="teacherId" defaultValue="" required><option value="" disabled>Selecionar…</option>{data?.teachers.map((teacher) => <option key={teacher.id} value={teacher.id}>{teacher.fullName}</option>)}</select></label>
             <label className={styles.field}>Matéria<select name="subjectId" defaultValue={SUBJECTS[0].id}>{SUBJECTS.map((subject) => <option key={subject.id} value={subject.id}>{subject.name}</option>)}</select></label>
@@ -132,7 +142,7 @@ export function CoordinatorWorkspace({ fullName, schoolYear }: { fullName: strin
           </form>
         </section>}
         {selected && data && <StudentResultsPanel key={`resultados-${selected.id}`} students={data.students.filter((student) => roster.some((item) => item.studentId === student.id))} />}
-        {selected && data && <GuardianPanel key={`vinculos-${selected.id}`} students={data.students.filter((student) => roster.some((item) => item.studentId === student.id))} guardians={data.guardians} links={data.guardianLinks} busy={busy} act={act} />}
+        {selected && data && <GuardianPanel key={`vinculos-${selected.id}`} students={data.students.filter((student) => roster.some((item) => item.studentId === student.id))} guardians={data.guardians} links={data.guardianLinks} busy={busy} act={act} onLinkIssued={setIssued} issueLink={issueLink} />}
         {selected && <ImportPanel key={selected.id} classroomId={selected.id} classroomName={selected.name} onApplied={() => void refresh()} />}
       </div>
     </div>
