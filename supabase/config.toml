@@ -18,8 +18,12 @@ sql_paths = ["./seed.sql"]
 
 [auth]
 enabled = true
-site_url = "http://localhost:3000"
-additional_redirect_urls = ["http://localhost:3000/auth/callback"]
+site_url = "https://hackaton-lepv.vercel.app"
+additional_redirect_urls = [
+  "https://hackaton-lepv.vercel.app/auth/callback",
+  "http://localhost:3000/auth/callback",
+  "http://127.0.0.1:3000/auth/callback"
+]
 # Contas e convites são provisionados pelo servidor/coordenador autorizado.
 enable_signup = false
 

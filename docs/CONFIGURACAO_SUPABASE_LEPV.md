@@ -28,8 +28,8 @@ A conexão TCP com o pooler falhou nesta máquina. A aplicação foi realizada p
 Configuração remota conferida com `supabase config diff`: zero diferenças nas propriedades declaradas. Oito propriedades remotas não declaradas no arquivo local foram preservadas.
 
 - Cadastro público desativado: `auth.enable_signup = false`.
-- Site URL de desenvolvimento: `http://localhost:3000`.
-- Callback autorizado: `http://localhost:3000/auth/callback`.
+- Site URL: `https://hackaton-lepv.vercel.app`.
+- Callbacks autorizados: `https://hackaton-lepv.vercel.app/auth/callback`, `http://localhost:3000/auth/callback` e `http://127.0.0.1:3000/auth/callback`.
 - REST expõe somente `public`; `app_private` permanece fora dos schemas expostos.
 - Chave privada utilizada exclusivamente pelo servidor e pelas ferramentas administrativas locais.
 
@@ -79,4 +79,4 @@ O relatório sem credenciais está em `supabase/.temp/lepv-verification-report.j
 
 ## Etapas seguintes
 
-A configuração de hospedagem e a URL pública da aplicação ainda precisam ser definidas. Ao publicar, atualizar a URL da aplicação e os callbacks de Auth com o domínio final, além das variáveis privadas no provedor de hospedagem. O fornecedor real de IA, os convites administrativos e a integração das telas dos demais integrantes permanecem pendentes.
+A aplicação foi publicada em https://hackaton-lepv.vercel.app, com variáveis de produção na Vercel e callbacks do Supabase atualizados. Ver [Configuração da Vercel](CONFIGURACAO_VERCEL_LEPV.md). O fornecedor real de IA, os convites administrativos e a integração das telas dos demais integrantes permanecem pendentes.

@@ -2,6 +2,8 @@
 
 Aplicação web de educação adaptativa para o 6º ao 9º ano. Esta entrega estabelece a fundação para quatro pessoas trabalharem em paralelo; os fluxos de negócio completos continuam nas tarefas individuais.
 
+Ambiente publicado: **https://hackaton-lepv.vercel.app**. Configuração e evidências em [Supabase](docs/CONFIGURACAO_SUPABASE_LEPV.md) e [Vercel](docs/CONFIGURACAO_VERCEL_LEPV.md).
+
 ## Executar
 
 Requisitos: Node.js 24 LTS e npm. As versões instaladas ficam no `package-lock.json`.
@@ -82,7 +84,7 @@ O workflow `.github/workflows/checks.yml` executa esses comandos com Node 24. A 
 
 ## O que falta implementar
 
-As demais frentes ainda cobrem CRUD/importação de alunos, convites administrativos, listas PDF/Word e armazenamento, banco de conteúdo, catálogo BNCC, interfaces, amizades e feedback da IA. Integrar essas frentes às APIs de aprendizagem e ao registro explícito de acesso. A base não contém 240 questões curriculares prontas nem uma LLM integrada. A Tarefa 03 validou Supabase hospedado com dados sintéticos; IA real e hospedagem pública continuam pendentes.
+As demais frentes ainda cobrem CRUD/importação de alunos, convites administrativos, listas PDF/Word e armazenamento, banco de conteúdo, catálogo BNCC, interfaces, amizades e feedback da IA. Integrar essas frentes às APIs de aprendizagem e ao registro explícito de acesso. A base não contém 240 questões curriculares prontas nem uma LLM integrada. A Tarefa 03 validou Supabase e APIs hospedadas na Vercel com dados sintéticos; IA real e integração das telas continuam pendentes.
 
 ## Configuração de IA
 
