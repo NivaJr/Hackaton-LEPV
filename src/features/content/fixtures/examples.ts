@@ -77,6 +77,46 @@ export const DEMO_EXAMPLES: DemoExample[] = [
     },
   },
   {
+    id: "exemplo-7-ma-07", skillCheck: "alta_confianca",
+    body: {
+      subjectId: "matematica", grade: 7, skillCodes: ["EF07MA04"], difficulty: "facil",
+      statement: "Durante 3 noites seguidas a temperatura caiu 4 °C por noite. Qual foi a variação total da temperatura?",
+      options: mc(["−12 °C", "12 °C", "−7 °C", "−1 °C"]), correctOptionId: "a",
+      explanation: "Cair 4 graus três vezes é 3 × (−4) = −12. A temperatura ficou 12 °C mais baixa.",
+      hint: "Uma queda é um número negativo. Quantas vezes ela aconteceu?",
+    },
+  },
+  {
+    id: "exemplo-7-ma-08", skillCheck: "alta_confianca",
+    body: {
+      subjectId: "matematica", grade: 7, skillCodes: ["EF07MA04"], difficulty: "media",
+      statement: "Bruno tinha R$ 50,00 na conta e fez uma compra de R$ 80,00 no débito com limite especial. Qual é o saldo dele agora?",
+      options: mc(["R$ 30,00", "−R$ 130,00", "−R$ 30,00", "R$ 130,00"]), correctOptionId: "c",
+      explanation: "O saldo é 50 − 80 = −30. A conta fica negativa em R$ 30,00.",
+      hint: "Ele gastou mais do que tinha. O saldo fica acima ou abaixo de zero?",
+    },
+  },
+  {
+    id: "exemplo-7-ma-09", skillCheck: "alta_confianca",
+    body: {
+      subjectId: "matematica", grade: 7, skillCodes: ["EF07MA18"], difficulty: "media",
+      statement: "Uma pizza foi dividida igualmente entre 4 amigos. Cada um ainda ganhou 3 pedaços extras e ficou com 8 pedaços. Quantos pedaços a pizza tinha?",
+      options: mc(["11", "20", "32", "44"]), correctOptionId: "b",
+      explanation: "A equação é x ÷ 4 + 3 = 8. Tirando 3, x ÷ 4 = 5, então x = 20.",
+      hint: "Desfaça as operações de trás para frente: primeiro tire os pedaços extras.",
+    },
+  },
+  {
+    id: "exemplo-7-ma-10", skillCheck: "alta_confianca",
+    body: {
+      subjectId: "matematica", grade: 7, skillCodes: ["EF07MA18"], difficulty: "dificil",
+      statement: "Qual é o valor de x na equação 5x = 3x + 14?",
+      options: mc(["x = 2", "x = 7", "x = 14", "x = 28"]), correctOptionId: "b",
+      explanation: "Tirando 3x dos dois lados, 2x = 14. Dividindo por 2, x = 7.",
+      hint: "Junte os termos com x do mesmo lado da igualdade.",
+    },
+  },
+  {
     id: "exemplo-7-ge-01", skillCheck: "alta_confianca",
     body: {
       subjectId: "geografia", grade: 7, skillCodes: ["EF07GE11"], difficulty: "facil",

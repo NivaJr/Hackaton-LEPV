@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>EAI · Plano de negócio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Inter:wght@400;500;600;700&display=block" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0B1F4B; --cyan: #1EC8E6; --lime: #A8E03A; --gold: #FFC83D;
+    --ink: #0B1F4B; --body: #26324F; --muted: #5B6B8C; --line: #D9E3F5; --paper: #F4F8FF;
+  }
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #fff; }
+  body { font: 10.5pt/1.55 Inter, system-ui, sans-serif; color: var(--body); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page { width: 210mm; height: 297mm; padding: 20mm 20mm 18mm; position: relative; page-break-after: always; overflow: hidden; }
+  .page:last-child { page-break-after: auto; }
+  h1, h2, h3, .num { font-family: Nunito, Inter, sans-serif; color: var(--ink); }
+  h2 { font-size: 22pt; line-height: 1.15; font-weight: 900; margin-bottom: 4mm; }
+  h3 { font-size: 12pt; font-weight: 800; margin: 4.5mm 0 1.5mm; }
+  p { margin-bottom: 2.6mm; }
+  .kicker { font: 700 8.5pt Inter, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #0E8FA6; margin-bottom: 2mm; }
+  .lead { font-size: 12pt; line-height: 1.5; color: var(--ink); margin-bottom: 5mm; }
+  .foot { position: absolute; left: 20mm; right: 20mm; bottom: 9mm; display: flex; justify-content: space-between; font-size: 8pt; color: var(--muted); border-top: 1px solid var(--line); padding-top: 2.5mm; }
+  .foot b { font-family: Nunito, sans-serif; color: var(--navy); }
+  ul { padding-left: 4.5mm; margin-bottom: 3mm; }
+  li { margin-bottom: 1.4mm; }
+  li::marker { color: var(--cyan); }
+  .src { font-size: 8pt; color: var(--muted); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm; }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 3mm; padding: 4.5mm 5mm; }
+  .card h3 { margin-top: 0; }
+  .card p:last-child, .card ul:last-child { margin-bottom: 0; }
+  .num { font-size: 30pt; font-weight: 900; line-height: 1; color: var(--navy); }
+  .num small { font-size: 14pt; }
+  .numlabel { font-size: 9.5pt; margin-top: 2mm; color: var(--body); }
+  .bar-cyan { border-top: 4px solid var(--cyan); }
+  .bar-lime { border-top: 4px solid var(--lime); }
+  .bar-gold { border-top: 4px solid var(--gold); }
+  .bar-navy { border-top: 4px solid var(--navy); }
+  table { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin: 2mm 0 3mm; }
+  th { text-align: left; font-weight: 600; color: var(--muted); font-size: 8.5pt; border-bottom: 1.5px solid var(--navy); padding: 1.8mm 2mm; }
+  td { border-bottom: 1px solid var(--line); padding: 1.6mm 2mm; vertical-align: top; }
+  td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.total td { font-weight: 700; color: var(--ink); border-bottom: 1.5px solid var(--navy); }
+  .note { border-left: 3px solid var(--gold); background: #FFF8E6; padding: 3mm 4mm; font-size: 9.5pt; border-radius: 0 2mm 2mm 0; margin: 3mm 0; }
+  .quote { border-left: 3px solid var(--cyan); padding: 1mm 0 1mm 4mm; margin-bottom: 3.5mm; }
+  .quote .h { font-family: Nunito, sans-serif; font-weight: 800; font-size: 11.5pt; color: var(--ink); line-height: 1.3; }
+  .quote .s { font-size: 8.5pt; color: var(--muted); margin-top: .8mm; }
+
+  /* capa */
+  .cover { background: var(--navy); color: #fff; padding: 0; }
+  .cover .inner { position: absolute; inset: 0; padding: 26mm 22mm; display: flex; flex-direction: column; }
+  .wordmark { font-family: Nunito, sans-serif; font-weight: 900; font-size: 64pt; letter-spacing: -.02em; line-height: 1; }
+  .wordmark span { color: var(--cyan); }
+  .wordmark i { font-style: normal; color: var(--lime); }
+  .cover .sub { font-size: 11pt; color: #B9C8E8; margin-top: 3mm; letter-spacing: .04em; }
+  .cover h1 { color: #fff; font-size: 34pt; font-weight: 900; line-height: 1.1; margin-top: auto; max-width: 150mm; }
+  .cover .tag { font-size: 13pt; color: #DCE6F7; margin-top: 6mm; max-width: 145mm; line-height: 1.5; }
+  .cover .meta { margin-top: 16mm; font-size: 9pt; color: #9FB2D9; line-height: 1.7; }
+  .cover .stripe { position: absolute; right: 0; top: 0; width: 9mm; height: 100%; background: linear-gradient(var(--cyan) 0 33%, var(--lime) 33% 66%, var(--gold) 66%); }
+
+  /* gráfico de barras */
+  .bars { margin: 3mm 0 2mm; }
+  .bars .row { display: grid; grid-template-columns: 34mm 1fr 30mm; align-items: center; gap: 3mm; margin-bottom: 2.2mm; font-size: 9.5pt; }
+  .bars .track { height: 5.5mm; }
+  .bars .fill { height: 100%; background: var(--navy); border-radius: 0 1mm 1mm 0; }
+  .bars .fill.hl { background: var(--cyan); }
+  .bars .v { font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 600; text-align: right; }
+
+  .loop { display: flex; gap: 2mm; align-items: stretch; margin: 3mm 0 4mm; }
+  .loop .step { flex: 1; background: var(--paper); border: 1px solid var(--line); border-radius: 2.5mm; padding: 3mm; font-size: 9pt; line-height: 1.4; }
+  .loop .step b { display: block; font-family: Nunito, sans-serif; color: var(--navy); font-size: 10pt; margin-bottom: 1mm; }
+  .loop .arrow { align-self: center; color: var(--cyan); font-weight: 900; font-size: 13pt; }
+  .tight p { margin-bottom: 2mm; }
+  ol.refs { padding-left: 5mm; font-size: 9pt; }
+  ol.refs li { margin-bottom: 2mm; }
+  .refs a { color: #0E7A8F; text-decoration: none; word-break: break-all; }
+</style>
+</head>
+<body>
+
+<!-- 1 · Capa -->
+<section class="page cover">
+  <div class="stripe"></div>
+  <div class="inner">
+    <div class="wordmark">E<span>A</span><i>I</i></div>
+    <div class="sub">Educational Artificial Intelligence</div>
+    <h1>Plano de negócio</h1>
+    <p class="tag">Uma plataforma para alunos do 6º ao 9º ano aprenderem de fato o que erraram, com o dever de casa transformado em jogo e o professor e a família acompanhando de perto.</p>
+    <div class="meta">
+      Hackathon de Educação · 31 de outubro de 2026<br>
+      Equipe LEPV: Viegas, Fabiano, Nivaldo e Gallotte
+    </div>
+  </div>
+</section>
+
+<!-- 2 · Resumo -->
+<section class="page">
+  <div class="kicker">Resumo</div>
+  <h2>O aluno brasileiro passa de ano sem aprender, e a dúvida vai junto</h2>
+  <p class="lead">No 9º ano da rede pública, só 16,5% dos alunos têm aprendizado adequado em matemática. Aos 15 anos, 72% ficam abaixo do básico no PISA. A EAI ataca esse problema na fase em que ele ainda tem conserto.</p>
+
+  <div class="grid2">
+    <div class="card bar-cyan">
+      <h3>Problema</h3>
+      <p>As lacunas de matemática e português começam nos anos iniciais e se acumulam. Ao mesmo tempo, o aluno não se engaja: professores perdem cerca de um quinto da aula com disciplina, e o dever de casa vira obrigação que ninguém confere.</p>
+    </div>
+    <div class="card bar-lime">
+      <h3>Tese</h3>
+      <p>O fundamental 2 é a última janela barata para consolidar a base. Se cada erro gerar uma explicação e uma questão nova da mesma habilidade até o aluno acertar, e se fazer isso for divertido, a lacuna para de crescer.</p>
+    </div>
+    <div class="card bar-gold">
+      <h3>Solução</h3>
+      <p>O professor sobe a lista que já usa (PDF ou Word). A IA adapta as questões aos gostos do aluno, explica cada erro e gera recuperação. Pontos, ranking de turma, desafios semanais e elogios em sala mantêm o aluno voltando. Pais acompanham por um perfil próprio.</p>
+    </div>
+    <div class="card bar-navy">
+      <h3>Mercado e modelo</h3>
+      <p>11,5 milhões de alunos nos anos finais em 61,7 mil escolas. Venda B2B por licença anual por aluno: primeiro para escolas privadas, depois para redes municipais e estaduais. Com preços alinhados ao que redes e escolas já pagam, o mercado endereçável passa de R$ 1,2 bilhão por ano.</p>
+    </div>
+  </div>
+
+  <h3>O que pedimos ao final do hackathon</h3>
+  <p>Três escolas parceiras para um piloto de um bimestre, com 6º e 7º ano, em matemática e português. O piloto mede três coisas: quantas habilidades erradas o aluno recupera (dois acertos seguidos), quanto do dever é entregue e quantos alunos voltam toda semana.</p>
+
+  <div class="foot"><b>EAI</b><span>Plano de negócio · 2</span></div>
+</section>
+
+<!-- 3 · Problema -->
+<section class="page">
+  <div class="kicker">Problema</div>
+  <h2>Duas falhas que se alimentam: aprendizado e engajamento</h2>
+
+  <h3>1. O aluno avança sem dominar o básico</h3>
+  <div class="grid3" style="margin: 3mm 0 3mm;">
+    <div class="card"><div class="num">72%</div><div class="numlabel">dos estudantes de 15 anos abaixo do nível básico em matemática no PISA 2025. Em 2022 eram 73%.</div></div>
+    <div class="card"><div class="num">16,5%</div><div class="numlabel">dos alunos do 9º ano da rede pública com aprendizado adequado em matemática (Saeb 2023).</div></div>
+    <div class="card"><div class="num">35,9%</div><div class="numlabel">dos alunos do 9º ano da rede pública com aprendizado adequado em português, o mesmo número de 2019.</div></div>
+  </div>
+  <p>O Brasil fez 377 pontos em matemática no PISA 2025, contra uma média de 469 em 23 países da OCDE. A queda entre etapas mostra como a lacuna cresce: no 5º ano, 43,5% dos alunos da rede pública estão no nível adequado em matemática. No 9º ano são 16,5%, e na 3ª série do ensino médio, 5,2%. No 9º ano, 60,9% não atingem o adequado em nenhuma das duas matérias.</p>
+  <p>Uma fração mal entendida no 6º ano vira dificuldade com porcentagem, depois com regra de três, e o aluno termina a escola carregando a mesma dúvida. A recuperação tradicional repete a mesma prova ou a mesma lista e confere a nota, não o entendimento.</p>
+
+  <h3>2. O aluno não se engaja, e o professor perde a aula</h3>
+  <div class="grid2" style="margin-top: 3mm;">
+    <div>
+      <div class="quote"><div class="h">Professor brasileiro perde 21% do tempo de aula para manter disciplina</div><div class="s">CNN Brasil, 07/10/2025</div></div>
+      <div class="quote"><div class="h">Professores brasileiros trabalham mais e gastam mais de 20% da aula para controlar alunos, diz OCDE</div><div class="s">Exame, outubro de 2025</div></div>
+    </div>
+    <div>
+      <div class="quote"><div class="h">63% dos professores reclamam de falta de disciplina e interesse dos alunos</div><div class="s">Folha de S.Paulo, maio de 2024</div></div>
+      <div class="quote"><div class="h">Pisa: 72% dos alunos brasileiros não atingem nível básico em matemática</div><div class="s">Exame, 08/09/2026</div></div>
+    </div>
+  </div>
+  <p>Parte do desinteresse tem causa concreta. Questões com letra pequena, cores que um aluno daltônico não distingue e textos longos para quem tem dificuldade de leitura afastam quem mais precisa praticar. Do outro lado, o professor não tem como conferir, um por um, se o dever foi feito e onde cada aluno travou.</p>
+
+  <p class="src">Fontes: Inep/OCDE, PISA 2025; OCDE, PISA 2022, nota sobre o Brasil; Todos Pela Educação com dados MEC/Inep/Saeb, abril de 2025; manchetes reunidas no material do Hackathon (slides 14 e 17). Lista completa na última página.</p>
+  <div class="foot"><b>EAI</b><span>Plano de negócio · 3</span></div>
+</section>
+
+<!-- 4 · Tese -->
+<section class="page">
+  <div class="kicker">Tese</div>
+  <h2>Consertar a base no fundamental 2, um erro de cada vez</h2>
+  <p class="lead">Acreditamos que o aluno aprende quando três condições aparecem juntas: o erro vira explicação na hora, o acerto precisa ser repetido para valer e estudar dá vontade de voltar no dia seguinte.</p>
+
+  <h3>Por que o 6º ao 9º ano</h3>
+  <p>É a fase em que as lacunas dos anos iniciais começam a travar conteúdos novos, mas ainda dá tempo de resolver antes do ensino médio. No Saeb 2023, 43,5% dos alunos do 5º ano da rede pública tinham aprendizado adequado em matemática. No 9º ano, eram 16,5%. Entre o fim dos anos iniciais e o fim do fundamental a defasagem aumenta, e é nesse intervalo que a EAI atua.</p>
+  <p>Também é quando o celular passa a ser do próprio aluno. Segundo a TIC Kids Online Brasil 2025, 69% dos usuários de internet de 11 a 12 anos têm celular próprio, e entre 13 e 17 anos são 78%. Jogar online está entre as atividades mais comuns dessa idade, e 52% assistem a vídeos de pessoas jogando videogame. Pontos, níveis e ranking usam uma linguagem que o aluno já conhece fora da escola.</p>
+
+  <h3>O ciclo de recuperação</h3>
+  <div class="loop">
+    <div class="step"><b>Erra</b>O aluno responde e erra uma questão do dever.</div>
+    <div class="arrow">›</div>
+    <div class="step"><b>Entende</b>A IA explica onde estava o erro, em linguagem de aluno.</div>
+    <div class="arrow">›</div>
+    <div class="step"><b>Tenta de novo</b>Chega uma questão nova da mesma habilidade, com dica. A errada não volta.</div>
+    <div class="arrow">›</div>
+    <div class="step"><b>Prova que aprendeu</b>A recuperação termina depois de dois acertos seguidos.</div>
+  </div>
+  <p>Como a questão errada nunca é refeita, decorar a resposta não adianta. Cada questão está ligada a uma habilidade da BNCC, então o professor enxerga a turma por habilidade e o aluno recupera a habilidade inteira, não só aquela questão.</p>
+
+  <h3>O que nos diferencia</h3>
+  <ul>
+    <li>O conteúdo é do professor. Ele sobe a lista que já usa, revisa o gabarito e publica. A plataforma não substitui o material da escola.</li>
+    <li>A questão fala a língua do aluno. Quem marcou na ficha que gosta de uma banda, de futebol ou de um filme recebe questões com esse contexto, sem mudar a habilidade cobrada.</li>
+    <li>O aprendizado é verificado. Acertar uma vez não basta para encerrar a recuperação.</li>
+    <li>O que acontece em sala também conta. O professor dá pontos pelo celular para quem fez uma boa pergunta, ajudou a turma ou foi bem na prova, e o aluno recebe o aviso na hora.</li>
+  </ul>
+  <div class="foot"><b>EAI</b><span>Plano de negócio · 4</span></div>
+</section>
+
+<!-- 5 · Produto -->
+<section class="page">
+  <div class="kicker">Produto</div>
+  <h2>Quatro perfis, um mesmo objetivo</h2>
+  <p class="lead">A EAI atende a escola inteira. Cada perfil vê só o que é dele, com regras de acesso aplicadas no servidor.</p>
+
+  <div class="grid2">
+    <div class="card bar-cyan">
+      <h3>Aluno</h3>
+      <ul>
+        <li>Dever de casa com pontos, níveis e patentes.</li>
+        <li>Ficha de interesses que personaliza as questões.</li>
+        <li>Explicação de cada erro e recuperação até dois acertos seguidos.</li>
+        <li>Ranking TOP 10 da turma, disputa entre turmas no mês e desafios semanais.</li>
+        <li>Recursos de acessibilidade: letra maior, cores para daltonismo, apoio à leitura.</li>
+      </ul>
+    </div>
+    <div class="card bar-lime">
+      <h3>Professor</h3>
+      <ul>
+        <li>Importa listas em PDF ou Word e informa o gabarito original.</li>
+        <li>Revisa enunciado, alternativas, série, matéria e habilidade BNCC antes de publicar.</li>
+        <li>Vê quem fez o dever e em quais habilidades a turma travou.</li>
+        <li>Dá pontos por atitude em sala pelo celular.</li>
+      </ul>
+    </div>
+    <div class="card bar-gold">
+      <h3>Família</h3>
+      <ul>
+        <li>Perfil próprio para acompanhar desempenho e engajamento do filho.</li>
+        <li>Recebe os elogios que o professor deu em sala.</li>
+        <li>Mantém as informações de saúde e apoio do aluno.</li>
+      </ul>
+    </div>
+    <div class="card bar-navy">
+      <h3>Coordenação</h3>
+      <ul>
+        <li>Cria turmas e importa a lista de alunos.</li>
+        <li>Acompanha os resultados da escola por série e matéria.</li>
+        <li>Convida professores, alunos e responsáveis.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Escopo inicial</h3>
+  <p>Seis matérias (matemática, português, inglês, história, geografia e biologia) e quatro séries, do 6º ao 9º ano. A primeira questão adaptada vale 70% da original, e os pontos de dever (XP do ranking) ficam separados dos pontos anuais de patente.</p>
+
+  <div class="note"><b>Estágio atual.</b> Protótipo construído durante o hackathon: base com login, os quatro perfis, regras de recuperação e pontuação testadas, importação de listas, gateway único de IA e pontos por atitude em sala. A personalização por interesses e os recursos de acessibilidade estão no plano do produto e ainda não foram implementados. Ainda falta validar com escolas reais.</div>
+  <div class="foot"><b>EAI</b><span>Plano de negócio · 5</span></div>
+</section>
+
+<!-- 6 · Mercado -->
+<section class="page">
+  <div class="kicker">Mercado</div>
+  <h2>11,5 milhões de alunos nos anos finais do fundamental</h2>
+  <p class="lead">O Censo Escolar 2024 contou 11.504.123 matrículas do 6º ao 9º ano em 61.718 escolas. É esse o público da EAI.</p>
+
+  <h3>Matrículas dos anos finais por rede, 2024</h3>
+  <div class="bars" role="img" aria-label="Matrículas dos anos finais por rede em 2024">
+    <div class="row"><span>Municipal</span><div class="track"><div class="fill" style="width:100%"></div></div><span class="v">5.019.779</span></div>
+    <div class="row"><span>Estadual</span><div class="track"><div class="fill" style="width:90%"></div></div><span class="v">4.516.428</span></div>
+    <div class="row"><span>Privada</span><div class="track"><div class="fill hl" style="width:38.9%"></div></div><span class="v">1.951.212</span></div>
+    <div class="row"><span>Federal</span><div class="track"><div class="fill" style="width:0.33%"></div></div><span class="v">16.704</span></div>
+  </div>
+  <p class="src">Fonte: Inep, Notas Estatísticas do Censo da Educação Básica 2024, tabela M4. Escolas com anos finais: 46.947 públicas e 14.771 privadas.</p>
+
+  <h3>Tamanho do mercado</h3>
+  <table>
+    <thead><tr><th>Segmento</th><th class="r">Alunos</th><th class="r">Preço proposto por aluno/ano</th><th class="r">Receita potencial/ano</th></tr></thead>
+    <tbody>
+      <tr><td>Escolas privadas</td><td class="r">1.951.212</td><td class="r">R$ 144</td><td class="r">R$ 281 mi</td></tr>
+      <tr><td>Redes públicas (municipal, estadual e federal)</td><td class="r">9.552.911</td><td class="r">R$ 100</td><td class="r">R$ 955 mi</td></tr>
+      <tr class="total"><td>Total endereçável</td><td class="r">11.504.123</td><td class="r"></td><td class="r">R$ 1,24 bi</td></tr>
+    </tbody>
+  </table>
+  <div class="note">Os preços vêm das referências de mercado da página seguinte e ainda serão testados nos pilotos. Se mudarem, a conta inteira muda junto.</div>
+
+  <h3>Contexto do setor</h3>
+  <p>O Brasil tem cerca de 905 edtechs, segundo o EdTech Report 2025 da Distrito, o maior número da América Latina. A consultoria IMARC estima o mercado brasileiro de edtech em US$ 6 bilhões em 2025. Os dois números mostram um mercado ativo e disputado. A EAI entra por um recorte estreito, o reforço verificado do 6º ao 9º ano usando as listas do próprio professor.</p>
+  <div class="foot"><b>EAI</b><span>Plano de negócio · 6</span></div>
+</section>
+
+<!-- 7 · Preços de referência -->
+<section class="page">
+  <div class="kicker">Preços de referência</div>
+  <h2>Quanto escolas e redes já pagam por plataformas</h2>
+  <p class="lead">Fornecedores de edtech no Brasil quase nunca publicam preço. Os valores abaixo saíram de documentos públicos de compras e propostas, onde o preço por aluno aparece.</p>
+
+  <table>
+    <thead><tr><th style="width:30%">Referência</th><th>O que inclui</th><th class="r" style="width:22%">Preço por aluno/ano</th></tr></thead>
+    <tbody>
+      <tr><td>Letrus, proposta à rede estadual de Goiás (maio de 2023)</td><td>Programa de leitura e escrita com IA para 9º ano e ensino médio, com formação e suporte. Cenários de 5 mil a 128,5 mil alunos.</td><td class="r">R$ 103 a R$ 110</td></tr>
+      <tr><td>Letrus, cotação ao IFRO Campus Jaru (dez. 2022)</td><td>Mesmo programa, citado na proposta acima, para cerca de 160 alunos.</td><td class="r">R$ 130</td></tr>
+      <tr><td>Consórcio CONCEN (SP), ata de registro de preços 001/2025</td><td>Plataforma de reforço do 1º ao 5º ano. Cada licença cobre uma matéria em uma série por 12 meses. Matemática e português custam o dobro.</td><td class="r">R$ 128 por matéria</td></tr>
+      <tr><td>São Domingos do Maranhão (MA), processo 156/2025</td><td>Plataforma de reforço do fundamental com IA para 1.059 alunos e 40 professores. Valor estimado de R$ 937 mil, com serviços de logística.</td><td class="r">cerca de R$ 885</td></tr>
+      <tr><td>Geekie One, relatos de famílias (Reclame Aqui)</td><td>Material didático digital completo do ensino médio, cobrado pela escola às famílias.</td><td class="r">R$ 1.490 a R$ 3.099</td></tr>
+      <tr><td>Khan Academy Kids, plano para escolas (EUA)</td><td>App de educação infantil. Para famílias e professores o uso é gratuito.</td><td class="r">US$ 5</td></tr>
+    </tbody>
+  </table>
+  <p class="src">O valor de São Domingos é a estimativa do edital dividida pelo número de alunos, com professores e serviços incluídos. Os relatos sobre a Geekie One são de consumidores, não tabela oficial.</p>
+
+  <h3>O que isso diz sobre o nosso preço</h3>
+  <p>Na rede pública, uma solução de uma única área sai por volta de R$ 100 a R$ 130 por aluno ao ano. A EAI cobre seis matérias, então propomos <b>R$ 100 por aluno ao ano</b> para o pacote completo. Fica abaixo de uma única matéria no CONCEN e permite disputar pregões com folga.</p>
+  <p>Na escola privada, o custo costuma entrar na taxa de material paga pelas famílias, que chega a milhares de reais por ano em sistemas completos. A EAI complementa o material da escola e não o substitui, então propomos <b>R$ 12 por aluno ao mês (R$ 144 ao ano)</b>, menos de 10% do menor valor relatado para a Geekie One.</p>
+  <div class="note">Os preços continuam sendo hipótese. As referências mostram a faixa praticada no mercado, mas cada cliente compara escopo, formação e suporte, e o piloto vai dizer quanto as escolas aceitam pagar.</div>
+  <div class="foot"><b>EAI</b><span>Plano de negócio · 7</span></div>
+</section>
+
+<!-- 8 · Modelo -->
+<section class="page">
+  <div class="kicker">Modelo de negócio</div>
+  <h2>Quem paga é a escola. Quem usa é a turma inteira.</h2>
+
+  <h3>Clientes e preço</h3>
+  <table>
+    <thead><tr><th style="width:24%">Cliente</th><th>Como vendemos</th><th style="width:26%">Preço a testar</th></tr></thead>
+    <tbody>
+      <tr><td>Escola privada</td><td>Assinatura anual por aluno ativo, com todos os perfis incluídos. Coordenação e direção decidem, o que encurta a venda.</td><td>R$ 12 por aluno/mês, cobrado por ano letivo</td></tr>
+      <tr><td>Rede municipal ou estadual</td><td>Licença anual por aluno, contratada pela secretaria, com formação de professores e relatório por habilidade.</td><td>R$ 100 por aluno/ano, seis matérias</td></tr>
+      <tr><td>Família</td><td>O perfil do responsável vem incluído na licença da escola. Não cobramos dos pais no início.</td><td>Sem custo</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Entrada no mercado</h3>
+  <ol style="padding-left:5mm; margin-bottom:3mm;">
+    <li>Pilotos gratuitos de um bimestre em escolas privadas de médio porte, começando por matemática e português no 6º e 7º ano.</li>
+    <li>Conversão dos pilotos em contrato anual, usando os resultados do próprio piloto: habilidades recuperadas, entrega do dever e frequência semanal.</li>
+    <li>Com casos documentados, oferta a redes municipais, que concentram 5 milhões de alunos nos anos finais.</li>
+  </ol>
+  <p>Professores são o principal canal, porque muitos dão aula em mais de uma escola. O elogio em sala chega aos pais, e a família que vê o filho engajado defende a plataforma na escola.</p>
+
+  <h3>Meta para o terceiro ano</h3>
+  <table>
+    <thead><tr><th>Frente</th><th class="r">Clientes</th><th class="r">Alunos</th><th class="r">Receita anual</th></tr></thead>
+    <tbody>
+      <tr><td>Escolas privadas</td><td class="r">150 escolas</td><td class="r">19.800</td><td class="r">R$ 2,9 mi</td></tr>
+      <tr><td>Redes municipais</td><td class="r">2 redes</td><td class="r">15.000</td><td class="r">R$ 1,5 mi</td></tr>
+      <tr class="total"><td>Total</td><td class="r"></td><td class="r">34.800</td><td class="r">R$ 4,4 mi</td></tr>
+    </tbody>
+  </table>
+  <p class="src">Média de 132 alunos por escola, pelo Censo 2024 (1.951.212 matrículas privadas em 14.771 escolas). A meta equivale a 0,3% dos alunos dos anos finais.</p>
+
+  <h3>Custos principais</h3>
+  <p>Equipe, atendimento às escolas, nuvem e chamadas à IA. Para conter o custo de IA, a plataforma reaproveita variantes já revisadas por habilidade e tema, sem levar dados de um aluno para outro. O gateway único permite trocar de fornecedor sem reescrever o produto.</p>
+  <div class="foot"><b>EAI</b><span>Plano de negócio · 8</span></div>
+</section>
+
+<!-- 9 · Concorrência, riscos e próximos passos -->
+<section class="page tight">
+  <div class="kicker">Concorrência e riscos</div>
+  <h2>Onde a EAI se encaixa e o que pode dar errado</h2>
+
+  <h3>Alternativas que a escola já usa</h3>
+  <table>
+    <thead><tr><th style="width:30%">Alternativa</th><th>O que falta para o nosso problema</th></tr></thead>
+    <tbody>
+      <tr><td>Lista em papel ou PDF</td><td>Ninguém confere quem fez, e o erro só aparece na correção, dias depois.</td></tr>
+      <tr><td>Plataformas de exercícios com banco próprio</td><td>O conteúdo não é o que o professor passou, e acertar uma vez costuma encerrar o assunto.</td></tr>
+      <tr><td>Jogos de quiz em sala</td><td>Engajam na hora da aula, mas não acompanham a recuperação do aluno depois do erro.</td></tr>
+      <tr><td>Sistemas de ensino com material e avaliação</td><td>Contratos grandes e caros, pensados para a escola inteira, com pouco espaço para o dever do dia a dia.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Riscos e como tratamos</h3>
+  <table>
+    <thead><tr><th style="width:30%">Risco</th><th>Resposta</th></tr></thead>
+    <tbody>
+      <tr><td>IA errar o conteúdo</td><td>Toda questão importada passa pela revisão do professor, com o gabarito original. Se a saída da IA falhar na validação, o sistema mostra o erro e não inventa resposta.</td></tr>
+      <tr><td>Dados de crianças e adolescentes</td><td>A LGPD exige tratamento no melhor interesse do menor. Só os interesses e a questão vão para a IA. Nome, e-mail, saúde e histórico ficam no servidor, e o fornecedor de IA precisa ser aprovado para esse público antes da produção.</td></tr>
+      <tr><td>Competição desanimar quem está atrás</td><td>O ranking público mostra só o TOP 10, e a disputa entre turmas e os pontos por atitude dão outros jeitos de se destacar.</td></tr>
+      <tr><td>Professor sem tempo para adotar</td><td>Ele usa a lista que já tem. Importar e revisar precisa levar poucos minutos. Isso será medido no piloto.</td></tr>
+      <tr><td>Venda lenta para o setor público</td><td>Começamos pelas escolas privadas, que decidem mais rápido, e usamos os resultados delas para chegar às redes.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Próximos passos</h3>
+  <ul>
+    <li>Até o fim do ano: fechar o percurso completo dos quatro perfis e validar o banco e a IA em ambiente real.</li>
+    <li>1º bimestre de 2027: pilotos em três escolas, com matemática e português no 6º e 7º ano.</li>
+    <li>Ao fim do piloto: publicar os resultados, ajustar o preço e abrir as primeiras vendas.</li>
+  </ul>
+  <div class="foot"><b>EAI</b><span>Plano de negócio · 9</span></div>
+</section>
+
+<!-- 10 · Fontes -->
+<section class="page">
+  <div class="kicker">Fontes</div>
+  <h2>Referências</h2>
+  <ol class="refs">
+    <li>Hackathon Desafios (material do evento), slide 14 “Nas manchetes: engajamento” e slide 17 “7 em cada 10 estudantes de 15 anos não atingem o básico em matemática”.</li>
+    <li>Inep/OCDE. PISA 2025: resultados Brasil. Citado no slide 17 do material do hackathon.</li>
+    <li>OCDE. PISA 2022: nota sobre o Brasil. Citado no slide 17 do material do hackathon.</li>
+    <li>Exame, 08/09/2026. “Pisa: 72% dos alunos brasileiros não atingem nível básico em matemática”.</li>
+    <li>CNN Brasil, 07/10/2025. “Professor brasileiro perde 21% do tempo de aula para manter disciplina”.</li>
+    <li>Exame, outubro de 2025. “Professores brasileiros trabalham mais e gastam mais de 20% da aula para controlar alunos, diz OCDE”.</li>
+    <li>Folha de S.Paulo, maio de 2024. “63% dos professores reclamam de falta de disciplina e interesse dos alunos”.</li>
+    <li>Todos Pela Educação. Aprendizagem na Educação Básica: situação brasileira no pós-pandemia, 28/04/2025, com dados MEC/Inep/Saeb 2023. <a href="https://static.poder360.com.br/2025/04/estudo-aprendizagemna-educacaobasica-todospelaeducacao-28abr2025.pdf">static.poder360.com.br/2025/04/estudo-aprendizagemna-educacaobasica-todospelaeducacao-28abr2025.pdf</a></li>
+    <li>Inep. Notas Estatísticas do Censo da Educação Básica 2024, tabela M4 e indicadores de escolas. <a href="https://cefort.ufam.edu.br/repositoriocp/wp-content/uploads/tainacan-items/71/3943/notas_estatisticas_censo_da_educacao_basica_2024.pdf">cefort.ufam.edu.br/…/notas_estatisticas_censo_da_educacao_basica_2024.pdf</a></li>
+    <li>Distrito. EdTech Report 2025, contagem de edtechs no Brasil, conforme <a href="https://canaltech.com.br/mercado/brasil-lidera-em-numero-de-edtechs-na-america-latina-e-captou-mais-de-r-3-tri/">Canaltech</a>.</li>
+    <li>IMARC Group. Brazil EdTech Market. <a href="https://www.imarcgroup.com/report/pt-br/brazil-edtech-market">imarcgroup.com/report/pt-br/brazil-edtech-market</a></li>
+    <li>Letrus. Apresentação e Proposta Comercial do Programa Letrus para os anos finais do Ensino Fundamental e Ensino Médio, Seduc Goiás, maio de 2023. <a href="https://www.educacao.go.gov.br/documentos/pregao2023/PROPOSTA%20COMERCIAL.pdf">educacao.go.gov.br/documentos/pregao2023/PROPOSTA COMERCIAL.pdf</a></li>
+    <li>CONCEN. Ata de Registro de Preços nº 001/2025, Pregão Eletrônico nº 004/2024. <a href="https://www.uchoa.sp.gov.br/images/licitacoes/AARP-ata152024.pdf">uchoa.sp.gov.br/images/licitacoes/AARP-ata152024.pdf</a></li>
+    <li>Prefeitura de São Domingos do Maranhão. Processo nº 156/2025, Pregão Eletrônico nº 19/2025. <a href="https://saodomingosdomaranhao.ma.gov.br/anexos/licitacoes/PE%20-%20N%C2%BA%2019-2025_68fa39c5c6361.pdf">saodomingosdomaranhao.ma.gov.br/anexos/licitacoes/PE nº 19-2025</a></li>
+    <li>Reclame Aqui, relatos sobre preços da Geekie One. <a href="https://www.reclameaqui.com.br/geekie-educacao/valores-abusivos_ffLWyT7aGB0lz0z8/">reclameaqui.com.br/geekie-educacao/valores-abusivos</a></li>
+    <li>Khan Academy Kids, preços para escolas e redes. <a href="https://www.khanacademy.org/kids/pricing">khanacademy.org/kids/pricing</a></li>
+    <li>Cetic.br. TIC Kids Online Brasil 2025, resumo executivo. <a href="https://www.cetic.br/media/docs/publicacoes/2/pt-br/20260317181001/tic_kids_online_2025_resumo_executivo.pdf.pdf">cetic.br/media/docs/publicacoes/…/tic_kids_online_2025_resumo_executivo.pdf</a></li>
+    <li>Lei nº 13.709/2018 (LGPD), art. 14, tratamento de dados de crianças e adolescentes.</li>
+  </ol>
+  <div class="note" style="margin-top:6mm;">Os números do Censo, do Saeb e da TIC Kids Online são oficiais. Os preços se apoiam nas referências públicas da página 7, mas preços, metas de clientes e receita continuam sendo hipóteses da equipe até os pilotos.</div>
+  <div class="foot"><b>EAI</b><span>Plano de negócio · 10</span></div>
+</section>
+
+</body>
+</html>

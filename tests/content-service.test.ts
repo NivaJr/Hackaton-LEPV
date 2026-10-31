@@ -323,9 +323,9 @@ describe("demo examples and inventory", () => {
     expect(inventory.target).toBe(240);
     expect(TARGET_TOTAL).toBe(240);
     expect(inventory.totalReviewed).toBe(0);
-    expect(inventory.totalDemoExamples).toBe(11);
+    expect(inventory.totalDemoExamples).toBe(15);
     expect(inventory.rows.filter((row) => row.demoExamples > 0).map((row) => [row.grade, row.subjectId, row.demoExamples])).toEqual([
-      [7, "matematica", 6], [7, "geografia", 5],
+      [7, "matematica", 10], [7, "geografia", 5],
     ]);
   });
 });

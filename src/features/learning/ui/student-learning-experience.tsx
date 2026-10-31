@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { NotificationBell } from "@/features/recognition/ui/notification-bell";
 import Image from "next/image";
 import {
   ArrowRight, BookOpen, Check, CheckCircle2, CircleAlert, ClipboardList, Edit3, GraduationCap, Layers3,
@@ -270,7 +269,7 @@ export function StudentLearningExperience({ fullName, mode, registeredAccessibil
   return <div className={experienceClassName} data-interface-mode={accessibleMode ? "accessible" : "standard"}>
     <div className={styles.accessibilityTop}><button type="button" onClick={toggleAccessibility} aria-pressed={accessibleMode} aria-label={accessibleMode ? "Usar interface normal" : "Ativar modo acessível"}><span><Image src="/brand/accessibility-symbol.png" alt="" width={42} height={35} aria-hidden="true" priority /></span><span><strong>Acessibilidade</strong><small>{accessibleMode ? "Modo acessível ativo" : "Ativar modo acessível"}</small></span></button></div>
     {mode === "demo" && <div className="student-demo-banner"><Sparkles size={16} /><span><strong>Demonstração provisória:</strong> dados sintéticos e adapter fake. Nenhuma resposta desta página é persistida no banco.</span></div>}
-    <div className="page-heading"><div><span className="eyebrow">{accessibleMode ? "SEU ESPAÇO DE ESTUDO" : "CENTRAL DE APRENDIZADO"}</span><h1>{accessibleMode ? <>Olá, {firstName}. Escolha o que estudar.</> : <>Olá, {firstName}<span className="greeting-dot">.</span> Escolha sua missão.</>}</h1><p>{accessibleMode ? "Primeiro escolha uma matéria. Depois escolha o conteúdo e a atividade." : "Escolha a matéria, o conteúdo definido para sua turma e o exercício que quer praticar."}</p></div><span className="class-badge"><GraduationCap size={16} />{snapshot.activities.className}</span>{mode === "real" && <NotificationBell />}</div>
+    <div className="page-heading"><div><span className="eyebrow">{accessibleMode ? "SEU ESPAÇO DE ESTUDO" : "CENTRAL DE APRENDIZADO"}</span><h1>{accessibleMode ? <>Olá, {firstName}. Escolha o que estudar.</> : <>Olá, {firstName}<span className="greeting-dot">.</span> Escolha sua missão.</>}</h1><p>{accessibleMode ? "Primeiro escolha uma matéria. Depois escolha o conteúdo e a atividade." : "Escolha a matéria, o conteúdo definido para sua turma e o exercício que quer praticar."}</p></div><span className="class-badge"><GraduationCap size={16} />{snapshot.activities.className}</span></div>
     {notice && <div className="student-notice" role="status" aria-live="polite"><CircleAlert size={17} /><span>{notice}</span><button onClick={() => setNotice(null)} aria-label="Fechar aviso"><X size={15} /></button></div>}
 
     {!simplifiedFocus && <>
