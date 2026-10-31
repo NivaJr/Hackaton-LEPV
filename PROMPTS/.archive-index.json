@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "sessions": {
+    "01a1901a-8a41-79d0-914b-d9951e834e1e": {
+      "records": [
+        {
+          "file": "s_f75093f7f30c4998_turn_41da33f2ad6db621.md",
+          "key": "48a978dbc16a5464e8b8a8410d4a71bf1e69fdeb32177379b23f329d49df6910",
+          "turn_id": "01a1901c-a77e-7d02-8e24-962707a35f2a",
+          "transcript_index": null,
+          "file_sha256": "c2d10412adc6ea0cb96319fe3f489b0638c8d552f60f24685be8bf0822adb0ef"
+        },
+        {
+          "file": "s_f75093f7f30c4998_turn_b86e5a450d9fa99b.md",
+          "key": "6784aa7a38eec9f1f5369f7046f7b7a58216aa3f160e6b4022a018e9be0a95b2",
+          "turn_id": "01a1901d-3bfc-7400-8ff9-489de1182388",
+          "transcript_index": null,
+          "file_sha256": "e27d6aa896a97c1463399c1f8634731faaf10b499624b9971085fd833ea2a6ca"
+        },
+        {
+          "file": "s_f75093f7f30c4998_turn_f0ffb38194243902.md",
+          "key": "733962c54bf92ad7742ccb6ce26dddeb766a3aec37c117d794c4478513a65e93",
+          "turn_id": "01a19020-1f68-7f11-807d-72b10135b1f6",
+          "transcript_index": null,
+          "file_sha256": "23896d87d4e52e4d7ae928484958848307841f7669cfc41ddfc54721bd63c800"
+        }
+      ],
+      "snapshot": []
+    }
+  }
+}

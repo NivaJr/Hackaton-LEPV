@@ -270,7 +270,8 @@ def precompact(event: dict, session: dict, session_id: str) -> None:
 
 def main() -> int:
     try:
-        event = json.load(sys.stdin)
+        # Decode the hook's UTF-8 bytes without the Windows console code page.
+        event = json.load(sys.stdin.buffer)
         if not isinstance(event, dict):
             raise ArchiveError("O evento de hook deve ser um objeto JSON.")
         name = required_string(event, "hook_event_name")
@@ -292,7 +293,7 @@ def main() -> int:
         reason = f"Falha ao arquivar prompts: {exc} Corrija o registro antes de continuar."
         print(reason, file=sys.stderr)
         # Exit 0 lets Codex consume the structured blocking result.
-        print(json.dumps({"continue": False, "stopReason": reason}, ensure_ascii=False))
+        print(json.dumps({"continue": False, "stopReason": reason}, ensure_ascii=True))
         return 0
 
 
