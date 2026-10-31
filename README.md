@@ -40,6 +40,7 @@ Preencher `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, a
 - Migração de identidade, escola, turmas, vínculos, ficha, histórico, saúde e apoio; seed sem senhas.
 - Contrato do gateway de LLM, inicialmente desabilitado, com erro explícito em vez de geração fictícia.
 - Workflow de checks e registro de prompts em `PROMPTS/`.
+- Tarefa 03 local: APIs de ficha, atividades, resposta, recuperação, dica, interrupção, resumo e TOP 10; migração aditiva com tentativas/créditos atômicos e rotação protegida. Contratos reais em [Rotas da Tarefa 03](docs/ROTAS_REAIS_TAREFA_03_NIVALDO.md) e validação em [Entrega de Nivaldo](docs/ENTREGA_NIVALDO_CORE.md).
 
 Login, convites e permissões ainda precisam ser exercitados contra o projeto Supabase da equipe. As rotas `/aluno`, `/coordenador`, `/professor` e `/responsavel` são protegidas; os dados mostrados nelas serão preenchidos pelos módulos individuais. O envio administrativo de convites ainda não está implementado.
 
@@ -75,13 +76,13 @@ O workflow `.github/workflows/checks.yml` executa esses comandos com Node 22. A 
 - Questão respondida não pode ser refeita. Erro produz outra questão e explicação; recuperação termina após dois acertos consecutivos ou interrupção.
 - A primeira adaptativa vale 70% da original. O teto por sequência e a fórmula de bônus continuam pendentes; `DEFAULT_RECOVERY_CAP_POINTS = null` não aprova um teto silenciosamente.
 - Base de 100 pontos e limites anuais das patentes são propostas identificadas em `src/config/scoring.ts`, não regras aprovadas.
-- XP ativo e pontos anuais são separados. Persistência de tentativas, livro de pontos e rotação continuam na tarefa de Nivaldo.
+- XP ativo e pontos anuais são separados. A Tarefa 03 implementa persistência de tentativas, livro de pontos e rotação no código local; aplicar a migração de aprendizagem e configurar os serviços antes de integrar as telas.
 - Saúde e apoio: leitura por perfis vinculados e edição pelo responsável confirmado. Histórico: professor edita somente sua matéria/turma; coordenador edita na instituição.
 - A ficha é editada pelo próprio aluno. Consulta por outros perfis segue pendente e está restrita na base.
 
 ## O que falta implementar
 
-As quatro fichas cobrem CRUD/importação de alunos, convites administrativos, listas PDF/Word e armazenamento, banco e variantes de questões, catálogo BNCC, API de tentativas, livro de pontos, rotação semanal, frequência, amizades e feedback da IA. A base não contém 240 questões curriculares prontas nem uma LLM integrada.
+As demais frentes ainda cobrem CRUD/importação de alunos, convites administrativos, listas PDF/Word e armazenamento, banco de conteúdo, catálogo BNCC, interfaces, amizades e feedback da IA. Integrar essas frentes às APIs de aprendizagem e ao registro explícito de acesso. A base não contém 240 questões curriculares prontas nem uma LLM integrada. A Tarefa 03 não validou Supabase hospedado ou IA real.
 
 ## Configuração de IA
 
