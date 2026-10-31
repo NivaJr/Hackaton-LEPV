@@ -37,16 +37,31 @@ function asQuestionState(payload: unknown): QuestionState {
   return { question: QuestionForStudentSchema.parse(value.question), status: value.status, ...(value.result ? { result: AttemptResultSchema.parse(value.result) } : {}) };
 }
 
+function brazilDate() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(new Date());
+}
+
 export function createHttpStudentLearningClient(): StudentLearningClient {
   return {
     async loadSnapshot(): Promise<StudentLearningSnapshot> {
-      const [preferencesPayload, activitiesPayload, summaryPayload] = await Promise.all([
-        learning("preferences"), learning("activities"), learning("summary"),
+      const [preferencesPayload, activitiesPayload] = await Promise.all([
+        learning("preferences"), learning("activities"),
       ]);
       const preferenceEnvelope = preferencesPayload as { preferences: unknown; saved: boolean };
-      const activities = activitiesPayload as ActivityList;
+      const rawActivities = activitiesPayload as Omit<ActivityList, "className"> & { className?: string };
+      const activities: ActivityList = {
+        ...rawActivities,
+        className: rawActivities.className?.trim() || `${rawActivities.grade}º ano`,
+      };
+      const periodStart = `${activities.schoolYear}-01-01`;
+      const periodEnd = brazilDate();
+      const [summaryPayload, ranking] = await Promise.all([
+        learning(`summary?from=${periodStart}&to=${periodEnd}`),
+        this.getRanking(activities.classId),
+      ]);
       const summaryEnvelope = summaryPayload as { summary: unknown };
-      const ranking = await this.getRanking(activities.classId);
       return {
         preferences: StudentPreferencesSchema.parse(preferenceEnvelope.preferences),
         preferencesSaved: preferenceEnvelope.saved,

@@ -42,3 +42,9 @@
 .total-score-copy{align-self:center}.total-score-copy>strong{display:block;font-size:46px;line-height:1.05;letter-spacing:-2px}.total-score-copy>small{color:#9bb5cf;font-size:8px}.total-score-patent{position:relative;z-index:1;grid-column:1/3;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;padding:13px 15px;border:1px solid rgba(155,181,207,.2);border-radius:13px;background:rgba(8,24,47,.52)}.total-score-patent span{font-size:8px;color:#9bb5cf;text-transform:uppercase;letter-spacing:.8px}.total-score-patent strong{font-size:15px;color:#fff}.score-disclosure{border-top:1px solid rgba(155,181,207,.16);margin-top:12px;padding-top:12px;color:#9bb5cf;font-size:8px}
 
 @media(max-width:560px){.total-score-copy>strong{font-size:36px}.total-score-patent{align-items:flex-start;flex-direction:column}}
+
+.student-loading .button{margin-top:18px}.student-recovery-complete{align-items:center}.student-recovery-complete>div{flex:1}.student-recovery-complete>.button{font-size:8px;min-height:34px;padding:9px 12px}.student-completion-actions{display:flex;justify-content:flex-end;margin-top:14px}
+
+@media(max-width:560px){.student-recovery-complete{align-items:flex-start;flex-wrap:wrap}.student-recovery-complete>.button,.student-completion-actions>.button{width:100%}}
+
+.scoring-overview,.student-section,.student-profile-panel,.student-ranking-panel{scroll-margin-top:100px}

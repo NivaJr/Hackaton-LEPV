@@ -37,7 +37,7 @@ export function SkillMatrix() {
     <div className="skill-chart-wrap">
       <svg className="skill-radar" viewBox="0 0 320 320" role="img" aria-labelledby="skill-chart-title skill-chart-description">
         <title id="skill-chart-title">Matriz demonstrativa de habilidades por matéria</title>
-        <desc id="skill-chart-description">Gráfico radar com seis matérias e níveis demonstrativos de zero a cem.</desc>
+        <desc id="skill-chart-description">Gráfico radar com seis matérias e valores demonstrativos de zero a cem.</desc>
         {grids.map((points, index) => <polygon key={points} points={points} className={`skill-grid level-${index + 1}`} />)}
         {axes.map((_, index) => { const [x, y] = point(index, 100); return <line key={index} x1="160" y1="160" x2={x} y2={y} className="skill-axis" />; })}
         <polygon points={polygon(values)} className="skill-shape" />

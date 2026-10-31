@@ -8,7 +8,7 @@ export function ScoringOverview({ summary, ranking, className }: { summary: Stud
   const leaderXp = Math.max(...ranking.top10.map((entry) => entry.xp), summary.xp, 1);
   const relativeXp = Math.max(4, Math.min(100, Math.round((summary.xp / leaderXp) * 100)));
 
-  return <section className="scoring-overview" aria-label="Painel de pontuação e classificação">
+  return <section className="scoring-overview" id="progresso" aria-label="Painel de pontuação e classificação">
     <article className="total-score-card">
       <div className="score-grid-pattern" aria-hidden="true" />
       <div className="total-score-rank"><RankBadge rankName={summary.rankName} /></div>

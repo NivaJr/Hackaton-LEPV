@@ -18,6 +18,8 @@ function pause(milliseconds = 220) {
 export function createFakeStudentLearningClient(): StudentLearningClient {
   let preferences = structuredClone(demoPreferences);
   let activities = structuredClone(demoActivities);
+  let summary = structuredClone(demoSummary);
+  let ranking = structuredClone(demoRanking);
   const questions = new Map<string, QuestionState>();
   const attempts = new Map<string, AttemptResponse>();
   const selectedAnswers = new Map<string, string>();
@@ -28,7 +30,7 @@ export function createFakeStudentLearningClient(): StudentLearningClient {
   return {
     async loadSnapshot(): Promise<StudentLearningSnapshot> {
       await pause();
-      return { preferences: structuredClone(preferences), preferencesSaved: true, activities: structuredClone(activities), summary: structuredClone(demoSummary), ranking: structuredClone(demoRanking) };
+      return { preferences: structuredClone(preferences), preferencesSaved: true, activities: structuredClone(activities), summary: structuredClone(summary), ranking: structuredClone(ranking) };
     },
     async savePreferences(input: StudentPreferencesUpdate) {
       await pause();
@@ -101,6 +103,20 @@ export function createFakeStudentLearningClient(): StudentLearningClient {
       idempotencyRequests.set(parsed.idempotencyKey, requestSignature);
       selectedAnswers.set(parsed.questionInstanceId, parsed.selectedOptionId);
       attempts.set(parsed.questionInstanceId, response);
+      summary = {
+        ...summary,
+        correctAnswers: summary.correctAnswers + (isCorrect ? 1 : 0),
+        incorrectAnswers: summary.incorrectAnswers + (isCorrect ? 0 : 1),
+        xp: summary.xp + result.xpAwarded,
+        rankPoints: summary.rankPoints + result.rankPointsAwarded,
+      };
+      ranking = {
+        ...ranking,
+        top10: ranking.top10
+          .map((entry) => entry.studentId === summary.studentId ? { ...entry, xp: summary.xp, rankPoints: summary.rankPoints } : entry)
+          .sort((a, b) => b.xp - a.xp || b.rankPoints - a.rankPoints || a.studentId.localeCompare(b.studentId))
+          .map((entry, index) => ({ ...entry, position: index + 1 })),
+      };
       const activity = activities.activities.find((item) => item.rootQuestionId === state.question.rootQuestionId);
       if (activity) {
         activity.status = "answered";
@@ -137,8 +153,8 @@ export function createFakeStudentLearningClient(): StudentLearningClient {
     },
     async getRanking(classId: string) {
       await pause();
-      if (classId !== demoRanking.classId) throw new LearningClientError("Turma não encontrada.", "NOT_FOUND", 404);
-      return structuredClone(demoRanking);
+      if (classId !== ranking.classId) throw new LearningClientError("Turma não encontrada.", "NOT_FOUND", 404);
+      return structuredClone(ranking);
     },
   };
 }
