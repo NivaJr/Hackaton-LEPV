@@ -29,6 +29,22 @@ beforeEach(() => {
 });
 
 describe("provisionamento por link", () => {
+  it("busca somente os emails pedidos pela RPC sem paginar todas as contas Auth", async () => {
+    const rpc = vi.fn(async () => ({ data: [{ email: "pessoa@b.com", userId: USER }], error: null }));
+    const listUsers = vi.fn(() => { throw new Error("Não enumerar Auth"); });
+    const admin = {
+      rpc, auth: { admin: { listUsers } },
+      from: (table: string) => ({ select: () => ({ in: async () => ({ data: table === "profiles"
+        ? [{ id: USER, school_id: "school", full_name: "Pessoa Teste" }]
+        : [{ user_id: USER, role: "aluno" }], error: null }) }) }),
+    };
+    const accounts = await createSupabaseAccountDirectory(admin as unknown as SupabaseClient, APP).findByEmails([" PESSOA@B.COM ", "missing@b.com"]);
+    expect(accounts.get("pessoa@b.com")).toMatchObject({ userId: USER, schoolId: "school", roles: ["aluno"] });
+    expect(accounts.has("missing@b.com")).toBe(false);
+    expect(listUsers).not.toHaveBeenCalled();
+    expect(rpc).toHaveBeenCalledWith("accounts_by_emails", { p_emails: ["pessoa@b.com", "missing@b.com"] });
+  });
+
   it("cria a conta sem enviar email e aponta para a página de confirmação", async () => {
     const result = await directory().ensureAccount({ email: "pessoa@b.com", fullName: "Pessoa Teste", role: "aluno", schoolId: "escola" });
     expect(result).toEqual({ userId: USER, accessLink: `${APP}/convite?token_hash=abc123&type=invite` });

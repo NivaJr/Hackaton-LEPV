@@ -8,6 +8,30 @@ export const OTHER_SCHOOL = "22222222-2222-4222-8222-222222222222";
 
 /** Test-only adapters that mirror the constraints of the foundation migration. */
 export class MemoryRoster implements RosterRepository {
+  audits: Array<{ id: string; schoolId: string; actorId: string; classroomId: string; kind: string; rows: unknown[]; results?: unknown[] }> = [];
+  async startImportAudit(schoolId: string, actorId: string, classroomId: string, kind: string, rows: unknown[]) {
+    const id = randomUUID();
+    this.audits.push({ id, schoolId, actorId, classroomId, kind, rows: structuredClone(rows) });
+    return id;
+  }
+  async finishImportAudit(schoolId: string, actorId: string, id: string, results: unknown[]) {
+    const audit = this.audits.find((item) => item.id === id && item.schoolId === schoolId && item.actorId === actorId)!;
+    audit.results = structuredClone(results);
+  }
+  async listImportAudits(schoolId: string) { return this.audits.filter((item) => item.schoolId === schoolId); }
+  async transferEnrollment(schoolId: string, enrollmentId: string, classroomId: string, studentId: string) {
+    const previous = await this.activeEnrollment(schoolId, studentId);
+    const destination = await this.getClassroom(schoolId, classroomId);
+    if (!previous || previous.id !== enrollmentId || previous.status !== "active") throw new RosterError("STALE_PREVIEW", "Matrícula alterada.", 409);
+    if (!destination || this.failEnrollFor.has(studentId)) {
+      this.failEnrollFor.delete(studentId);
+      throw new Error("falha simulada antes do commit");
+    }
+    const moved = { id: randomUUID(), schoolId, classroomId, classroomName: destination.name, studentId, status: "active" };
+    previous.status = "transferred";
+    this.enrollments.push(moved);
+    return moved;
+  }
   classrooms: (ClassroomRecord & { schoolId: string })[] = [];
   enrollments: (EnrollmentRecord & { schoolId: string; status: string })[] = [];
   assignments: (AssignmentRecord & { schoolId: string })[] = [];

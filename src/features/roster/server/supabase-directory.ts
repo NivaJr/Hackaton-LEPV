@@ -4,7 +4,6 @@ import type { Role } from "@/contracts";
 import { RosterError, type AccountRecord, type PendingAccessLink } from "../model";
 import type { AccountDirectory } from "../ports";
 
-const PAGE_SIZE = 1_000;
 
 function fail(message: string): never {
   throw new RosterError("PROVISIONING_FAILED", message, 502);
@@ -17,26 +16,17 @@ function reportAuthError(step: string, error: { code?: string; status?: number }
 
 /**
  * Privileged adapter. RosterService authorizes the coordinator and school before any call.
- * Emails are found by paging Auth users because profiles has no email column; see the
- * request to Nivaldo in docs/ENTREGA_FABIANO_GESTAO.md.
+ * A bounded server-only RPC searches the requested Auth emails; no user enumeration.
  *
  * generateLink returns the access link without sending email, so provisioning does not
  * depend on SMTP. The coordinator hands the link over; /convite redeems it on a button click.
  */
 export function createSupabaseAccountDirectory(admin: SupabaseClient, appUrl: string | undefined): AccountDirectory {
   async function authIdsByEmail(emails: string[]): Promise<Map<string, string>> {
-    const wanted = new Set(emails);
-    const found = new Map<string, string>();
-    for (let page = 1; found.size < wanted.size; page += 1) {
-      const { data, error } = await admin.auth.admin.listUsers({ page, perPage: PAGE_SIZE });
-      if (error) fail("Não foi possível consultar as contas existentes.");
-      data.users.forEach((user) => {
-        const email = user.email?.toLocaleLowerCase("pt-BR");
-        if (email && wanted.has(email)) found.set(email, user.id);
-      });
-      if (data.users.length < PAGE_SIZE) break;
-    }
-    return found;
+    if (!emails.length) return new Map();
+    const { data, error } = await admin.rpc("accounts_by_emails", { p_emails: [...new Set(emails.map((email) => email.trim().toLowerCase()))] });
+    if (error || !Array.isArray(data)) fail("Não foi possível consultar as contas existentes. Confira a migração de provisionamento.");
+    return new Map((data as Array<{ email: string; userId: string }>).map((user) => [user.email, user.userId]));
   }
 
   function accessUrl(tokenHash: string, type: "invite" | "recovery") {

@@ -195,6 +195,15 @@ describe("pontos anuais e avisos", () => {
     expect(result.notification.read).toBe(true);
     expect((await service.listNotifications(student())).unreadCount).toBe(0);
   });
+
+  it("não devolve avisos antigos ao responsável quando o contexto perde o vínculo", async () => {
+    const { service, store } = createFixture();
+    await service.grant(teacher(), "Marta", grantBody());
+    const notification = store.notifications.find((item) => item.userId === "guardian-1")!;
+    expect((await service.listNotifications(guardian(["student-ana"]))).notifications).toHaveLength(1);
+    expect((await service.listNotifications(guardian([]))).notifications).toHaveLength(0);
+    await expect(service.markNotificationRead(guardian([]), notification.id)).rejects.toMatchObject({ code: "NOTIFICATION_NOT_FOUND" });
+  });
 });
 
 describe("leitura dos elogios", () => {

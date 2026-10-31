@@ -44,7 +44,9 @@ export type { DocumentExtractionInput };
 export type ContentExtractionGateway = ExtractionReportingGateway;
 
 /** Limits paid AI calls per user and school day, and one read at a time per user. */
+export type ImportSlot = { ok: true; release(): void | Promise<void> } | { ok: false; reason: "daily" | "busy"; limit: number };
+
 export interface ImportQuota {
   /** Returns a release function, or the reason the read was refused. */
-  acquire(key: { institutionId: string; userId: string }, at: Date): { ok: true; release(): void } | { ok: false; reason: "daily" | "busy"; limit: number };
+  acquire(key: { institutionId: string; userId: string }, at: Date): ImportSlot | Promise<ImportSlot>;
 }

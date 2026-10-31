@@ -90,6 +90,22 @@ describe("turmas e alocação", () => {
 });
 
 describe("resultados por aluno", () => {
+  it("audita um lote parcial com ator da sessão e omite os links de cadastro", async () => {
+    directory.failInviteFor.add("falha@fixture.test");
+    const result = await service.confirmImport(coordinator, { kind: "students", classroomId: classA.id, rows: [
+      { line: 2, fullName: "Aluno fictício", email: "novo@fixture.test", decision: "apply" },
+      { line: 3, fullName: "Outra linha fictícia", email: "falha@fixture.test", decision: "apply" },
+    ] });
+    expect(result.rows.map((row) => row.status)).toEqual(["created", "failed"]);
+    expect(result.rows[0].accessLink).toBeTruthy();
+    expect(repository.audits).toHaveLength(1);
+    expect(repository.audits[0]).toMatchObject({ actorId: coordinator.userId, schoolId: SCHOOL, classroomId: classA.id });
+    expect(JSON.stringify(repository.audits[0].results)).not.toContain("accessLink");
+    expect(JSON.stringify(repository.audits[0].results)).not.toContain("/convite");
+    expect(await service.importAudits(otherCoordinator)).toEqual([]);
+    await expect(service.importAudits(student)).rejects.toMatchObject({ status: 403 });
+  });
+
   const studentId = randomUUID();
   beforeEach(() => { repository.people.push({ id: studentId, fullName: "Aluno Exemplo", schoolId: SCHOOL, role: "aluno" }); });
 

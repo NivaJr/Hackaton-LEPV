@@ -80,7 +80,7 @@ O build remoto de produção passou. A configuração completa de ambiente preci
 
 ## Limites atuais
 
-A infraestrutura e as APIs da Tarefa 03 estão disponíveis. O conteúdo de validação é sintético. O Gemini está configurado em Production e a extração de uma questão sintética foi executada pelo endpoint real, com HTTP 201; isso não comprova revisão pedagógica nem a validação de todas as operações de IA. A migração `20261031060000_recognition.sql` ainda não foi recebida/aplicada nesta etapa: notificações retornam `503 STORE_UNAVAILABLE`. Envio administrativo de convites e conteúdo curricular/BNCC revisado permanecem fora desta validação.
+A infraestrutura e as APIs da Tarefa 03 estão disponíveis. O conteúdo de validação é sintético. O Gemini está configurado em Production e a extração de uma questão sintética foi executada pelo endpoint real, com HTTP 201; isso não comprova revisão pedagógica nem a validação de todas as operações de IA. As migrações de reconhecimento, conteúdo e handoff foram aplicadas; a integração e a validação hospedada desta etapa estão no [Handoff de Nivaldo](ENTREGA_NIVALDO_HANDOFF.md). Envio administrativo de emails e conteúdo curricular/BNCC revisado permanecem fora desta validação.
 
 ## Atualização de Production em 31/10/2026
 
