@@ -1,0 +1,16 @@
+.field{display:grid;gap:6px;font-size:13px;font-weight:600;margin-top:12px;max-width:420px}
+.field select{min-height:42px;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:transparent;color:inherit;font:inherit}
+.count{font-size:13px;color:var(--muted);margin:14px 0 0}
+.count strong{color:var(--ink)}
+.list{list-style:none;margin:8px 0 0;padding:0;max-height:340px;overflow-y:auto}
+.list li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.list li:last-child{border-bottom:0}
+.option{display:flex;align-items:flex-start;gap:10px;cursor:pointer;min-width:0}
+.option input{margin-top:3px;flex:none}
+.statement{min-width:0;overflow-wrap:anywhere;line-height:1.45}
+.leaving{flex:none;font-size:12px;color:var(--muted)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.notice{padding:11px 14px;border-radius:10px;font-size:13px;line-height:1.5;background:#fff3de;color:#73521f;margin:12px 0 0}
+.error{background:#fdecea;color:#8c2f28}
+.success{background:var(--mint);color:#1f6a53}
+.empty{color:var(--muted);font-size:14px;margin:12px 0 0}
