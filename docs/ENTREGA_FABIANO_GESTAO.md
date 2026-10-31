@@ -82,7 +82,7 @@ Quatro séries e seis matérias vêm do catálogo. Esta tarefa não envolve ques
 Resultados no commit desta entrega:
 
 - `npm run typecheck`: passou.
-- `npm test`: 331 de 332 testes passaram em 28 arquivos, incluindo `roster-import`, `roster-service`, `roster-directory`, `family-service`, `family-recognitions` e `roster-database`. A falha é `llm-prompts`, somente em checkout Windows, que converte `PROMPTS/04-gallotte-templates-ia.md` para CRLF.
+- `npm test`: 339 de 340 testes passaram em 29 arquivos, incluindo `roster-import`, `roster-service`, `roster-directory`, `family-service`, `family-recognitions` e `roster-database`. A falha é `llm-prompts`, somente em checkout Windows, que converte `PROMPTS/04-gallotte-templates-ia.md` para CRLF.
 - `npm run build`: passou.
 
 ## Percurso realmente executado
@@ -107,6 +107,16 @@ Cadastro por link em produção, em 31/10/2026: Fabiano importou contas, abriu o
 ## Decisões em aberto
 
 Nenhuma decisão desta entrega permanece em aberto.
+
+## Boletins em PDF
+
+Por decisão de Fabiano em 31/10/2026, o histórico escolar vem das provas da escola, em PDF, e não das atividades da plataforma. O coordenador envia, abre e remove boletins por aluno na turma (`#boletins`); o responsável confirmado abre em "Histórico escolar". Aluno e professor não têm acesso.
+
+O módulo `src/features/school-reports` tem rota própria, `/api/school-reports/students/:id` (GET, POST) e `/files/:fileId` (GET, DELETE). Limite de 4 MB, assinatura `%PDF` conferida no servidor. Os arquivos ficam no bucket privado `boletins`, criado no primeiro envio, sem migração: o título fica no nome do objeto e todo acesso passa pelo servidor. Não há registro de quem enviou cada arquivo.
+
+## Cadastro sem email
+
+Fabiano aceitou em 31/10/2026 que o cadastro feito pelo coordenador dispensa email: a escola entrega o link, então o endereço não é confirmado. SMTP próprio deixa de ser necessário para esse fluxo.
 
 ## Ativação e rotação de atividades
 
@@ -140,7 +150,6 @@ A seção de elogios lista motivo, nota, professor, matéria, data e pontos, com
 - Resultados: a visão por aluno usa o resumo real; o agregado por turma ainda é exemplo e depende de Nivaldo.
 
 - Dois responsáveis editando o mesmo registro: prevalece a última gravação.
-- O histórico é consultado, mas a edição por coordenador e professor não tem tela nesta tarefa.
 - `docs/CONTRATOS_NIVALDO_CORE.md` ainda cita "Fabia" e deve ser ajustado por Nivaldo.
 - `/demo/*` segue com os dados e os menus antigos.
 - Nos menus do coordenador e do responsável, "Visão geral" continua destacada ao navegar pelas âncoras, porque todas ficam na mesma página.

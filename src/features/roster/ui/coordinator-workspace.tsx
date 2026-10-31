@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Flag, GraduationCap, TrendingUp, Users } from "lucide-react";
 import { ActivityManager } from "@/features/learning/ui/activity-manager";
+import { StudentReportsPanel } from "@/features/school-reports/ui/student-reports-panel";
 import { GRADES, SUBJECTS, getSubject } from "@/config/catalog";
 import type { SubjectId } from "@/contracts";
 import { AccessLinkNotice, ClassAccessLinksPanel, type IssuedLink } from "./access-link";
@@ -119,7 +120,7 @@ export function CoordinatorWorkspace({ fullName, schoolYear }: { fullName: strin
       </section>
       <div className={styles.stack}>
         {issued && <AccessLinkNotice issued={issued} onClose={() => setIssued(null)} />}
-        {!selected && <section className="panel"><span id="acompanhamento" /><span id="vinculos" /><span id="importacao" /><p className={styles.empty}>Selecione uma turma para ver alunos, professores, resultados, responsáveis e importações.</p></section>}
+        {!selected && <section className="panel"><span id="acompanhamento" /><span id="boletins" /><span id="vinculos" /><span id="importacao" /><p className={styles.empty}>Selecione uma turma para ver alunos, professores, resultados, boletins, responsáveis e importações.</p></section>}
         {selected && <section className="panel">
           <div className="panel-heading"><div><span className="eyebrow">TURMA</span><h2>{selected.name}</h2></div>
             <button type="button" className={`${styles.link} ${styles.danger}`} disabled={busy} onClick={() => { if (window.confirm(`Excluir a turma ${selected.name}?`)) void act(async () => { await rosterApi.deleteClassroom(selected.id); setSelectedId(null); }, "Turma excluída."); }}>Excluir turma</button>
@@ -146,6 +147,7 @@ export function CoordinatorWorkspace({ fullName, schoolYear }: { fullName: strin
           </form>
         </section>}
         {selected && data && <StudentResultsPanel key={`resultados-${selected.id}`} students={data.students.filter((student) => roster.some((item) => item.studentId === student.id))} />}
+        {selected && data && <StudentReportsPanel key={`boletins-${selected.id}`} students={data.students.filter((student) => roster.some((item) => item.studentId === student.id))} />}
         {selected && data && <GuardianPanel key={`vinculos-${selected.id}`} students={data.students.filter((student) => roster.some((item) => item.studentId === student.id))} guardians={data.guardians} links={data.guardianLinks} busy={busy} act={act} onLinkIssued={setIssued} issueLink={issueLink} />}
         {selected && orphanSubjects.length > 0 && <ActivityManager key={`atividades-${selected.id}-${orphanSubjects.length}`} title="Atividades sem professor" scopes={orphanSubjects.map((subject) => ({ classId: selected.id, className: selected.name, subjectId: subject.id }))} />}
         {selected && <ImportPanel key={selected.id} classroomId={selected.id} classroomName={selected.name} onApplied={() => void refresh()} />}

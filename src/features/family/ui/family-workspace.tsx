@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Check, Flag, Flame, HeartPulse, MessageSquareText, TrendingUp } from "lucide-react";
 import { SUBJECTS } from "@/config/catalog";
 import { NotificationBell } from "@/features/recognition/ui/notification-bell";
+import { FamilyReportsList } from "@/features/school-reports/ui/family-reports-list";
 import type { ChildRecord, FamilyRecord, FamilyRecordCategory, FeedbackResult, StudentOverview } from "../model";
 import { RecognitionsPanel } from "./recognitions-panel";
 import styles from "./family.module.css";
@@ -92,7 +93,8 @@ function ChildPanel({ studentId }: { studentId: string }) {
     </div>
     <section className="panel" id="historico">
       <div className="panel-heading"><div><span className="eyebrow">SOMENTE CONSULTA</span><h2>Histórico escolar</h2></div></div>
-      {overview.history.length === 0 ? <p className={styles.empty}>Nenhum registro no histórico.</p> : <div className={styles.tableWrap}><table className={styles.table}>
+      <FamilyReportsList studentId={studentId} />
+      {overview.history.length > 0 && <div className={styles.tableWrap}><table className={styles.table}>
         <thead><tr><th>Ano</th><th>Período</th><th>Matéria</th><th>Nota</th><th>Observações</th></tr></thead>
         <tbody>{overview.history.map((entry) => <tr key={entry.id}><td>{entry.schoolYear}</td><td>{entry.period}</td><td>{subjectName(entry.subjectId)}</td><td>{entry.grade ?? "—"}</td><td>{entry.notes || "—"}</td></tr>)}</tbody>
       </table></div>}
