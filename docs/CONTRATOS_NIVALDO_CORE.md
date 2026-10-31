@@ -42,6 +42,6 @@ Os snapshots e gabaritos ficam no esquema privado, sem SELECT para o navegador. 
 
 ## Decisões pendentes
 
-A produção exige configuração explícita do valor original, referência adaptativa e elegibilidade do XP adaptativo após rotação. Sem essa configuração a resposta final não é aceita silenciosamente com pontuação inventada. O teto permanece `null`. Os testes usam uma política injetada, identificada como teste, com original 100, referência na original e XP adaptativo seguindo a raiz; isso não aprova a proposta para produção.
+O usuário confirmou a política da demonstração em [Decisões](DECISOES.md): original 100, adaptativas a 70% do valor nominal anterior, XP acompanhando a raiz e ausência de teto (`null`). O ambiente local já contém essa configuração explícita. Novos ambientes devem receber as três variáveis; não há fallback silencioso. Os testes cobrem ambas as referências, original/anterior, sem transformar outras políticas em padrão.
 
 As patentes existentes são uma calibração proposta e serão identificadas como tal na resposta. A rotação usa segunda-feira como início da semana em Brasília, ordena saídas por data de ativação e desempata por ID. O ranking desempata por XP, pontos anuais e ID, sem expor posições além das dez primeiras.

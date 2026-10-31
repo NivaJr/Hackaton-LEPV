@@ -7,7 +7,7 @@ As rotas abaixo existem no código, em `src/app/api/learning/[...path]/route.ts`
 ## Condições para usar
 
 - A aplicação usa a sessão real do Supabase por cookie, validada no servidor. Não enviar `studentId`, papel, escola, gabarito ou pontos no corpo de operações do aluno.
-- Banco: aplicar primeiro `20261030220000_foundation.sql` e depois `20261031030000_learning.sql`. Configurar `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` e `SUPABASE_SECRET_KEY` no ambiente apropriado; a chave privada permanece no servidor.
+- Banco: no projeto `alkvhjnqfjyjflaswdmi` as migrações `20261030220000_foundation.sql` e `20261031030000_learning.sql` já foram aplicadas. Para uma instalação nova, aplicar nessa ordem. Configurar `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` e `SUPABASE_SECRET_KEY` no ambiente apropriado; a chave privada permanece no servidor. Ver [Configuração do Supabase](CONFIGURACAO_SUPABASE_LEPV.md).
 - A conta deve ter perfil, papel `aluno` e matrícula ativa. Abrir uma atividade exige ficha salva e política de pontuação explicitamente configurada.
 - As atividades precisam de snapshots revisados entregues pelo módulo de conteúdo e seleção inicial pelo coordenador. As APIs não criam conteúdo curricular automaticamente.
 - Próxima questão de recuperação usa o gateway de IA existente. O fornecedor da base continua desabilitado; sem o adaptador de Gallotte, essa operação retorna `503 AI_UNAVAILABLE`, preservando a tentativa.
@@ -243,7 +243,7 @@ Formato de erro:
 | 503 | Configuração, persistência ou IA indisponível |
 | 500 | Falha inesperada, sem detalhes internos na resposta |
 
-Antes de abrir novas atividades, a equipe deve definir no servidor `LEPV_ORIGINAL_POINTS`, `LEPV_RECOVERY_REFERENCE` (`original` ou `previous`) e `LEPV_ADAPTIVE_XP_FOLLOWS_ROOT` (`true` ou `false`). Sem uma configuração válida a abertura retorna `503 SCORING_NOT_CONFIGURED`. A política fica congelada na instância e na cadeia. O teto de recuperação permanece `null`; nenhum teto é aprovado por este documento. Os valores positivos mostrados no exemplo do ranking são ilustrativos.
+O usuário confirmou para a demonstração: `LEPV_ORIGINAL_POINTS=100`, `LEPV_RECOVERY_REFERENCE=previous` e `LEPV_ADAPTIVE_XP_FOLLOWS_ROOT=true`. Cada adaptativa vale 70% do valor nominal anterior: 100 → 70 → 49 → 34,30, sem teto. Esses valores já estão no ambiente local configurado. Um novo ambiente ainda precisa receber as três variáveis; sem configuração válida a abertura retorna `503 SCORING_NOT_CONFIGURED`. A política fica congelada na instância e na cadeia. Os valores mostrados no exemplo do ranking são ilustrativos; a calibração de patentes continua proposta.
 
 ## Exemplo mínimo no navegador
 
@@ -291,4 +291,4 @@ await learning(`ranking?classId=${encodeURIComponent(classId)}`);
 
 Validação local concluída: `npm run typecheck`, **82 testes aprovados** e `npm run build`. Foram exercitados os contratos HTTP, o serviço com repositório em memória e a migração com PostgreSQL/WASM (PGlite), usando identidades e conteúdo fictícios. O servidor de produção local também reconheceu os seis grupos de rotas e retornou `401 UNAUTHENTICATED` às chamadas sem sessão. O adaptador em memória é exclusivo dos testes.
 
-A execução no Supabase hospedado, os convites/login reais, a publicação de conteúdo por outro módulo e um fornecedor real de IA continuam dependentes da configuração e integração da equipe. Este documento não declara essas integrações remotas verificadas. A publicação do código no GitHub é separada do deploy da aplicação e da configuração do banco.
+O Supabase hospedado foi criado e validado com sessões reais dos quatro perfis e de outro aluno, usando somente dados sintéticos. As rotas foram exercitadas por HTTP local com cookies reais, incluindo reenvios, recuperação, dica, interrupção e rotação: XP 219 → 0, pontos anuais preservados em 219. As variantes usadas nessa validação foram fixtures privadas; a chamada real de IA permanece desabilitada. Convites administrativos, publicação pelo módulo de conteúdo e integração das telas continuam pendentes. A publicação do código no GitHub é separada do deploy da aplicação. Detalhes e limites em [Configuração do Supabase](CONFIGURACAO_SUPABASE_LEPV.md).

@@ -24,7 +24,7 @@ Gallotte deve chamar a operação interna `LearningService.registerActivity` a p
 
 ## Pontuação
 
-Nenhum valor proposto foi ativado como padrão. A abertura exige escolhas explícitas em `LEPV_ORIGINAL_POINTS`, `LEPV_RECOVERY_REFERENCE` e `LEPV_ADAPTIVE_XP_FOLLOWS_ROOT`. A política fica congelada na cadeia, o fator continua 0,7 e o teto permanece `null`. A calibração de patentes é sinalizada como proposta. Os testes injetam políticas de teste para verificar as opções; isso não confirma decisões do usuário.
+A abertura exige escolhas explícitas em `LEPV_ORIGINAL_POINTS`, `LEPV_RECOVERY_REFERENCE` e `LEPV_ADAPTIVE_XP_FOLLOWS_ROOT`. Após a entrega local, o usuário confirmou para a demonstração original 100, referência na questão anterior, XP acompanhando a raiz e ausência de teto. A política fica congelada na cadeia e a calibração de patentes continua como proposta. A confirmação está em [Decisões](DECISOES.md).
 
 ## Validação observada
 
@@ -38,8 +38,8 @@ Nenhum valor proposto foi ativado como padrão. A abertura exige escolhas explí
 
 ## Pendências externas e limites
 
-Não há `.env.local` ou Supabase hospedado configurado neste checkout. Não foram aplicadas migrações remotas, provisionadas contas, enviados convites, verificados cookies reais ou chamado um fornecedor real de IA. A chave administrativa deve ser configurada exclusivamente no servidor. O gateway da base permanece desabilitado.
+O Supabase `hackaton-lepv` foi configurado após autorização do usuário. As duas migrações e o seed estão aplicados, cinco contas fictícias foram provisionadas sem envio de mensagens e as rotas foram verificadas por HTTP com cookies reais. A rotação preservou 219 pontos anuais enquanto retirou os 219 de XP das raízes desativadas. Credenciais permanecem locais e ignoradas. Relatório e limites em [Configuração do Supabase](CONFIGURACAO_SUPABASE_LEPV.md). Hospedagem pública, convites administrativos e fornecedor real de IA continuam pendentes; o gateway permanece desabilitado.
 
 O estado privado agrega o histórico por aluno e usa CAS para o MVP; crescimento além do hackathon exige paginação/compactação e revisão do custo de leitura. Os fatos relacionais de tentativa/crédito já têm índices e não são apagados por rotação. Os testes PGlite exercitam SQL real com conexão emulada, sem alegar ensaio de carga com múltiplas conexões do Supabase.
 
-Os prompts visíveis desta etapa estão em `PROMPTS/03-nivaldo-2026-10-30_024...`, `025...`, `026...` e `027...`. A entrega segue na branch `feat/nivaldo-core`. Integração à `main`, deploy e configurações de serviços externos são etapas separadas da publicação desta branch.
+Os prompts visíveis desta etapa estão em `PROMPTS/03-nivaldo-2026-10-30_024...` a `029...`. A entrega foi publicada na branch `feat/nivaldo-core`, commit `0de7b11`, cujo workflow GitHub passou. A configuração e a validação posteriores do Supabase são registradas nesta etapa. Integração à `main` e deploy são etapas separadas da publicação da branch.
