@@ -23,14 +23,14 @@ describe("recuperação integrada ao gateway Gemini", () => {
       questionInstanceId: original.question.questionInstanceId, selectedOptionId: "b", idempotencyKey: "gemini-original-error",
     });
 
-    for (const [index, points] of [70, 49].entries()) {
+    for (const index of [0, 1]) {
       const next = await service.nextRecovery(actor(), incorrect.recoveryId!);
       expect(next!.question).toMatchObject({ sourceType: "recuperacao", skillCodes: ["EF06MA01"] });
       expect(next!.question).not.toHaveProperty("correctOptionId");
       const result = await service.submitAttempt(actor(), {
         questionInstanceId: next!.question.questionInstanceId, selectedOptionId: "A", idempotencyKey: `gemini-recovery-${index}`,
       });
-      expect(result.result).toMatchObject({ isCorrect: true, consecutiveCorrect: index + 1, xpAwarded: points });
+      expect(result.result).toMatchObject({ isCorrect: true, consecutiveCorrect: index + 1, rankPointsAwarded: 35, xpAwarded: 0 });
       if (index === 1) expect(result.result.recoveryStatus).toBe("recovered");
       const sent = JSON.stringify(requestBody(fetchMock, index));
       expect(sent).toContain("futebol");

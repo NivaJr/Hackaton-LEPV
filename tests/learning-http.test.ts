@@ -60,11 +60,11 @@ describe("contratos HTTP reais consumidos pela interface", () => {
     expect(hint).toEqual({ questionInstanceId: next.question.questionInstanceId, text: "Conte dois pares." });
     expect(JSON.stringify(hint)).not.toContain("correctOptionId");
     const result = await (await request("POST", "attempts", { questionInstanceId: next.question.questionInstanceId, selectedOptionId: "a", idempotencyKey: "http-recovery" })).json();
-    expect(result.result).toMatchObject({ xpAwarded: 70, rankPointsAwarded: 70, consecutiveCorrect: 1 });
+    expect(result.result).toMatchObject({ xpAwarded: 0, rankPointsAwarded: 35, consecutiveCorrect: 1 });
     const interruption = await (await request("POST", `recoveries/${answered.recoveryId}/interrupt`)).json();
     expect(interruption).toMatchObject({ recoveryId: answered.recoveryId, state: { status: "interrupted", consecutiveCorrect: 1, answeredCount: 1 } });
     const ranking = await (await request("GET", `ranking?classId=${fixtureIds.classId}`)).json();
-    expect(ranking.top10[0]).toMatchObject({ studentId: fixtureIds.student, position: 1, xp: 70, rankPoints: 70 });
+    expect(ranking.top10[0]).toMatchObject({ studentId: fixtureIds.student, position: 1, xp: 0, rankPoints: 35 });
     const summary = await (await request("GET", "summary?from=2026-10-01&to=2026-10-31")).json();
     expect(StudentSummarySchema.safeParse(summary.summary).success).toBe(true);
     expect(summary.activityDates).toEqual(["2026-10-30"]);

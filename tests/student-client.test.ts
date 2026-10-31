@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createFakeStudentLearningClient, createHttpStudentLearningClient } from "@/features/learning/client";
-import { demoActivities, demoPreferences, demoRanking, demoSummary } from "@/features/learning/fixtures/student-demo";
+import { demoActivities, demoPreferences, demoRanking, demoSubjectProgress, demoSummary } from "@/features/learning/fixtures/student-demo";
+import { progressPercent } from "@/features/learning/ui/skill-matrix";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -10,8 +11,18 @@ describe("StudentLearningClient fake", () => {
     const snapshot = await client.loadSnapshot();
 
     expect(snapshot.activities.grade).toBe(7);
+    expect(snapshot.activities.activities).toHaveLength(16);
+    expect(snapshot.activities.activities.filter((item) => item.activityType === "weekly_challenge")).toHaveLength(10);
+    expect(snapshot.activities.activities.filter((item) => item.activityType === "exercise")).toHaveLength(6);
+    expect(snapshot.activities.activities.every((item) => !!item.contentTitle)).toBe(true);
     expect(new Set(snapshot.activities.activities.map((item) => item.grade))).toEqual(new Set([7]));
     expect(new Set(snapshot.activities.activities.map((item) => item.subjectId)).size).toBe(6);
+  });
+
+  it("calcula o mapa por pontos conquistados sobre pontos disponíveis", () => {
+    const history = demoSubjectProgress.find((entry) => entry.subjectId === "historia")!;
+    expect(history).toMatchObject({ earnedRankPoints: 200, availableRankPoints: 2_000 });
+    expect(progressPercent(history)).toBe(10);
   });
 
   it("salva interesses e contexto sem aceitar campos de identidade", async () => {
@@ -21,6 +32,17 @@ describe("StudentLearningClient fake", () => {
     expect(saved.interests).toEqual(["xadrez", "música"]);
     expect(saved.context).toBe("Prefiro desafios curtos.");
     expect(saved.version).toBe(2);
+  });
+
+  it("diferencia a pontuação da lista do professor e do desafio semanal", async () => {
+    const client = createFakeStudentLearningClient();
+    const list = await client.openActivity("math-list-01");
+    const listResult = await client.submitAttempt({ questionInstanceId: list.question.questionInstanceId, selectedOptionId: "b", idempotencyKey: "teacher-list-correct" });
+    expect(listResult.result).toMatchObject({ isCorrect: true, xpAwarded: 0, rankPointsAwarded: 50 });
+
+    const challenge = await client.openActivity("math-root-01");
+    const challengeResult = await client.submitAttempt({ questionInstanceId: challenge.question.questionInstanceId, selectedOptionId: "b", idempotencyKey: "weekly-challenge-correct" });
+    expect(challengeResult.result).toMatchObject({ isCorrect: true, xpAwarded: 100, rankPointsAwarded: 100 });
   });
 
   it("reutiliza o resultado da instância e não duplica crédito", async () => {

@@ -14,6 +14,10 @@ export type ActivityStatus = "not_started" | "pending" | "answered";
 
 export interface StudentActivity {
   rootQuestionId: string;
+  activityType: "exercise" | "weekly_challenge";
+  contentId?: string;
+  contentTitle?: string;
+  contentDefinedBy?: "professor" | "coordenador";
   subjectId: SubjectId;
   grade: Grade;
   skillCodes: string[];
@@ -59,12 +63,19 @@ export interface RankingEntry {
 
 export interface RankingResponse {
   classId: string;
-  rankCalibration: "proposed" | string;
+  rankCalibration: "confirmed" | string;
   top10: RankingEntry[];
+}
+
+export interface SubjectProgress {
+  subjectId: SubjectId;
+  earnedRankPoints: number;
+  availableRankPoints: number;
 }
 
 export interface StudentLearningSnapshot {
   activityDates?: string[];
+  subjectProgress?: SubjectProgress[];
   preferences: StudentPreferences;
   preferencesSaved: boolean;
   activities: ActivityList;

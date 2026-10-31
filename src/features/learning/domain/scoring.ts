@@ -1,6 +1,6 @@
 import {
   DEFAULT_RECOVERY_CAP_POINTS,
-  PROPOSED_RANK_THRESHOLDS,
+  RANK_THRESHOLDS,
   RECOVERY_REWARD_MULTIPLIER,
 } from "@/config/scoring";
 
@@ -32,16 +32,16 @@ export function calculateRecoveryReward({
   return roundPoints(Math.min(nominal, Math.max(0, capPoints - alreadyAwarded)));
 }
 
-/** Proposed rank calibration; annual points remain uncapped above Desafiante. */
+/** Confirmed rank calibration; annual points remain cumulative above Onisciente. */
 export function getRankForPoints(points: number) {
   requirePoints(points, "points");
-  return [...PROPOSED_RANK_THRESHOLDS].reverse().find((rank) => points >= rank.minimumPoints)!;
+  return [...RANK_THRESHOLDS].reverse().find((rank) => points >= rank.minimumPoints)!;
 }
 
 export function getRankProgress(points: number) {
   const current = getRankForPoints(points);
-  const index = PROPOSED_RANK_THRESHOLDS.findIndex((rank) => rank.id === current.id);
-  const next = PROPOSED_RANK_THRESHOLDS[index + 1] ?? null;
+  const index = RANK_THRESHOLDS.findIndex((rank) => rank.id === current.id);
+  const next = RANK_THRESHOLDS[index + 1] ?? null;
   const progress = next
     ? Math.min(1, (points - current.minimumPoints) / (next.minimumPoints - current.minimumPoints))
     : 1;

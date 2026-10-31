@@ -68,7 +68,7 @@ export function createHttpStudentLearningClient(): StudentLearningClient {
         learning(`summary?from=${periodStart}&to=${periodEnd}`),
         this.getRanking(activities.classId),
       ]);
-      const summaryEnvelope = summaryPayload as { summary: unknown; activityDates?: string[] };
+      const summaryEnvelope = summaryPayload as { summary: unknown; activityDates?: string[]; subjectProgress?: StudentLearningSnapshot["subjectProgress"] };
       return {
         preferences: StudentPreferencesSchema.parse(preferenceEnvelope.preferences),
         preferencesSaved: preferenceEnvelope.saved,
@@ -76,6 +76,7 @@ export function createHttpStudentLearningClient(): StudentLearningClient {
         summary: StudentSummarySchema.parse(summaryEnvelope.summary),
         ranking,
         activityDates: summaryEnvelope.activityDates ?? [],
+        subjectProgress: summaryEnvelope.subjectProgress,
       };
     },
     async savePreferences(input: StudentPreferencesUpdate) {

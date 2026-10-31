@@ -36,7 +36,7 @@ describe.sequential("serviço + migrações reais em Postgres/WASM (Auth emulado
       await service.submitAttempt(actor(), { questionInstanceId: next!.question.questionInstanceId, selectedOptionId: "a", idempotencyKey: `database-recovery-${i}` });
     }
     const fresh = new LearningService(new SupabaseLearningRepository(postgresRpcClient(db)), { generateRecoveryQuestion: async () => question(999) }, testPolicy, testNow);
-    expect((await fresh.summary(actor(), ids.student, "2026-10-01", "2026-10-31")).summary).toMatchObject({ xp: 140, rankPoints: 140, correctAnswers: 2, incorrectAnswers: 1 });
+    expect((await fresh.summary(actor(), ids.student, "2026-10-01", "2026-10-31")).summary).toMatchObject({ xp: 0, rankPoints: 70, correctAnswers: 2, incorrectAnswers: 1 });
     const counts = await db.query<{ attempts: number; credits: number }>("select (select count(*)::int from public.learning_attempts) attempts,(select count(*)::int from public.learning_point_ledger) credits");
     expect(counts.rows[0]).toEqual({ attempts: 3, credits: 6 });
     await expect(fresh.nextRecovery(actor(), first.recoveryId!)).rejects.toMatchObject({ code: "RECOVERY_CLOSED" });

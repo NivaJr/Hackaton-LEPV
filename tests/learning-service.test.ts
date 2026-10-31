@@ -17,20 +17,18 @@ async function wrong(service: LearningService) {
 }
 
 describe("aprendizagem: autorização, snapshots e persistência idempotente", () => {
-  it("não ativa valores propostos implicitamente e exige as três escolhas explícitas", () => {
-    expect(readLearningScoringPolicy({})).toBeNull();
-    expect(readLearningScoringPolicy({ LEPV_ORIGINAL_POINTS: "100" })).toBeNull();
-    expect(readLearningScoringPolicy({ LEPV_ORIGINAL_POINTS: "100", LEPV_RECOVERY_REFERENCE: "original", LEPV_ADAPTIVE_XP_FOLLOWS_ROOT: "true" })).toEqual(testPolicy);
-    expect(readLearningScoringPolicy({ LEPV_ORIGINAL_POINTS: "NaN", LEPV_RECOVERY_REFERENCE: "original", LEPV_ADAPTIVE_XP_FOLLOWS_ROOT: "true" })).toBeNull();
+  it("usa a política confirmada sem depender de variáveis de ambiente", () => {
+    expect(readLearningScoringPolicy({})).toMatchObject({ originalPoints: 50, recoveryReference: "original", adaptiveXpFollowsRoot: true });
+    expect(readLearningScoringPolicy({ LEPV_ORIGINAL_POINTS: "999" })).toEqual(readLearningScoringPolicy({}));
   });
 
-  it("não cria instância sem ficha salva ou configuração explícita", async () => {
+  it("não cria instância sem ficha salva e usa a regra confirmada mesmo sem configuração legada", async () => {
     const { repository, service, generate } = setup();
     const disabled = new LearningService(repository, { generateRecoveryQuestion: generate }, null, testNow);
-    await expect(disabled.openActivity(actor(), "root-01")).rejects.toMatchObject({ code: "SCORING_NOT_CONFIGURED" });
+    expect((await disabled.openActivity(actor(), "root-01")).question.rootQuestionId).toBe("root-01");
     repository.students.get(fixtureIds.student)!.preferences = null;
-    await expect(service.openActivity(actor(), "root-01")).rejects.toMatchObject({ code: "PREFERENCES_REQUIRED" });
-    expect(repository.students.get(fixtureIds.student)!.state.instances).toHaveLength(0);
+    await expect(service.openActivity(actor(), "root-02")).rejects.toMatchObject({ code: "PREFERENCES_REQUIRED" });
+    expect(repository.students.get(fixtureIds.student)!.state.instances).toHaveLength(1);
   });
 
   it("mantém uma atribuição imutável e não expõe gabarito, explicação ou dica", async () => {
@@ -60,6 +58,18 @@ describe("aprendizagem: autorização, snapshots e persistência idempotente", (
     expect(await service.submitAttempt(actor(), { ...submit, idempotencyKey: "different-key" })).toEqual(results[0]);
     const second = await service.openActivity(actor(), "root-02");
     await expect(service.submitAttempt(actor(), { ...submit, questionInstanceId: second.question.questionInstanceId })).rejects.toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
+  });
+
+  it("concede 50 pontos de patente e nenhum XP em exercício comum", async () => {
+    const { service, repository } = setup();
+    repository.catalogs.get(fixtureIds.classId)!.catalog.activities[0].activityType = "exercise";
+    const opened = await service.openActivity(actor(), "root-01");
+    const answered = await service.submitAttempt(actor(), {
+      questionInstanceId: opened.question.questionInstanceId,
+      selectedOptionId: "a",
+      idempotencyKey: "regular-exercise",
+    });
+    expect(answered.result).toMatchObject({ xpAwarded: 0, rankPointsAwarded: 50 });
   });
 
   it("nega ator de outro perfil, ID de outro aluno e alternativa inexistente", async () => {
@@ -96,7 +106,7 @@ describe("recuperação e falhas externas", () => {
     expect(repository.students.get(fixtureIds.student)!.state.instances).toHaveLength(2);
   });
 
-  it("zera sequência após erro, encerra após dois acertos e preserva 70 + 70 sem teto implícito", async () => {
+  it("zera sequência após erro, encerra após dois acertos e concede 35 pontos por acerto", async () => {
     const { service } = setup();
     const first = await wrong(service);
     const answers = ["a", "b", "a", "a"];
@@ -109,7 +119,7 @@ describe("recuperação e falhas externas", () => {
       await expect(service.hint(actor(), next!.question.questionInstanceId)).rejects.toMatchObject({ code: "HINT_UNAVAILABLE" });
     }
     expect(last!.result.recoveryStatus).toBe("recovered");
-    expect((await service.summary(actor(), fixtureIds.student, "2026-10-01", "2026-10-31")).summary).toMatchObject({ xp: 210, rankPoints: 210 });
+    expect((await service.summary(actor(), fixtureIds.student, "2026-10-01", "2026-10-31")).summary).toMatchObject({ xp: 0, rankPoints: 105 });
     await expect(service.nextRecovery(actor(), first.recoveryId!)).rejects.toMatchObject({ code: "RECOVERY_CLOSED" });
   });
 
@@ -123,16 +133,16 @@ describe("recuperação e falhas externas", () => {
     await expect(service.submitAttempt(actor(), { questionInstanceId: pending!.question.questionInstanceId, selectedOptionId: "a", idempotencyKey: "after-interrupt" })).rejects.toMatchObject({ code: "RECOVERY_CLOSED" });
   });
 
-  it("respeita referência na questão anterior quando ela é escolhida explicitamente", async () => {
+  it("mantém a recuperação em 35 pontos mesmo com a política legada de referência anterior", async () => {
     const { repository, generate } = setup();
     const service = new LearningService(repository, { generateRecoveryQuestion: generate }, { ...testPolicy, recoveryReference: "previous" }, testNow);
     const first = await wrong(service);
     const awards = [];
     for (let i = 0; i < 2; i++) {
       const next = await service.nextRecovery(actor(), first.recoveryId!);
-      awards.push((await service.submitAttempt(actor(), { questionInstanceId: next!.question.questionInstanceId, selectedOptionId: "a", idempotencyKey: `previous-reference-${i}` })).result.xpAwarded);
+      awards.push((await service.submitAttempt(actor(), { questionInstanceId: next!.question.questionInstanceId, selectedOptionId: "a", idempotencyKey: `previous-reference-${i}` })).result.rankPointsAwarded);
     }
-    expect(awards).toEqual([70,49]);
+    expect(awards).toEqual([35,35]);
   });
 
   it("interromper durante a geração impede persistir a variante atrasada", async () => {
@@ -163,7 +173,7 @@ describe("recuperação e falhas externas", () => {
 });
 
 describe("rotação, ranking e métricas autorizadas", () => {
-  it.each([true,false])("a elegibilidade do XP adaptativo segue a política explícita: followsRoot=%s", async (followsRoot) => {
+  it.each([true,false])("recuperação não concede XP, independentemente da política legada: followsRoot=%s", async (followsRoot) => {
     const { repository, generate } = setup();
     const service = new LearningService(repository, { generateRecoveryQuestion: generate }, { ...testPolicy, adaptiveXpFollowsRoot: followsRoot }, testNow);
     const first = await wrong(service);
@@ -171,7 +181,7 @@ describe("rotação, ranking e métricas autorizadas", () => {
     await service.submitAttempt(actor(), { questionInstanceId: next!.question.questionInstanceId, selectedOptionId: "a", idempotencyKey: "rotation-adaptive" });
     await service.interrupt(actor(), first.recoveryId!);
     await service.rotate(coordinator(), fixtureIds.classId, "matematica", "2026-10-26", ["root-11","root-12"]);
-    expect((await service.summary(actor(), fixtureIds.student, "2026-10-01", "2026-10-31")).summary).toMatchObject({ xp: followsRoot ? 0 : 70, rankPoints: 70 });
+    expect((await service.summary(actor(), fixtureIds.student, "2026-10-01", "2026-10-31")).summary).toMatchObject({ xp: 0, rankPoints: 35 });
   });
 
   it("professor da turma atual não recebe métricas de uma turma anterior do aluno", async () => {
