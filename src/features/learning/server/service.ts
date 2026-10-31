@@ -378,6 +378,17 @@ export class LearningService {
     });
   }
 
+  /** Coordinator view of published originals (active or not) for one class and subject. No answer keys. */
+  async publishedActivities(actor: SessionContext, classId: string, subjectId: SubjectId) {
+    this.requireCoordinator(actor);
+    const { catalog } = await this.repository.loadCatalog(actor.institutionId, classId);
+    const activities = catalog.activities.filter((item) => item.body.subjectId === subjectId).map((item) => ({
+      rootQuestionId: item.rootQuestionId, statement: item.body.statement, skillCodes: item.body.skillCodes,
+      difficulty: item.body.difficulty, active: item.active, activatedAt: item.activatedAt,
+    }));
+    return { classId, subjectId, grade: catalog.grade, activities };
+  }
+
   async activate(actor: SessionContext, classId: string, subjectId: SubjectId, rootIds: string[]) {
     this.requireCoordinator(actor);
     if (rootIds.length !== 10 || new Set(rootIds).size !== 10) throw new LearningError("TEN_ORIGINALS_REQUIRED", "Selecione dez originais distintas.", 422);

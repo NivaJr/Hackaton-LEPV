@@ -17,7 +17,12 @@ export function CoordinatorWorkspace({ fullName, schoolYear }: { fullName: strin
   const [busy, setBusy] = useState(false);
 
   const refresh = useCallback(async () => {
-    try { setData(await rosterApi.overview()); }
+    try {
+      const overview = await rosterApi.overview();
+      setData(overview);
+      // Open the first class so menu anchors (acompanhamento, vínculos, importação) have a target.
+      setSelectedId((current) => current ?? overview.classrooms[0]?.id ?? null);
+    }
     catch (cause) { setMessage({ tone: "error", text: cause instanceof Error ? cause.message : "Não foi possível carregar a escola." }); }
   }, []);
   useEffect(() => { void refresh(); }, [refresh]);

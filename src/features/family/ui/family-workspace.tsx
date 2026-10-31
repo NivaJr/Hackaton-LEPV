@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Flag, Flame, HeartPulse, MessageSquareText, TrendingUp } from "lucide-react";
+import { Award, Check, Flag, Flame, HeartPulse, MessageSquareText, TrendingUp } from "lucide-react";
 import { SUBJECTS } from "@/config/catalog";
+import type { RecognitionView } from "@/features/recognition/model";
+import { recognitionApi, RecognitionApiError } from "@/features/recognition/ui/api";
 import type { ChildRecord, FamilyRecord, FamilyRecordCategory, FeedbackResult, StudentOverview } from "../model";
 import styles from "./family.module.css";
 
@@ -47,6 +49,51 @@ function RecordEditor({ studentId, category, title, initial }: { studentId: stri
       {saved.updatedAt && <span className={styles.meta}>Atualizado em {new Date(saved.updatedAt).toLocaleDateString("pt-BR")}</span>}
     </div>
     {state && <p role={state.tone === "error" ? "alert" : "status"} className={`${styles.notice} ${styles[state.tone]}`} style={{ marginTop: 12 }}>{state.text}</p>}
+  </section>;
+}
+
+const praiseDate = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric" });
+
+type PraiseState =
+  | { kind: "loading" }
+  | { kind: "ready"; items: RecognitionView[]; total: number | null }
+  | { kind: "off" }
+  | { kind: "error"; text: string };
+
+function PraisePanel({ studentId }: { studentId: string }) {
+  const [state, setState] = useState<PraiseState>({ kind: "loading" });
+
+  useEffect(() => {
+    let active = true;
+    recognitionApi.forStudent(studentId)
+      .then((data) => { if (active) setState({ kind: "ready", items: data.recognitions, total: data.annualPoints?.points ?? null }); })
+      .catch((cause: unknown) => {
+        if (!active) return;
+        if (cause instanceof RecognitionApiError && cause.status === 503) setState({ kind: "off" });
+        else setState({ kind: "error", text: describeError(cause) });
+      });
+    return () => { active = false; };
+  }, [studentId]);
+
+  return <section className="panel" id="elogios">
+    <div className="panel-heading"><div><span className="eyebrow">ATITUDES EM AULA</span><h2>Elogios dos professores</h2></div><Award size={21} /></div>
+    {state.kind === "loading" && <p className={styles.empty}>Carregando…</p>}
+    {state.kind === "off" && <p className={styles.empty}>Os elogios aparecem aqui quando a escola ativar esse recurso.</p>}
+    {state.kind === "error" && <p role="alert" className={`${styles.notice} ${styles.error}`}>{state.text}</p>}
+    {state.kind === "ready" && state.items.length === 0 && <p className={styles.empty}>Nenhum elogio registrado ainda.</p>}
+    {state.kind === "ready" && state.items.length > 0 && <>
+      {state.total !== null && <p className={styles.meta}>{state.total} pontos de patente com elogios neste ano letivo.</p>}
+      <div className={styles.tableWrap}><table className={styles.table}>
+        <thead><tr><th>Data</th><th>Professor</th><th>Matéria</th><th>Motivo</th><th>Pontos</th></tr></thead>
+        <tbody>{state.items.map((item) => <tr key={item.id}>
+          <td>{praiseDate.format(new Date(item.createdAt))}</td>
+          <td>{item.teacherName}</td>
+          <td>{subjectName(item.subjectId)}</td>
+          <td>{item.reasonLabel}{item.note ? `: ${item.note}` : ""}</td>
+          <td>+{item.points} pontos de patente</td>
+        </tr>)}</tbody>
+      </table></div>
+    </>}
   </section>;
 }
 
@@ -117,5 +164,6 @@ export function FamilyWorkspace({ fullName }: { fullName: string }) {
       <select value={selectedId ?? ""} onChange={(event) => setSelectedId(event.target.value)}>{children.map((child) => <option key={child.id} value={child.id}>{child.fullName}{child.classroomName ? ` · ${child.classroomName}` : ""}</option>)}</select>
     </label>}
     {selected && <ChildPanel key={selected.id} studentId={selected.id} />}
+    {selected && <PraisePanel key={`elogios-${selected.id}`} studentId={selected.id} />}
   </div>;
 }

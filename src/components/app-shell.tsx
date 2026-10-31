@@ -1,29 +1,19 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowUpRight, BookOpen, ChevronRight, CircleHelp, Compass, Flag, GraduationCap, LayoutDashboard, ShieldCheck, Sparkles, Trophy, Users } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, ChevronRight, CircleHelp, Flag, GraduationCap, ShieldCheck, Sparkles } from "lucide-react";
+import { navItems, type DashboardMode } from "./nav-items";
+import { NotificationBell } from "@/features/recognition/ui/notification-bell";
 import type { Role } from "@/contracts";
 import { ROLE_LABELS } from "@/lib/auth/navigation";
 import { Brand } from "./brand";
 import { signOut } from "@/app/login/actions";
 
-export type DashboardMode = "demo" | "real";
+export type { DashboardMode };
 
 export function AppShell({ role, fullName, mode, children }: { role: Role; fullName: string; mode: DashboardMode; children: ReactNode }) {
-  const isStudent = role === "aluno";
   const home = mode === "demo" ? `/demo/${role}` : `/${role}`;
-  const items = isStudent ? [
-    { label: "Visão geral", icon: LayoutDashboard, href: home },
-    { label: "Minhas atividades", icon: BookOpen, href: `${home}#atividade` },
-    { label: "Meu progresso", icon: Compass, href: `${home}#progresso` },
-    { label: "Ranking da turma", icon: Trophy, href: `${home}#ranking-turma` },
-    { label: "Meu perfil", icon: GraduationCap, href: `${home}#perfil` },
-  ] : [
-    { label: "Visão geral", icon: LayoutDashboard, href: home },
-    { label: role === "responsavel" ? "Atividades do aluno" : "Atividades", icon: BookOpen, href: "/tarefas" },
-    { label: "Acompanhamento", icon: Compass, href: "/tarefas" },
-    { label: role === "coordenador" ? "Turmas e pessoas" : "Minha turma", icon: Users, href: "/tarefas" },
-    { label: "Meu espaço", icon: GraduationCap, href: "/tarefas" },
-  ];
+  const items = navItems(role, mode, home);
+  const showBell = mode === "real" && (role === "aluno" || role === "responsavel");
   const initials = fullName.split(" ").filter(Boolean).slice(0, 2).map(part => part[0]).join("");
   return <div className="app-shell">
     <a href="#conteudo" className="skip-link">Ir para o conteúdo</a>
@@ -40,7 +30,7 @@ export function AppShell({ role, fullName, mode, children }: { role: Role; fullN
       </div>
     </aside>
     <div className="workspace-main">
-      <header className="topbar"><div className="breadcrumb"><span>Meu espaço</span><ChevronRight size={14} /><strong>Visão geral</strong></div><div className="topbar-right"><span className={`mode-pill ${mode === "demo" ? "demo-pill" : "real-pill"}`}>{mode === "demo" ? <Flag size={13} /> : <ShieldCheck size={13} />}{mode === "demo" ? "Demonstração" : "Acesso autenticado"}</span><span className="topbar-divider" /><span className="user-avatar">{initials || "LP"}</span><div className="user-summary"><strong>{fullName}</strong><small>{ROLE_LABELS[role]}</small></div></div></header>
+      <header className="topbar"><div className="breadcrumb"><span>Meu espaço</span><ChevronRight size={14} /><strong>Visão geral</strong></div><div className="topbar-right">{showBell && <NotificationBell />}<span className={`mode-pill ${mode === "demo" ? "demo-pill" : "real-pill"}`}>{mode === "demo" ? <Flag size={13} /> : <ShieldCheck size={13} />}{mode === "demo" ? "Demonstração" : "Acesso autenticado"}</span><span className="topbar-divider" /><span className="user-avatar">{initials || "LP"}</span><div className="user-summary"><strong>{fullName}</strong><small>{ROLE_LABELS[role]}</small></div></div></header>
       <main id="conteudo" className="dashboard-content">{mode === "demo" && <div className="demo-notice"><span><span className="live-dot" />Você está explorando uma demonstração. Dados fictícios, sem persistência e sem IA integrada.</span><Link href="/login">Acessar conta real<ArrowUpRight size={14} /></Link></div>}{children}<footer className="workspace-footer"><span>EAI · Educational Artificial Intelligence</span><span>{mode === "demo" ? "Ambiente de demonstração" : "Plataforma educacional"}</span></footer></main>
     </div>
   </div>;

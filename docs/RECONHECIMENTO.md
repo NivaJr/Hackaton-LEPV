@@ -167,7 +167,9 @@ Usar `GET /api/recognition?studentId=<filho>` para a lista e `annualPoints`. O v
 
 ## SQL proposto (para o Nivaldo aplicar)
 
-Sugestão de arquivo: `supabase/migrations/20261031050000_recognition.sql`, depois de `20261031030000_learning.sql`. Nenhuma migração foi criada nesta branch.
+A migração agora existe em `supabase/migrations/20261031060000_recognition.sql`, depois de `20261031050000_learning_classroom_name.sql`. Ela junta o SQL abaixo, a extensão do livro de pontos e a nova `learning_class_ranking` num arquivo só. Foi validada apenas em PGlite (`tests/recognition-database.test.ts`), com Auth emulado. Não foi aplicada no Supabase hospedado.
+
+Diferenças do arquivo em relação ao SQL abaixo: a RPC recusa (`RECOGNITION_INVALID`) pontos diferentes de 20, limite fora de 1 a 3, `p_day` que não bate com o dia de São Paulo de `p_created_at` e ano letivo diferente do da turma; a busca de idempotência também filtra por escola; há `check (teacher_id <> student_id)`. O SQL abaixo fica como referência.
 
 ```sql
 begin;
@@ -379,4 +381,6 @@ A página declara `manifest: "/professor/reconhecer/manifest.webmanifest"` só p
 
 `tests/recognition-service.test.ts`, `tests/recognition-http.test.ts` e `tests/recognition-supabase.test.ts` cobrem: professor de outra turma e de outra escola, matéria não atribuída, aluno e responsável tentando premiar, aluno transferido e de outra turma, limite de 3 com troca de dia no fuso de Brasília, limite separado por professor, toque duplo com a mesma chave, chave reutilizada com outro motivo, só pontos anuais, aviso para aluno e responsável confirmado (não para pendente), leitura por aluno, colega, responsável, professor e coordenador, marcação de lida, formato de erro, 503 sem migração e o mapeamento do adapter Supabase com cliente falso.
 
-Não foi testado: Supabase real, a RPC e as políticas acima (não existem no banco), navegador real e instalação do manifest.
+`tests/recognition-database.test.ts` roda a migração em PGlite sobre a fundação e o aprendizado: elogio criado com crédito anual e aviso para aluno e responsável, quarto elogio do dia recusado, chave repetida devolvendo `duplicate`, ranking sem pontos de elogio e RLS de notificações e elogios.
+
+Não foi testado: Supabase hospedado e PostgREST, navegador real e instalação do manifest.

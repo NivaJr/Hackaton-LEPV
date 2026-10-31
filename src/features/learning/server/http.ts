@@ -5,6 +5,7 @@ import type { LearningService } from "./service";
 
 const empty = z.object({}).strict();
 const classQuery = z.object({ classId: z.uuid() }).strict();
+const catalogQuery = z.object({ classId: z.uuid(), subjectId: SubjectIdSchema }).strict();
 const activateInput = z.object({ classId: z.uuid(), subjectId: SubjectIdSchema, rootQuestionIds: z.array(IdSchema).length(10) }).strict();
 const rotationInput = z.object({ classId: z.uuid(), subjectId: SubjectIdSchema, weekStart: z.string().date(), incomingRootIds: z.array(IdSchema).length(2) }).strict();
 const summaryQuery = z.object({ studentId: z.uuid().optional(), from: z.string().date(), to: z.string().date() }).strict()
@@ -72,6 +73,10 @@ export function createLearningHttpHandler(dependencies: LearningHttpDependencies
       if (method === "POST" && path.length === 1 && first === "access") {
         empty.parse(body);
         return respond(await service.recordAccess(actor));
+      }
+      if (method === "GET" && path.length === 1 && first === "catalog") {
+        const query = catalogQuery.parse(Object.fromEntries(url.searchParams));
+        return respond(await service.publishedActivities(actor, query.classId, query.subjectId));
       }
       if (method === "POST" && path.length === 1 && first === "activation") {
         const input = activateInput.parse(body);

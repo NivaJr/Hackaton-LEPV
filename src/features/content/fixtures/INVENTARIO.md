@@ -2,11 +2,13 @@
 
 Data: 31/10/2026. Fonte: `src/features/content/fixtures/examples.ts` (os testes conferem esta contagem com `buildContentInventory()`).
 
-A meta é 4 séries × 6 matérias × 10 questões = 240 questões revisadas por professor. Hoje existem **11 exemplos de demonstração** e **0 questões revisadas por professor**. Os exemplos foram escritos pela equipe de desenvolvimento para testar o fluxo. Ao importar um deles, ele entra como rascunho e precisa da revisão do professor antes de publicar.
+Os 10 exemplos de Matemática do 7º ano bastam para publicar e ativar uma turma inteira na demonstração, sem depender da IA.
+
+A meta é 4 séries × 6 matérias × 10 questões = 240 questões revisadas por professor. Hoje existem **15 exemplos de demonstração** e **0 questões revisadas por professor**. Os exemplos foram escritos pela equipe de desenvolvimento para testar o fluxo. Ao importar um deles, ele entra como rascunho e precisa da revisão do professor antes de publicar.
 
 | Série | Matéria | Exemplos de demonstração | Revisadas por professor | Meta |
 | --- | --- | --- | --- | --- |
-| 7º ano | Matemática | 6 | 0 | 10 |
+| 7º ano | Matemática | 10 | 0 | 10 |
 | 7º ano | Geografia | 5 | 0 | 10 |
 | As outras 22 combinações | | 0 | 0 | 10 cada |
 

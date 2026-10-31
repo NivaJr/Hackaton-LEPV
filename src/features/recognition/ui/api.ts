@@ -1,4 +1,4 @@
-import type { NotificationView, RecognitionOutcome, RecognitionReason } from "../model";
+import type { NotificationView, RecognitionOutcome, RecognitionReason, RecognitionView } from "../model";
 
 export class RecognitionApiError extends Error {
   constructor(readonly code: string, message: string, readonly status: number) {
@@ -32,6 +32,12 @@ export interface GrantResponse {
   results: RecognitionOutcome[];
 }
 
+export interface StudentRecognitionsResponse {
+  studentId: string;
+  annualPoints: { schoolYear: number; points: number } | null;
+  recognitions: RecognitionView[];
+}
+
 export interface NotificationsResponse {
   unreadCount: number;
   notifications: NotificationView[];
@@ -60,6 +66,7 @@ export const recognitionApi = {
   students: (classId: string) => request<ClassStudentsResponse>(`/api/recognition/students?classId=${encodeURIComponent(classId)}`),
   grant: (input: { classId: string; subjectId: string; studentIds: string[]; reason: RecognitionReason; note?: string; idempotencyKey: string }) =>
     request<GrantResponse>("/api/recognition", json(input)),
+  forStudent: (studentId: string) => request<StudentRecognitionsResponse>(`/api/recognition?studentId=${encodeURIComponent(studentId)}`),
   notifications: () => request<NotificationsResponse>("/api/notifications"),
   markRead: (id: string) => request<{ notification: NotificationView }>(`/api/notifications/${encodeURIComponent(id)}/read`, json({})),
 };
