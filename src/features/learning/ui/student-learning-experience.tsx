@@ -52,6 +52,12 @@ export function StudentLearningExperience({ fullName, mode }: { fullName: string
   }
   function finish() { operation.current = null; setBusy(null); }
 
+  // Sections render after the snapshot loads, so the browser cannot follow the hash on its own.
+  const loaded = snapshot !== null;
+  useEffect(() => {
+    if (loaded && window.location.hash) document.getElementById(window.location.hash.slice(1))?.scrollIntoView();
+  }, [loaded]);
+
   useEffect(() => {
     let active = true;
     client.recordAccess().then(() => client.loadSnapshot()).then((data) => {

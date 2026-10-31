@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { TEMPLATES, parseImportRows } from "@/features/roster/import/rows";
+import { TEMPLATES, accessLinksCsv, parseImportRows } from "@/features/roster/import/rows";
 import { MAX_FILE_BYTES, parseCsv, parseXlsx, readSpreadsheet } from "@/features/roster/import/spreadsheet";
 import { workbook, zip } from "./helpers/xlsx";
 
@@ -78,6 +78,13 @@ describe("linhas de alunos e professores", () => {
   it("os modelos publicados passam pelo próprio importador", () => {
     expect(students(TEMPLATES.students.content)[0].issues).toEqual([]);
     expect(teachers(TEMPLATES.teachers.content)[0].issues).toEqual([]);
+  });
+});
+
+describe("arquivo de links de cadastro", () => {
+  it("gera colunas separadas por ponto e vírgula e protege aspas", () => {
+    expect(accessLinksCsv([{ fullName: "Ana \"Nina\" Rocha", email: "a@b.com", accessLink: "https://x.example/convite?type=invite" }]))
+      .toBe('nome completo;email;link de cadastro\r\n"Ana ""Nina"" Rocha";"a@b.com";"https://x.example/convite?type=invite"\r\n');
   });
 });
 

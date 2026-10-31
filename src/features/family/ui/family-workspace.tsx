@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Award, Check, Flag, Flame, HeartPulse, MessageSquareText, TrendingUp } from "lucide-react";
+import { Check, Flag, Flame, HeartPulse, MessageSquareText, TrendingUp } from "lucide-react";
 import { SUBJECTS } from "@/config/catalog";
-import type { RecognitionView } from "@/features/recognition/model";
-import { recognitionApi, RecognitionApiError } from "@/features/recognition/ui/api";
+import { NotificationBell } from "@/features/recognition/ui/notification-bell";
 import type { ChildRecord, FamilyRecord, FamilyRecordCategory, FeedbackResult, StudentOverview } from "../model";
+import { RecognitionsPanel } from "./recognitions-panel";
 import styles from "./family.module.css";
 
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
@@ -52,51 +52,6 @@ function RecordEditor({ studentId, category, title, initial }: { studentId: stri
   </section>;
 }
 
-const praiseDate = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric" });
-
-type PraiseState =
-  | { kind: "loading" }
-  | { kind: "ready"; items: RecognitionView[]; total: number | null }
-  | { kind: "off" }
-  | { kind: "error"; text: string };
-
-function PraisePanel({ studentId }: { studentId: string }) {
-  const [state, setState] = useState<PraiseState>({ kind: "loading" });
-
-  useEffect(() => {
-    let active = true;
-    recognitionApi.forStudent(studentId)
-      .then((data) => { if (active) setState({ kind: "ready", items: data.recognitions, total: data.annualPoints?.points ?? null }); })
-      .catch((cause: unknown) => {
-        if (!active) return;
-        if (cause instanceof RecognitionApiError && cause.status === 503) setState({ kind: "off" });
-        else setState({ kind: "error", text: describeError(cause) });
-      });
-    return () => { active = false; };
-  }, [studentId]);
-
-  return <section className="panel" id="elogios">
-    <div className="panel-heading"><div><span className="eyebrow">ATITUDES EM AULA</span><h2>Elogios dos professores</h2></div><Award size={21} /></div>
-    {state.kind === "loading" && <p className={styles.empty}>Carregando…</p>}
-    {state.kind === "off" && <p className={styles.empty}>Os elogios aparecem aqui quando a escola ativar esse recurso.</p>}
-    {state.kind === "error" && <p role="alert" className={`${styles.notice} ${styles.error}`}>{state.text}</p>}
-    {state.kind === "ready" && state.items.length === 0 && <p className={styles.empty}>Nenhum elogio registrado ainda.</p>}
-    {state.kind === "ready" && state.items.length > 0 && <>
-      {state.total !== null && <p className={styles.meta}>{state.total} pontos de patente com elogios neste ano letivo.</p>}
-      <div className={styles.tableWrap}><table className={styles.table}>
-        <thead><tr><th>Data</th><th>Professor</th><th>Matéria</th><th>Motivo</th><th>Pontos</th></tr></thead>
-        <tbody>{state.items.map((item) => <tr key={item.id}>
-          <td>{praiseDate.format(new Date(item.createdAt))}</td>
-          <td>{item.teacherName}</td>
-          <td>{subjectName(item.subjectId)}</td>
-          <td>{item.reasonLabel}{item.note ? `: ${item.note}` : ""}</td>
-          <td>+{item.points} pontos de patente</td>
-        </tr>)}</tbody>
-      </table></div>
-    </>}
-  </section>;
-}
-
 function ChildPanel({ studentId }: { studentId: string }) {
   const [overview, setOverview] = useState<StudentOverview | null>(null);
   const [feedback, setFeedback] = useState<FeedbackResult | null>(null);
@@ -130,6 +85,7 @@ function ChildPanel({ studentId }: { studentId: string }) {
       <p className={styles.feedback}>{feedback.text}</p>
       <span className={styles.meta}>{feedback.origin === "ia" ? "Gerado por IA a partir dos resultados, sem dados de saúde ou apoio." : "Mensagem automática, sem IA."}{feedback.metricsSource === "fixture" ? " Baseada em dados de exemplo." : ""}</span>
     </section>}
+    <RecognitionsPanel studentId={studentId} />
     <div className={styles.columns} id="saude-apoio">
       <RecordEditor studentId={studentId} category="health" title="Saúde" initial={overview.health} />
       <RecordEditor studentId={studentId} category="support" title="Necessidades de apoio" initial={overview.support} />
@@ -157,13 +113,12 @@ export function FamilyWorkspace({ fullName }: { fullName: string }) {
 
   const selected = children?.find((child) => child.id === selectedId);
   return <div className={styles.stack}>
-    <div className="page-heading"><div><span className="eyebrow">PRESENTE EM CADA DESCOBERTA</span><h1>Olá, {fullName.split(" ")[0]}<span className="greeting-dot">.</span></h1><p>Acompanhe a jornada dos estudantes vinculados à sua conta.</p></div></div>
+    <div className="page-heading"><div><span className="eyebrow">PRESENTE EM CADA DESCOBERTA</span><h1>Olá, {fullName.split(" ")[0]}<span className="greeting-dot">.</span></h1><p>Acompanhe a jornada dos estudantes vinculados à sua conta.</p></div><NotificationBell /></div>
     {error && <p role="alert" className={`${styles.notice} ${styles.error}`}>{error}</p>}
     {children?.length === 0 && <section className="panel"><p className={styles.empty}>Nenhum estudante com vínculo confirmado. Fale com a coordenação da escola.</p></section>}
     {children && children.length > 0 && <label className={styles.field}>Estudante
       <select value={selectedId ?? ""} onChange={(event) => setSelectedId(event.target.value)}>{children.map((child) => <option key={child.id} value={child.id}>{child.fullName}{child.classroomName ? ` · ${child.classroomName}` : ""}</option>)}</select>
     </label>}
     {selected && <ChildPanel key={selected.id} studentId={selected.id} />}
-    {selected && <PraisePanel key={`elogios-${selected.id}`} studentId={selected.id} />}
   </div>;
 }

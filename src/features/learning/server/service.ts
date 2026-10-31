@@ -236,7 +236,13 @@ export class LearningService {
     if ("pending" in claim) return claim.pending;
     try {
       const body = GeneratedQuestionSchema.parse(await this.ai.generateRecoveryQuestion({
-        original: claim.previous.question, preferences: claim.preferences, selectedOptionId: claim.selectedOptionId,
+        original: claim.previous.question,
+        preferences: {
+          interests: claim.preferences.interests,
+          context: claim.preferences.context,
+          version: claim.preferences.version,
+        },
+        selectedOptionId: claim.selectedOptionId,
       }));
       const sameSkills = [...body.skillCodes].sort().join("|") === [...claim.root.body.skillCodes].sort().join("|");
       if (body.subjectId !== claim.root.body.subjectId || body.grade !== claim.root.body.grade || !sameSkills) {

@@ -71,6 +71,7 @@ export function createRosterHttpHandler(dependencies: RosterHttpDependencies) {
         if (path.length === 1 && method === "POST") return respond(await service.createClassroom(actor, await readJson(request)), 201);
         if (path.length === 2 && method === "PATCH") return respond(await service.updateClassroom(actor, uuid.parse(id), await readJson(request)));
         if (path.length === 2 && method === "DELETE") return respond(await service.deleteClassroom(actor, uuid.parse(id)));
+        if (path.length === 3 && path[2] === "access-links" && method === "POST") return respond(await service.classAccessLinks(actor, uuid.parse(id)), 201);
       }
       if (first === "assignments") {
         if (path.length === 1 && method === "POST") return respond(await service.createAssignment(actor, await readJson(request)), 201);
@@ -87,6 +88,7 @@ export function createRosterHttpHandler(dependencies: RosterHttpDependencies) {
         if (path.length === 1 && method === "POST") return respond(await service.createGuardianLink(actor, await readJson(request)), 201);
         if (path.length === 2 && method === "PATCH") return respond(await service.setGuardianLinkStatus(actor, uuid.parse(id), await readJson(request)));
       }
+      if (first === "access-links" && path.length === 1 && method === "POST") return respond(await service.issueAccessLink(actor, await readJson(request)), 201);
       if (first === "imports" && path.length === 2 && method === "POST") {
         if (id === "preview") {
           // Role first: other profiles must not make the server buffer an upload.

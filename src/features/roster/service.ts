@@ -1,10 +1,10 @@
-import type { SessionContext } from "@/contracts";
+import type { Role, SessionContext } from "@/contracts";
 import { parseImportRows, markDuplicates, validateRow, type ParsedRow } from "./import/rows";
 import { readSpreadsheet } from "./import/spreadsheet";
 import {
-  AssignmentInputSchema, ClassroomInputSchema, ClassroomPatchSchema, EnrollmentInputSchema, GuardianLinkInputSchema, GuardianLinkStatusSchema, ImportConfirmSchema, ImportKindSchema, RosterError,
-  type AccountRecord, type AssignmentRecord, type ClassroomRecord, type ConfirmRowResult, type ConfirmStatus, type EnrollmentRecord,
-  type ImportConfirmRow, type ImportKind, type ImportPreview, type ImportResult, type PreviewRow, type PreviewStatus, type RowIssue,
+  AccessLinkInputSchema, AssignmentInputSchema, ClassroomInputSchema, ClassroomPatchSchema, EnrollmentInputSchema, GuardianLinkInputSchema, GuardianLinkStatusSchema, ImportConfirmSchema, ImportKindSchema, RosterError,
+  type AccountRecord, type AssignmentRecord, type ClassAccessLinks, type ClassroomRecord, type ConfirmRowResult, type ConfirmStatus, type EnrollmentRecord,
+  type ImportConfirmRow, type ImportKind, type ImportPreview, type ImportResult, type PreviewRow, type PreviewStatus, type ProvisionedAccount, type RowIssue,
 } from "./model";
 import type { AccountDirectory, RosterMetricsGateway, RosterRepository, StudentResultsGateway } from "./ports";
 
@@ -28,6 +28,8 @@ function countBy<T extends string>(keys: T[], values: T[]): Record<T, number> {
   values.forEach((value) => { counts[value] += 1; });
   return counts;
 }
+
+type RowOutcome = Pick<ConfirmRowResult, "status" | "issue" | "accessLink">;
 
 interface Snapshot {
   accounts: Map<string, AccountRecord>;
@@ -97,6 +99,12 @@ export class RosterService {
     this.schoolOf(actor);
   }
 
+  private async accountFor(schoolId: string, row: { email: string; fullName: string }, role: Role, account: AccountRecord | undefined): Promise<ProvisionedAccount> {
+    const known = provisioned(account);
+    if (known) return { userId: known.userId, accessLink: null };
+    return this.directory.ensureAccount({ email: row.email, fullName: row.fullName, role, schoolId, ...(account ? { userId: account.userId } : {}) });
+  }
+
   async overview(actor: SessionContext) {
     const schoolId = this.schoolOf(actor);
     const [classrooms, enrollments, assignments, students, teachers, guardians, guardianLinks] = await Promise.all([
@@ -139,6 +147,26 @@ export class RosterService {
     return { deleted: true };
   }
 
+  /** Lets the class screen hand out links at any time, since they are never stored. */
+  async classAccessLinks(actor: SessionContext, classroomId: string): Promise<ClassAccessLinks> {
+    const schoolId = this.schoolOf(actor);
+    await this.classroom(schoolId, classroomId);
+    const [enrollments, assignments, students, teachers] = await Promise.all([
+      this.repository.listEnrollments(schoolId), this.repository.listAssignments(schoolId),
+      this.repository.listPeople(schoolId, "aluno"), this.repository.listPeople(schoolId, "professor"),
+    ]);
+    const ids = new Set([
+      ...enrollments.filter((item) => item.classroomId === classroomId).map((item) => item.studentId),
+      ...assignments.filter((item) => item.classroomId === classroomId).map((item) => item.teacherId),
+    ]);
+    const names = new Map([...students, ...teachers].map((person) => [person.id, person.fullName]));
+    const pending = await this.directory.issuePendingAccessLinks([...ids]);
+    return {
+      links: pending.map(({ userId, email, accessLink }) => ({ fullName: names.get(userId) ?? email, email, accessLink })),
+      activeCount: ids.size - pending.length,
+    };
+  }
+
   /** Scores come straight from the learning core; this feature never computes or adjusts them. */
   async studentResults(actor: SessionContext, studentId: string) {
     const schoolId = this.schoolOf(actor);
@@ -165,10 +193,18 @@ export class RosterService {
     if (known && !known.roles.includes("responsavel")) {
       throw new RosterError("ROLE_CONFLICT", "Esta conta já existe sem o papel de responsável.", 409);
     }
-    const guardianId = known?.userId ?? await this.directory.ensureAccount({
-      email: row.email, fullName: row.fullName, role: "responsavel", schoolId, ...(account ? { userId: account.userId } : {}),
-    });
-    return this.repository.createGuardianLink(schoolId, guardianId, studentId);
+    const guardian = await this.accountFor(schoolId, row, "responsavel", account);
+    const link = await this.repository.createGuardianLink(schoolId, guardian.userId, studentId);
+    return { ...link, ...(guardian.accessLink ? { accessLink: guardian.accessLink } : {}) };
+  }
+
+  /** Replaces an expired or lost link; coordinators are excluded because only people they manage qualify. */
+  async issueAccessLink(actor: SessionContext, input: unknown) {
+    const schoolId = this.schoolOf(actor);
+    const { personId } = AccessLinkInputSchema.parse(input);
+    const people = await Promise.all((["aluno", "professor", "responsavel"] as const).map((role) => this.repository.listPeople(schoolId, role)));
+    if (!people.flat().some((person) => person.id === personId)) throw new RosterError("NOT_FOUND", "Pessoa não encontrada nesta escola.", 404);
+    return { accessLink: await this.directory.issueAccessLink(personId) };
   }
 
   async setGuardianLinkStatus(actor: SessionContext, linkId: string, input: unknown) {
@@ -272,7 +308,7 @@ export class RosterService {
     return { rows: results, counts: countBy(CONFIRM_STATUSES, results.map((row) => row.status)) };
   }
 
-  private async applyStudent(schoolId: string, classroomId: string, row: PreviewRow, decided: ImportConfirmRow, snapshot: Snapshot): Promise<Pick<ConfirmRowResult, "status" | "issue">> {
+  private async applyStudent(schoolId: string, classroomId: string, row: PreviewRow, decided: ImportConfirmRow, snapshot: Snapshot): Promise<RowOutcome> {
     if (row.status === "invalid") return { status: "failed", issue: row.issues[0] };
     if (row.status === "already_in_class") return { status: "already_applied" };
     const account = snapshot.accounts.get(row.email);
@@ -285,30 +321,27 @@ export class RosterService {
       const issue = await this.transfer(schoolId, row.currentEnrollment!.id, classroomId, account!.userId);
       return issue ? { status: "failed", issue } : { status: "transferred" };
     }
-    const studentId = provisioned(account)?.userId ?? await this.directory.ensureAccount({
-      email: row.email, fullName: row.fullName, role: "aluno", schoolId, ...(account ? { userId: account.userId } : {}),
-    });
+    const { userId: studentId, accessLink } = await this.accountFor(schoolId, row, "aluno", account);
+    const link = accessLink ? { accessLink } : {};
     try {
       await this.repository.enroll(schoolId, classroomId, studentId);
     } catch (error) {
       if (!(error instanceof RosterError) || error.code !== "DUPLICATE_ENROLLMENT") throw error;
       const current = await this.repository.activeEnrollment(schoolId, studentId);
-      return current?.classroomId === classroomId ? { status: "already_applied" } : { status: "failed", issue: STALE };
+      return current?.classroomId === classroomId ? { status: "already_applied", ...link } : { status: "failed", issue: STALE, ...link };
     }
-    return { status: row.status === "new" ? "created" : "enrolled" };
+    return { status: row.status === "new" ? "created" : "enrolled", ...link };
   }
 
-  private async applyTeacher(schoolId: string, classroomId: string, row: PreviewRow, snapshot: Snapshot): Promise<Pick<ConfirmRowResult, "status" | "issue">> {
+  private async applyTeacher(schoolId: string, classroomId: string, row: PreviewRow, snapshot: Snapshot): Promise<RowOutcome> {
     if (row.status === "invalid") return { status: "failed", issue: row.issues[0] };
     if (row.status === "already_assigned") return { status: "already_applied" };
     const account = snapshot.accounts.get(row.email);
-    const teacherId = provisioned(account)?.userId ?? await this.directory.ensureAccount({
-      email: row.email, fullName: row.fullName, role: "professor", schoolId, ...(account ? { userId: account.userId } : {}),
-    });
+    const { userId: teacherId, accessLink } = await this.accountFor(schoolId, row, "professor", account);
     // A later line for the same new teacher must reuse the identity created by the first one.
     snapshot.accounts.set(row.email, { userId: teacherId, schoolId, fullName: row.fullName, roles: ["professor"] });
     const assignment = await this.repository.createAssignment(schoolId, { classroomId, teacherId, subjectId: row.subjectId! });
     snapshot.assignments.push(assignment);
-    return { status: row.status === "new" ? "created" : "assigned" };
+    return { status: row.status === "new" ? "created" : "assigned", ...(accessLink ? { accessLink } : {}) };
   }
 }

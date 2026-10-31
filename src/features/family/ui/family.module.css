@@ -18,3 +18,8 @@
 .empty{color:var(--muted);font-size:14px;margin:12px 0 0}
 :global([data-theme="dark"]) .success{color:#a8ecd2}
 @media(max-width:900px){.columns{grid-template-columns:minmax(0,1fr)}}
+.recognitions{list-style:none;margin:12px 0 0;padding:0}
+.recognitions li{padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.recognitions li:last-child{border-bottom:0}
+.recognitions p{margin:4px 0;color:var(--ink);line-height:1.5}
+.recognitions .meta{display:block;margin-top:2px}

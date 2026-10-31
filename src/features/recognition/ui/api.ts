@@ -32,7 +32,7 @@ export interface GrantResponse {
   results: RecognitionOutcome[];
 }
 
-export interface StudentRecognitionsResponse {
+export interface StudentRecognitions {
   studentId: string;
   annualPoints: { schoolYear: number; points: number } | null;
   recognitions: RecognitionView[];
@@ -66,7 +66,7 @@ export const recognitionApi = {
   students: (classId: string) => request<ClassStudentsResponse>(`/api/recognition/students?classId=${encodeURIComponent(classId)}`),
   grant: (input: { classId: string; subjectId: string; studentIds: string[]; reason: RecognitionReason; note?: string; idempotencyKey: string }) =>
     request<GrantResponse>("/api/recognition", json(input)),
-  forStudent: (studentId: string) => request<StudentRecognitionsResponse>(`/api/recognition?studentId=${encodeURIComponent(studentId)}`),
+  forStudent: (studentId: string) => request<StudentRecognitions>(`/api/recognition?studentId=${encodeURIComponent(studentId)}`),
   notifications: () => request<NotificationsResponse>("/api/notifications"),
   markRead: (id: string) => request<{ notification: NotificationView }>(`/api/notifications/${encodeURIComponent(id)}/read`, json({})),
 };
