@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import type { LearningRpcClient } from "@/features/learning/server/supabase-repository";
@@ -12,6 +12,15 @@ const definitions: Record<string, Array<[string, string]>> = {
   learning_commit_student: [["p_school", "uuid"], ["p_student", "uuid"], ["p_expected_version", "bigint"], ["p_catalog_version", "bigint"], ["p_state", "jsonb"]],
   learning_save_preferences: [["p_school", "uuid"], ["p_student", "uuid"], ["p_preferences", "jsonb"]],
   learning_class_ranking: [["p_school", "uuid"], ["p_class", "uuid"]],
+  learning_recognition_points: [["p_school", "uuid"], ["p_student", "uuid"], ["p_year", "integer"], ["p_subjects", "text[]"]],
+  learning_class_metrics: [["p_school", "uuid"], ["p_classes", "uuid[]"], ["p_from", "date"], ["p_to", "date"], ["p_subjects", "text[]"]],
+  content_list_questions: [["p_school", "uuid"], ["p_class", "uuid"], ["p_subject", "text"]],
+  content_get_question: [["p_school", "uuid"], ["p_id", "text"]],
+  content_insert_questions: [["p_items", "jsonb"]],
+  content_replace_question: [["p_item", "jsonb"], ["p_expected_version", "integer"]],
+  content_remove_question: [["p_school", "uuid"], ["p_id", "text"], ["p_expected_version", "integer"]],
+  content_acquire_import: [["p_school", "uuid"], ["p_user", "uuid"], ["p_token", "uuid"]],
+  content_release_import: [["p_school", "uuid"], ["p_user", "uuid"], ["p_token", "uuid"]],
 };
 
 export async function queryAs<T>(db: PGlite, role: "service_role" | "authenticated" | "anon", userId: string | null, sql: string, parameters: unknown[] = []) {
@@ -46,7 +55,7 @@ export async function createLearningDatabase() {
     create role authenticated nologin;
     create role service_role nologin bypassrls;
     create schema auth;
-    create table auth.users(id uuid primary key);
+    create table auth.users(id uuid primary key,email text unique);
     create function auth.uid() returns uuid language sql stable as $$
       select (nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub')::uuid;
     $$;
@@ -54,9 +63,11 @@ export async function createLearningDatabase() {
     grant usage on schema auth to authenticated,service_role;
     grant execute on function auth.uid() to authenticated,service_role;
   `);
-  for (const file of ["supabase/migrations/20261030220000_foundation.sql", "supabase/seed.sql", "supabase/migrations/20261031030000_learning.sql", "supabase/migrations/20261031050000_learning_classroom_name.sql"]) {
-    await db.exec(await readFile(resolve(process.cwd(), file), "utf8"));
+  const migrations = resolve(process.cwd(), "supabase/migrations");
+  for (const file of (await readdir(migrations)).filter((file) => file.endsWith(".sql")).sort()) {
+    await db.exec(await readFile(resolve(migrations, file), "utf8"));
   }
+  await db.exec(await readFile(resolve(process.cwd(), "supabase/seed.sql"), "utf8"));
   await db.exec(`
     insert into auth.users(id) values ('${ids.student}'),('${ids.teacher}'),('${ids.coordinator}'),('${ids.guardian}'),('00000000-0000-4000-8000-000000000005');
     insert into public.profiles(id,school_id,full_name) values

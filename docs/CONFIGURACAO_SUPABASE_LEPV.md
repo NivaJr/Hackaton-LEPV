@@ -79,4 +79,10 @@ O relatório sem credenciais está em `supabase/.temp/lepv-verification-report.j
 
 ## Etapas seguintes
 
-A aplicação está publicada em https://eai-lepv.vercel.app, com variáveis de produção na Vercel e callbacks do Supabase atualizados. O endereço anterior permanece autorizado para compatibilidade. Ver [Configuração da Vercel](CONFIGURACAO_VERCEL_LEPV.md). O fornecedor real de IA, os convites administrativos e a integração das telas dos demais integrantes permanecem pendentes.
+A aplicação está publicada em https://eai-lepv.vercel.app, com variáveis de produção na Vercel e callbacks do Supabase atualizados. O endereço anterior permanece autorizado para compatibilidade. Ver [Configuração da Vercel](CONFIGURACAO_VERCEL_LEPV.md). O fluxo atual de cadastro usa links sem envio de email. Gemini, telas integradas e os complementos de persistência têm registros próprios de validação.
+
+## Complementos do handoff — 31/10/2026
+
+Aplicadas no mesmo projeto de Production, em transação junto ao histórico: `20261031060000_recognition.sql`, `20261031133738_content.sql` e `20261031133820_roster_handoff.sql`. O histórico foi comparado ao texto dos arquivos, normalizado para LF. O advisor de segurança não apontou novos avisos de banco; permanece o aviso de configuração Auth já existente antes desta etapa.
+
+Tabelas novas: `teacher_recognitions`, `notifications`, `roster_import_audits`, `app_private.content_questions` e `app_private.content_import_usage`. Todas possuem RLS; respostas de questões e credenciais não são liberadas ao navegador. Contratos, critérios e localização da evidência hospedada em [Entrega do handoff](ENTREGA_NIVALDO_HANDOFF.md).

@@ -16,5 +16,5 @@ export function createLearningService() {
     if (error) throw new LearningError("PERSISTENCE_UNAVAILABLE", "Não foi possível conferir o professor da matéria.", 503);
     return (count ?? 0) > 0;
   };
-  return new LearningService(new SupabaseLearningRepository(client), getLearningAiGateway(), readLearningScoringPolicy(process.env));
+  return new LearningService(new SupabaseLearningRepository(client), getLearningAiGateway(), readLearningScoringPolicy(process.env), undefined, hasAssignedTeacher);
 }

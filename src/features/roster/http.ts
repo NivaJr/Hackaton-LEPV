@@ -67,6 +67,7 @@ export function createRosterHttpHandler(dependencies: RosterHttpDependencies) {
         } });
       }
       if (path.length === 1 && first === "overview" && method === "GET") return respond(await service.overview(actor));
+      if (path.length === 2 && first === "imports" && id === "audit" && method === "GET") return respond({ audits: await service.importAudits(actor) });
       if (first === "classrooms") {
         if (path.length === 1 && method === "POST") return respond(await service.createClassroom(actor, await readJson(request)), 201);
         if (path.length === 2 && method === "PATCH") return respond(await service.updateClassroom(actor, uuid.parse(id), await readJson(request)));

@@ -94,7 +94,7 @@ export class ContentService {
   }
 
   private async callAi(actor: SessionContext, run: () => Promise<unknown>, unavailableMessage: string): Promise<unknown> {
-    const slot = this.quota.acquire({ institutionId: actor.institutionId, userId: actor.userId }, this.now());
+    const slot = await this.quota.acquire({ institutionId: actor.institutionId, userId: actor.userId }, this.now());
     if (!slot.ok) {
       throw new ContentError("AI_RATE_LIMITED", slot.reason === "busy"
         ? "Espere a leitura anterior terminar antes de enviar outra lista."
@@ -109,7 +109,7 @@ export class ContentService {
       }
       throw new ContentError("AI_PROVIDER_ERROR", "O serviço de IA não respondeu como esperado. Tente de novo em alguns minutos ou cole o texto.", 503, undefined, { cause: error });
     } finally {
-      slot.release();
+      await slot.release();
     }
   }
 

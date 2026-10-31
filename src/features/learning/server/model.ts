@@ -128,6 +128,14 @@ export const RankingRowSchema = z.object({
 }).strict();
 export type RankingRow = z.infer<typeof RankingRowSchema>;
 
+export const LearningClassMetricsSchema = z.object({
+  classroomId: z.uuid(), studentsEnrolled: z.number().int().nonnegative(),
+  attempts: z.number().int().nonnegative(), correct: z.number().int().nonnegative(),
+  accessDays: z.number().int().nonnegative(), eligibleDays: z.number().int().nonnegative(),
+  correctPercent: z.number().min(0).max(100), frequencyPercent: z.number().min(0).max(100),
+}).strict();
+export type LearningClassMetrics = z.infer<typeof LearningClassMetricsSchema>;
+
 export class LearningError extends Error {
   constructor(public readonly code: string, message: string, public readonly status = 409, options?: ErrorOptions) {
     super(message, options);
