@@ -6,6 +6,7 @@ import {
   demoActivities,
   demoPreferences,
   demoRanking,
+  demoSubjectProgress,
   demoSummary,
 } from "@/features/learning/fixtures/student-demo";
 import type { AttemptResponse, QuestionState, StudentLearningClient, StudentLearningSnapshot } from "./types";
@@ -20,6 +21,7 @@ export function createFakeStudentLearningClient(): StudentLearningClient {
   let activities = structuredClone(demoActivities);
   let summary = structuredClone(demoSummary);
   let ranking = structuredClone(demoRanking);
+  let subjectProgress = structuredClone(demoSubjectProgress);
   const questions = new Map<string, QuestionState>();
   const attempts = new Map<string, AttemptResponse>();
   const selectedAnswers = new Map<string, string>();
@@ -32,7 +34,7 @@ export function createFakeStudentLearningClient(): StudentLearningClient {
     async recordAccess() { /* Demonstration has no remote persistence. */ },
     async loadSnapshot(): Promise<StudentLearningSnapshot> {
       await pause();
-      return { preferences: structuredClone(preferences), preferencesSaved: true, activities: structuredClone(activities), summary: structuredClone(summary), ranking: structuredClone(ranking) };
+      return { preferences: structuredClone(preferences), preferencesSaved: true, activities: structuredClone(activities), summary: structuredClone(summary), ranking: structuredClone(ranking), subjectProgress: structuredClone(subjectProgress) };
     },
     async savePreferences(input: StudentPreferencesUpdate) {
       await pause();
@@ -80,6 +82,8 @@ export function createFakeStudentLearningClient(): StudentLearningClient {
       const answer = correctOptions[state.question.subjectId];
       const isCorrect = parsed.selectedOptionId === answer;
       const isRecovery = state.question.sourceType === "recuperacao";
+      const activity = activities.activities.find((item) => item.rootQuestionId === state.question.rootQuestionId);
+      const isWeeklyChallenge = activity?.activityType === "weekly_challenge";
       const recoveryId = isCorrect && !isRecovery ? null : `recovery-${state.question.rootQuestionId}`;
       if (isRecovery && recoveryId && closedRecoveries.has(recoveryId)) throw new LearningClientError("A recuperação já foi encerrada.", "RECOVERY_CLOSED", 409);
       let consecutiveCorrect = 0;
@@ -95,8 +99,8 @@ export function createFakeStudentLearningClient(): StudentLearningClient {
         questionInstanceId: parsed.questionInstanceId,
         isCorrect,
         explanation: isCorrect ? "Boa! Você aplicou a habilidade corretamente." : "Ainda não. Observe os dados principais do enunciado e tente a mesma habilidade em um novo desafio.",
-        xpAwarded: isCorrect ? (isRecovery ? 70 : 100) : 0,
-        rankPointsAwarded: isCorrect ? (isRecovery ? 70 : 100) : 0,
+        xpAwarded: isCorrect && !isRecovery && isWeeklyChallenge ? 100 : 0,
+        rankPointsAwarded: isCorrect ? (isRecovery ? 35 : isWeeklyChallenge ? 100 : 50) : 0,
         consecutiveCorrect: Math.min(consecutiveCorrect, 2),
         recoveryStatus,
       };
@@ -113,6 +117,8 @@ export function createFakeStudentLearningClient(): StudentLearningClient {
         xp: summary.xp + result.xpAwarded,
         rankPoints: summary.rankPoints + result.rankPointsAwarded,
       };
+      subjectProgress = subjectProgress.map((entry) => entry.subjectId === state.question.subjectId
+        ? { ...entry, earnedRankPoints: entry.earnedRankPoints + result.rankPointsAwarded } : entry);
       ranking = {
         ...ranking,
         top10: ranking.top10
@@ -120,7 +126,6 @@ export function createFakeStudentLearningClient(): StudentLearningClient {
           .sort((a, b) => b.xp - a.xp || b.rankPoints - a.rankPoints || a.studentId.localeCompare(b.studentId))
           .map((entry, index) => ({ ...entry, position: index + 1 })),
       };
-      const activity = activities.activities.find((item) => item.rootQuestionId === state.question.rootQuestionId);
       if (activity) {
         activity.status = "answered";
         activity.recoveryId = recoveryId;

@@ -37,7 +37,7 @@ Configuradas no ambiente **Production**, sem valores privados no código:
 | `SUPABASE_SECRET_KEY` | Chave privada do servidor, marcada como sensível na Vercel |
 | `LEPV_ORIGINAL_POINTS` | `100` |
 | `LEPV_RECOVERY_REFERENCE` | `previous` |
-| `LEPV_ADAPTIVE_XP_FOLLOWS_ROOT` | `true` |
+| `LEPV_ADAPTIVE_XP_FOLLOWS_ROOT` | `true` (sem uso após a regra confirmada) |
 | `LLM_PROVIDER` | `gemini` |
 | `LLM_API_KEY` | Chave do Gemini, marcada como sensível na Vercel |
 | `LLM_MODEL` | `gemini-3.5-flash-lite` |

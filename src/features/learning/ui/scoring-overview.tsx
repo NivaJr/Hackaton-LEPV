@@ -13,16 +13,16 @@ export function ScoringOverview({ summary, ranking, className }: { summary: Stud
       <div className="score-grid-pattern" aria-hidden="true" />
       <div className="total-score-rank"><RankBadge rankName={summary.rankName} /></div>
       <div className="total-score-copy"><span>PONTUAÇÃO TOTAL ANUAL</span><strong>{summary.rankPoints.toLocaleString("pt-BR")}</strong><small>pontos acumulados no ano letivo</small></div>
-      <div className="total-score-patent"><span>Patente atual</span><strong>{summary.rankName}</strong><small>Calibração das patentes ainda identificada como proposta.</small></div>
-      <div className="score-disclosure">A pontuação anual permanece separada do XP ativo e não é apagada pela rotação de exercícios.</div>
+      <div className="total-score-patent"><span>Patente atual</span><strong>{summary.rankName}</strong><small>A próxima patente é alcançada a cada 1.000 pontos.</small></div>
+      <div className="score-disclosure">A pontuação anual permanece separada do XP ativo e não é apagada pela rotação dos desafios.</div>
     </article>
 
     <article className="dynamic-score-card">
-      <div className="dynamic-score-heading"><div><span className="eyebrow">PONTUAÇÃO DINÂMICA</span><h2>XP dos exercícios ativos</h2></div><span className="dynamic-live"><i />Atual</span></div>
+      <div className="dynamic-score-heading"><div><span className="eyebrow">XP SEMANAL ATIVO</span><h2>Desafios que continuam no ranking</h2></div><span className="dynamic-live"><i />Atual</span></div>
       <div className="dynamic-score-main"><div><strong>{summary.xp.toLocaleString("pt-BR")}</strong><span>XP ativo</span></div><div className="ranking-position-card"><Trophy size={22} /><span>Classificação</span><strong>{current ? `#${current.position}` : "—"}</strong><small>{current ? `de ${ranking.top10.length} no TOP 10` : "Fora do TOP 10"}</small></div></div>
       <div className="dynamic-progress-copy"><span>Comparação com o líder da {className}</span><strong>{relativeXp}%</strong></div>
       <div className="dynamic-progress" role="progressbar" aria-label="XP em relação ao líder da turma" aria-valuemin={0} aria-valuemax={100} aria-valuenow={relativeXp}><span style={{ width: `${relativeXp}%` }}><i /></span></div>
-      <div className="dynamic-score-footer"><span>XP e pontos anuais permanecem separados.</span><a href="#ranking-turma">Ver TOP 10<ArrowUpRight size={13} /></a></div>
+      <div className="dynamic-score-footer"><span>Dois desafios entram e os dois mais antigos saem a cada semana.</span><a href="#ranking-turma">Ver TOP 10<ArrowUpRight size={13} /></a></div>
     </article>
   </section>;
 }

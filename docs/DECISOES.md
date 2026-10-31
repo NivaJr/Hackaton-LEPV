@@ -1,6 +1,21 @@
 # Decisões de implementação
 
-## Pontuação da demonstração — 30/10/2026
+## Pontuação definitiva — 31/10/2026
+
+Esta decisão substitui a política provisória de 30/10/2026 para novas instâncias:
+
+- Exercício comum correto: 50 pontos de patente e 0 XP.
+- Desafio semanal correto: 100 pontos de patente e 100 XP.
+- Recuperação correta: 35 pontos de patente e 0 XP, independentemente da quantidade de tentativas.
+- A recuperação continua até dois acertos consecutivos ou interrupção.
+- Há dez desafios semanais ativos. A cada semana entram dois e saem os dois mais antigos, por `activatedAt`; o XP dos desafios removidos deixa de compor o ranking, mas seus pontos de patente permanecem.
+- Patentes cumulativas: Ferro (0), Bronze (1.000), Prata (2.000), Ouro (3.000), Platina (4.000), Esmeralda (5.000), Diamante (6.000), Mestre (7.000), Grão-Mestre (8.000) e Onisciente (9.000).
+
+A regra é validada no serviço e na função SQL de persistência; valores enviados pelo navegador não são aceitos como autoridade. As variáveis `LEPV_*` deixaram de ser usadas.
+
+Os dez desafios ativos são contados por turma e matéria, e toda questão publicada entra como desafio semanal, porque a publicação ainda não oferece a opção de exercício comum.
+
+## Pontuação anterior da demonstração — 30/10/2026
 
 Confirmação explícita do usuário registrada em `PROMPTS/03-nivaldo-2026-10-30_029_politica-pontuacao-demonstracao.md`:
 

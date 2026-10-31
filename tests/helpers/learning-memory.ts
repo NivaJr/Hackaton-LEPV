@@ -36,7 +36,7 @@ export function catalog(): VersionedCatalog {
     classId: fixtureIds.classId, institutionId: fixtureIds.school, grade: 6, schoolYear: 2026, rotations: [],
     activities: Array.from({ length: 12 }, (_, i) => ({
       rootQuestionId: `root-${String(i + 1).padStart(2, "0")}`, body: question(i + 1), contentVersion: 1,
-      reviewed: true as const, active: i < 10, activatedAt: i < 10 ? "2026-10-29T12:00:00Z" : null,
+      activityType: "weekly_challenge" as const, reviewed: true as const, active: i < 10, activatedAt: i < 10 ? "2026-10-29T12:00:00Z" : null,
     })),
   } };
 }

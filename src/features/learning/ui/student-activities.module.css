@@ -16,5 +16,183 @@
 .activities button > span { display: grid; gap: 5px; }
 .activities button > span:last-child { display: flex; align-items: center; gap: 8px; font-size: 13px; }
 .activities small, .readOnly { color: var(--muted); font-size: 13px; line-height: 1.6; }
+.activitySections { display: grid; gap: 18px; margin-top: 20px; }
+.weeklySection, .teacherSection { padding: 17px; border-radius: 16px; }
+.weeklySection { border: 2px solid #d5a900; background: linear-gradient(135deg, #fffbea, #fff4c8); box-shadow: 0 10px 28px rgba(157, 116, 0, .12); }
+.teacherSection { border: 1px solid var(--line); background: var(--surface-soft); }
+.activitySectionHeading { display: flex; align-items: center; gap: 11px; }
+.activitySectionHeading > span { display: grid; width: 39px; height: 39px; place-items: center; border-radius: 11px; flex: 0 0 auto; }
+.weeklySection .activitySectionHeading > span { color: #725600; background: #ffe36d; }
+.teacherSection .activitySectionHeading > span { color: var(--indigo); background: color-mix(in srgb, var(--indigo) 12%, var(--surface)); }
+.activitySectionHeading > div { display: grid; gap: 3px; }
+.activitySectionHeading strong { color: var(--ink); font-size: 1rem; }
+.activitySectionHeading small { color: var(--muted); font-size: .76rem; line-height: 1.45; }
+.weeklyActivities button { border-color: #e5c850; background: rgba(255,255,255,.86); }
+.weeklyActivities button:hover:not(:disabled) { border-color: #aa7d00; background: #fff; }
+.activityEmpty { margin: 13px 0 0; color: var(--muted); font-size: .86rem; }
+.interestFieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.interestFieldset legend { width: 100%; color: var(--ink); font-size: .92rem; font-weight: 750; }
+.interestFieldset legend small { float: right; color: var(--muted); font-size: .72rem; font-weight: 500; }
+.interestSuggestions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.interestSuggestions button { display: inline-flex; align-items: center; gap: 5px; min-height: 37px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); font: inherit; font-size: .78rem; cursor: pointer; }
+.interestSuggestions button[aria-pressed="true"] { border-color: #24795a; background: #e9f8f1; color: #155b42; font-weight: 750; }
+.interestSuggestions button:focus-visible { outline: 3px solid #1746a2; outline-offset: 2px; }
+.interestFieldset > p { margin: 10px 0 0; color: var(--muted); font-size: .72rem; line-height: 1.55; }
 @media (max-width: 560px) { .activities button { align-items: flex-start; flex-direction: column; } }
 @media (prefers-reduced-motion: reduce) { .experience :global(.spin) { animation: none; } }
+
+.contentSection { display: grid; gap: 14px; scroll-margin-top: 90px; }
+.contentGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.contentGrid button { position: relative; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 5px 11px; min-height: 88px; padding: 15px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.contentGrid button > span:first-child { grid-row: 1 / 3; display: grid; width: 40px; height: 40px; place-items: center; border-radius: 11px; background: color-mix(in srgb, var(--indigo) 10%, var(--surface-soft)); color: var(--indigo); }
+.contentGrid button > svg { position: absolute; top: 12px; right: 12px; color: #24795a; }
+.contentGrid button strong { padding-right: 22px; font-size: .98rem; line-height: 1.35; }
+.contentGrid button small { color: var(--muted); font-size: .78rem; line-height: 1.45; }
+.contentGrid button:hover:not(:disabled) { border-color: var(--indigo); background: var(--surface-soft); }
+.contentGrid button:focus-visible { outline: 3px solid #1746a2; outline-offset: 3px; }
+.contentGrid button:disabled { opacity: .6; cursor: wait; }
+.contentGrid .contentSelected { border: 2px solid var(--indigo); background: color-mix(in srgb, var(--indigo) 6%, var(--surface)); }
+.contentEmpty { margin: 0; padding: 16px; border: 1px dashed var(--line); border-radius: 11px; color: var(--muted); background: var(--surface-soft); }
+
+.accessibilityTop { display: flex; justify-content: flex-end; margin: 0 0 14px; }
+.accessibilityTop button {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 58px;
+  padding: 7px 15px 7px 8px;
+  border: 2px solid color-mix(in srgb, var(--indigo) 55%, var(--line));
+  border-radius: 999px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--surface) 88%, #dcecff), color-mix(in srgb, var(--surface) 90%, #e7f8ef));
+  color: var(--ink);
+  box-shadow: 0 8px 24px rgba(27, 55, 98, .1);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.accessibilityTop button > span:first-child {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid color-mix(in srgb, var(--indigo) 24%, var(--line));
+  overflow: hidden;
+}
+.accessibilityTop button > span:first-child img { width: 38px; height: auto; object-fit: contain; }
+.accessibilityTop button > span:last-child { display: grid; gap: 1px; }
+.accessibilityTop strong { font-size: .92rem; line-height: 1.2; }
+.accessibilityTop small { color: var(--muted); font-size: .75rem; line-height: 1.25; }
+.accessibilityTop button[aria-pressed="true"] { border-color: #24795a; }
+.accessibilityTop button[aria-pressed="true"] > span:first-child { background: #effaf5; border-color: #24795a; }
+.accessibilityTop button:hover { transform: translateY(-1px); box-shadow: 0 10px 28px rgba(27, 55, 98, .15); }
+.accessibilityTop button:focus-visible { outline: 3px solid #1746a2; outline-offset: 3px; }
+
+.accessibleMode {
+  --accessible-focus: #1746a2;
+}
+.accessibleMode :global(.page-heading h1) { font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1.12; }
+.accessibleMode :global(.page-heading p),
+.accessibleMode :global(.section-heading p),
+.accessibleMode :global(.panel-description) { font-size: 1.08rem; line-height: 1.7; }
+.accessibleMode :global(.section-heading h2),
+.accessibleMode :global(.panel-heading h2) { font-size: clamp(1.45rem, 2.5vw, 1.85rem); line-height: 1.25; }
+.accessibleMode :global(.page-heading),
+.accessibleMode :global(.section-heading),
+.accessibleMode :global(.panel-heading) { align-items: flex-start; }
+.accessibleMode :global(.eyebrow) {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  text-transform: none;
+}
+.accessibleMode :global(.student-workspace-grid) { grid-template-columns: minmax(0, 1fr); }
+.accessibleMode :global(.student-question-panel),
+.accessibleMode :global(.student-profile-panel) { width: 100%; }
+.accessibleMode :global(.student-subject-button),
+.accessibleMode :global(.student-answer),
+.accessibleMode :global(.button),
+.accessibleMode :global(.text-button),
+.accessibleMode :global(.icon-button) { min-height: 48px; }
+.accessibleMode :global(.button),
+.accessibleMode :global(.text-button) { font-size: .98rem; letter-spacing: 0; }
+.accessibleMode :global(.student-subject-button strong),
+.accessibleMode :global(.student-answer strong),
+.accessibleMode .activities strong,
+.accessibleMode .contentGrid strong { font-size: 1.05rem; line-height: 1.5; }
+.accessibleMode :global(.student-subject-button small),
+.accessibleMode .activities small,
+.accessibleMode .contentGrid small { font-size: .9rem; line-height: 1.55; }
+.accessibleMode :global(button:focus-visible),
+.accessibleMode :global(a:focus-visible),
+.accessibleMode :global(input:focus-visible),
+.accessibleMode :global(textarea:focus-visible) {
+  outline: 3px solid var(--accessible-focus);
+  outline-offset: 3px;
+}
+.accessibleMode :global(.student-mission-card) {
+  grid-template-columns: 1fr;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: none;
+}
+.accessibleMode :global(.student-mission-card p) { color: var(--muted); }
+.accessibleMode :global(.command-orbit) { display: none; }
+.accessibleMode :global(.student-subject-button:hover:not(:disabled)),
+.accessibleMode :global(.student-answer:hover:not(:disabled)) { transform: none; }
+
+.readingSupport {
+  font-family: Arial, Verdana, Tahoma, sans-serif;
+}
+.readingSupport :global(p),
+.readingSupport :global(li),
+.readingSupport :global(label),
+.readingSupport :global(button),
+.readingSupport :global(input),
+.readingSupport :global(textarea) {
+  letter-spacing: .02em;
+  line-height: 1.65;
+}
+.readingSupport :global(.student-question-statement) {
+  max-width: 68ch;
+  font-size: 1.3rem;
+  line-height: 1.75;
+  text-align: left;
+}
+.readingSupport :global(.student-answer strong) { font-size: 1.08rem; font-style: normal; }
+.readingSupport :global(.page-heading p),
+.readingSupport :global(.panel-description),
+.readingSupport :global(.section-heading p) { font-size: 1.08rem; line-height: 1.75; }
+
+.focusSupport :global(.student-section) { margin-top: 12px; }
+.focusSupport :global(.student-subject-grid) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.focusSummary, .focusRanking { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 24px; margin: 18px 0; }
+.focusSummary h2, .focusRanking h2 { margin: 5px 0 7px; font-size: 1.55rem; }
+.focusSummary p, .focusRanking p { margin: 0; color: var(--muted); font-size: 1rem; line-height: 1.65; }
+.focusStats { display: grid; grid-template-columns: repeat(3, minmax(120px, 1fr)); gap: 10px; }
+.focusStats > span { display: grid; gap: 4px; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-soft); }
+.focusStats small { color: var(--muted); font-size: .86rem; }
+.focusStats strong { color: var(--ink); font-size: 1.15rem; }
+.focusRankValue { display: grid; grid-template-columns: auto auto; align-items: center; gap: 4px 10px; min-width: 190px; padding: 16px; border: 2px solid #24795a; border-radius: 10px; background: #effaf5; color: #154d3b; }
+.focusRankValue strong { font-size: 1.45rem; }
+.focusRankValue span { grid-column: 1 / -1; font-size: .92rem; }
+
+.predictableSupport,
+.predictableSupport *,
+.focusSupport,
+.focusSupport * {
+  scroll-behavior: auto !important;
+  animation-duration: .001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: .001ms !important;
+}
+.predictableSupport :global(.student-subject-button),
+.predictableSupport :global(.student-answer),
+.predictableSupport :global(.button) { border-radius: 8px; }
+
+@media (max-width: 700px) {
+  .accessibilityTop button { width: 100%; }
+  .focusSupport :global(.student-subject-grid) { grid-template-columns: 1fr; }
+  .focusSummary, .focusRanking { grid-template-columns: 1fr; }
+  .focusStats { grid-template-columns: 1fr; }
+}
