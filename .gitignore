@@ -13,3 +13,4 @@ PROMPTS/.archive-lock/
 PROMPTS/.archive-tmp-*
 supabase/.temp/
 supabase/.branches/
+.claude/settings.local.json
