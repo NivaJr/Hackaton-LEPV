@@ -221,8 +221,9 @@ O aluno acessa a própria turma; professor, responsável e coordenador precisam 
 | --- | --- |
 | POST `/api/learning/access` com `{}` | Registrar um dia de acesso em Brasília, sem duplicar o dia |
 | GET `/api/learning/summary?from=2026-10-01&to=2026-10-31&studentId=:id` | Retorna `{ summary, rankCalibration, accessDaysScope, originalAttempts, recoveryAttempts, activityDates }`; validar `summary` com `StudentSummarySchema`. `activityDates` contém as datas únicas das respostas autorizadas no período, em Brasília. O próprio aluno pode omitir `studentId`. Professor recebe somente suas matérias atribuídas; os demais precisam de vínculo |
-| POST `/api/learning/activation` | Coordenador seleciona inicialmente dez raízes distintas: `{ classId, subjectId, rootQuestionIds }` |
-| POST `/api/learning/rotation` | Coordenador troca duas raízes na semana atual: `{ classId, subjectId, weekStart, incomingRootIds }`; `weekStart` é a segunda-feira em Brasília |
+| GET `/api/learning/catalog?classId=&subjectId=` | Questões da turma e matéria para gestão, sem gabarito, com estado da semana. Mesma permissão da ativação. |
+| POST `/api/learning/activation` | Professor da turma e matéria seleciona inicialmente dez raízes distintas: `{ classId, subjectId, rootQuestionIds }` |
+| POST `/api/learning/rotation` | Professor da turma e matéria troca duas raízes na semana atual: `{ classId, subjectId, weekStart, incomingRootIds }`; `weekStart` é a segunda-feira em Brasília |
 
 Os contadores do resumo usam o intervalo `from`/`to`; XP é o total elegível atual e pontos anuais correspondem ao ano letivo. Dias de acesso são diferentes de dias com resposta. O professor não recebe a frequência global do aluno: `accessDaysScope` identifica essa restrição.
 

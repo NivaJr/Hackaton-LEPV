@@ -82,7 +82,7 @@ Quatro séries e seis matérias vêm do catálogo. Esta tarefa não envolve ques
 Resultados no commit desta entrega:
 
 - `npm run typecheck`: passou.
-- `npm test`: 327 de 328 testes passaram em 28 arquivos, incluindo `roster-import`, `roster-service`, `roster-directory`, `family-service`, `family-recognitions` e `roster-database`. A falha é `llm-prompts`, somente em checkout Windows, que converte `PROMPTS/04-gallotte-templates-ia.md` para CRLF.
+- `npm test`: 331 de 332 testes passaram em 28 arquivos, incluindo `roster-import`, `roster-service`, `roster-directory`, `family-service`, `family-recognitions` e `roster-database`. A falha é `llm-prompts`, somente em checkout Windows, que converte `PROMPTS/04-gallotte-templates-ia.md` para CRLF.
 - `npm run build`: passou.
 
 ## Percurso realmente executado
@@ -106,9 +106,11 @@ Cadastro por link em produção, em 31/10/2026: Fabiano importou contas, abriu o
 
 ## Decisões em aberto
 
-Registradas em 31/10/2026, sem decisão tomada:
+Nenhuma decisão desta entrega permanece em aberto.
 
-1. **Ativação e rotação de atividades:** hoje só o coordenador pode executá-las pelas APIs, e nenhuma tela as chama. Fabiano entende que a função interessa ao professor e ao aluno; a passagem das APIs ao professor segue por definir com a equipe.
+## Ativação e rotação de atividades
+
+Por decisão de Fabiano em 31/10/2026, o professor da turma e matéria ativa e rotaciona; o coordenador só atua em matéria sem professor atribuído. A regra é validada no serviço, e `GET /api/learning/catalog` lista as questões sem gabarito. A tela `ActivityManager` fica em `/professor` e, para matérias sem professor, na turma em `/coordenador`. A ativação continua exigindo dez originais de uma vez, e cada semana troca duas.
 
 ## Cadastro por link
 
