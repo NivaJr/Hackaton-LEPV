@@ -1,8 +1,19 @@
+import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
-import { Dashboard } from "@/components/dashboard";
-import { requireRole } from "@/lib/auth/session";
+import { TeacherContentPanel } from "@/features/content/ui/teacher-content-panel";
+import { TeacherOverviewPanel } from "@/features/teacher-dashboard/ui/teacher-overview";
+import { loadTeacherOverview } from "@/features/teacher-dashboard/server/load-teacher-overview";
+import { getSessionContext, requireRole } from "@/lib/auth/session";
 
 export default async function TeacherPage() {
   const profile = await requireRole("professor");
-  return <AppShell role="professor" fullName={profile.fullName} mode="real"><Dashboard role="professor" fullName={profile.fullName} mode="real" /></AppShell>;
+  const session = await getSessionContext();
+  if (!session) redirect("/login?next=%2Fprofessor");
+  const overview = await loadTeacherOverview(session);
+  return <AppShell role="professor" fullName={profile.fullName} mode="real">
+    <div className="grid gap-8">
+      <TeacherOverviewPanel overview={overview} />
+      <div id="questoes" className="scroll-mt-6"><TeacherContentPanel mode="real" /></div>
+    </div>
+  </AppShell>;
 }
