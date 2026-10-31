@@ -15,7 +15,7 @@ Todos começam no mesmo commit-base, em checkout/worktree próprio. Não usar qu
 | Pessoa | Branch sugerida | Donos | Como começa sem esperar |
 | --- | --- | --- | --- |
 | Viegas | `feat/viegas-aluno` | `learning/ui`, `client`, `fixtures`; conteúdo da página aluno | StudentLearningClient fake e contratos |
-| Fabia | `feat/fabia-gestao` | features/APIs roster/family; páginas coordenador/responsável | Ports de métricas/repositórios fake e auth/RLS da base |
+| Fabiano | `feat/fabiano-gestao` | features/APIs roster/family; páginas coordenador/responsável | Ports de métricas/repositórios fake e auth/RLS da base |
 | Nivaldo | `feat/nivaldo-core` | SQL/banco/auth; learning/server, learning/domain, config/scoring, APIs learning | Repositório em memória e IA desabilitada |
 | Gallotte | `feat/gallotte-conteudo-ia` | content/API content; página professor; lib/llm; validação completa | Texto/questões/repository fake e contratos |
 
@@ -46,7 +46,7 @@ Assinaturas vêm do código. Regex de BNCC não comprova existência de habilida
 ## Acordo mínimo entre pessoas
 
 1. Viegas publica operações de StudentLearningClient; Nivaldo devolve endpoints/payloads alinhados aos schemas. Fake permite começar antes da API real.
-2. Fabia publica prévia/confirmação de importação e metrics ports. Nivaldo combina dados/provisionamento; feedback usa summarizeStudent de Gallotte.
+2. Fabiano publica prévia/confirmação de importação e metrics ports. Nivaldo combina dados/provisionamento; feedback usa summarizeStudent de Gallotte.
 3. Gallotte publica port de conteúdo/origem. Nivaldo combina tabelas e vínculo de instâncias/tentativas à raiz. LLM não escolhe créditos, papéis ou identidade.
 4. Gallotte preserva gateway compatível e exemplos stub; todos testam sem chave. Fixture não se apresenta como consulta real.
 
@@ -62,19 +62,19 @@ Assinaturas vêm do código. Regex de BNCC não comprova existência de habilida
 
 ## Ordem das migrações
 
-Somente Nivaldo escreve/aplica SQL comum. Fabia/Gallotte enviam necessidades por contrato, sem migrações concorrentes. Preservar a foundation existente; mudanças são aditivas e com RLS coerente.
+Somente Nivaldo escreve/aplica SQL comum. Fabiano/Gallotte enviam necessidades por contrato, sem migrações concorrentes. Preservar a foundation existente; mudanças são aditivas e com RLS coerente.
 
 1. `20261030220000_foundation.sql`: base existente.
 2. `20261031010000_core_extensions.sql`: extensões comuns/provisionamento, somente se necessárias.
 3. `20261031020000_content.sql`: listas/banco/versões/habilidades/origem acordados com Gallotte.
 4. `20261031030000_learning.sql`: instâncias/tentativas/recuperação/lançamentos/rotação.
-5. `20261031040000_import_feedback.sql`: auditoria de importação/cache de feedback, se necessários a Fabia.
+5. `20261031040000_import_feedback.sql`: auditoria de importação/cache de feedback, se necessários a Fabiano.
 
 Nomes novos são reservas sugeridas, não arquivos já existentes. Inspecionar a base antes de criar objetos; não referenciar tabelas/IDs não acordados nem reescrever migração aplicada. Testar políticas com papéis diferentes quando houver banco configurado e declarar quando não foi possível.
 
 ## Ordem de integração e validação completa
 
-Publicar contratos primeiro. Sugestão: extensões core de Nivaldo → gestão/família de Fabia → content/gateway de Gallotte → UI aluno de Viegas. Isso não bloqueia desenvolvimento: usar fakes e, se preciso, integrar feature desabilitada/stub explícito antes. Depois de cada merge, executar checks e um percurso sintético.
+Publicar contratos primeiro. Sugestão: extensões core de Nivaldo → gestão/família de Fabiano → content/gateway de Gallotte → UI aluno de Viegas. Isso não bloqueia desenvolvimento: usar fakes e, se preciso, integrar feature desabilitada/stub explícito antes. Depois de cada merge, executar checks e um percurso sintético.
 
 Gallotte coordena validação com os quatro: turma/importação → convite/primeiro acesso → lista revisada/publicada → resposta/recuperação → responsável vê métricas/edita apoio. Incluir arquivo inválido, tentativa repetida, IA desabilitada e usuário sem vínculo. Navegador/serviço externo só é declarado testado quando houve execução observada.
 
@@ -108,4 +108,4 @@ Checks em cada branch e após integração. Não transformar falha de configura�
 
 ## Prompts e segredos
 
-Prompts efetivamente usados ficam em PROMPTS/ com prefixos 01-viegas-, 02-fabia-, 03-nivaldo-, 04-gallotte-. Distinguir desenvolvimento de templates de IA; sem chaves, dados reais de menores, logs de ferramentas ou instruções internas. Hook local não captura sites Claude/ChatGPT automaticamente: registrar manualmente por turno e antes de compactação manual, sem prometer callback automático.
+Prompts efetivamente usados ficam em PROMPTS/ com prefixos 01-viegas-, 02-fabiano-, 03-nivaldo-, 04-gallotte-. Distinguir desenvolvimento de templates de IA; sem chaves, dados reais de menores, logs de ferramentas ou instruções internas. Hook local não captura sites Claude/ChatGPT automaticamente: registrar manualmente por turno e antes de compactação manual, sem prometer callback automático.

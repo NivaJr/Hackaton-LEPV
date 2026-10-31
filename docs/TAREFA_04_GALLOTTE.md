@@ -2,7 +2,7 @@
 
 ## Objetivo e limites
 
-Entregar upload/revisão de listas PDF/Word pelo professor, associação BNCC/banco de questões, único gateway de LLM e validação do percurso completo entre quatro perfis. Professor continua dono das listas; Fabia faz UI do responsável e Nivaldo banco/pontos.
+Entregar upload/revisão de listas PDF/Word pelo professor, associação BNCC/banco de questões, único gateway de LLM e validação do percurso completo entre quatro perfis. Professor continua dono das listas; Fabiano faz UI do responsável e Nivaldo banco/pontos.
 
 ## Arquivos de sua responsabilidade
 
@@ -23,7 +23,7 @@ Não editar SQL, auth, scoring, schemas comuns ou UI de outros perfis. Shell/dem
 | Recuperar | `generateRecoveryQuestion({ original, preferences, selectedOptionId })` → `GeneratedQuestion` |
 | Dica | `generateHint({ question })` → `{ text }` |
 | Explicação | `explainAnswer({ question, answerKey, selectedOptionId })` → `{ text }` |
-| Feedback dos pais | `summarizeStudent({ summary })` → `{ text }`, consumido por Fabia |
+| Feedback dos pais | `summarizeStudent({ summary })` → `{ text }`, consumido por Fabiano |
 
 Factory única: `getLearningAiGateway()` em `src/lib/llm/gateway.ts`. Preservar estado desabilitado/AiNotConfiguredError. Contratos centrais incluem `GeneratedQuestion`, `QuestionForStudent`, `QuestionAnswerKey`, `StudentSummary`. Sessão/escopo docente vêm da base; usar `TeacherMetricsGateway` com fake até Nivaldo publicar métricas. A base não oferece parser PDF/Word nem driver real.
 
@@ -61,6 +61,6 @@ Rodar `npm run typecheck`, `npm test` e `npm run build`. Testar extração/valid
 Você trabalhará com Gallotte na Tarefa 04 do Hackaton-LEPV. Leia AGENTS.md, README.md, docs/INTEGRACAO.md e docs/TAREFA_04_GALLOTTE.md; inspecione contratos, catálogo, sessão, foundation e gateway reais.
 Use feat/gallotte-conteudo-ia no commit-base comum e checkout/worktree próprio. Sem force-push ou sobrescrita alheia. Arquive este prompt e os novos em PROMPTS/ com prefixo 04-gallotte-, sem chaves/dados reais/instruções internas.
 Implemente content, APIs content, conteúdo da página professor mantendo guard e drivers em src/lib/llm. Entregue PDF/DOCX com revisão, gabarito docente, BNCC oficial, origem/variantes e gateway único para extrair/adaptar/recuperar/dica/explicação/resumo. Use fixtures/repository fake para começar sem outras branches. Preserve desabilitado e interface pública compatível; combine mudanças.
-Nivaldo é dono do banco/auth/pontos; Fabia de roster/family; Viegas da UI aluno. Não copie essas áreas ou edite SQL, schemas comuns, scoring, UI alheia, shell/demo global, package.json ou lockfiles sem coordenação. Não mude regras confirmadas; teto/fórmula continuam propostas. Declare suporte de arquivos/provedor/cobertura real; não alegue 240 questões sem inventário.
+Nivaldo é dono do banco/auth/pontos; Fabiano de roster/family; Viegas da UI aluno. Não copie essas áreas ou edite SQL, schemas comuns, scoring, UI alheia, shell/demo global, package.json ou lockfiles sem coordenação. Não mude regras confirmadas; teto/fórmula continuam propostas. Declare suporte de arquivos/provedor/cobertura real; não alegue 240 questões sem inventário.
 Execute npm run typecheck, npm test e npm run build. Valide/documente o percurso dos quatro perfis com os colegas e entregue checkpoint com APIs, gateway, SQL solicitado, testes, inventário e limites reais.
 ```
