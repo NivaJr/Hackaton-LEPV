@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowUpRight, Award, BookOpen, ChevronRight, CircleHelp, Compass, Flag, GraduationCap, HeartPulse, LayoutDashboard, ShieldCheck, Sparkles, Trophy, Upload, UserCheck, Users } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Award, BookOpen, ChevronRight, CircleHelp, Compass, FileText, Flag, GraduationCap, HeartPulse, LayoutDashboard, ShieldCheck, Sparkles, Trophy, Upload, UserCheck, Users } from "lucide-react";
 import type { Role } from "@/contracts";
 import { ROLE_LABELS } from "@/lib/auth/navigation";
 import { Brand } from "./brand";
@@ -18,6 +18,7 @@ export function AppShell({ role, fullName, mode, children }: { role: Role; fullN
     { label: "Acompanhamento", icon: Compass, href: `${home}#acompanhamento` },
     { label: "Turmas e pessoas", icon: Users, href: `${home}#turmas` },
     { label: "Importação", icon: Upload, href: `${home}#importacao` },
+    { label: "Boletins", icon: FileText, href: `${home}#boletins` },
     { label: "Responsáveis", icon: UserCheck, href: `${home}#vinculos` },
   ] : isGuardianPanel ? [
     { label: "Visão geral", icon: LayoutDashboard, href: home },
@@ -31,6 +32,7 @@ export function AppShell({ role, fullName, mode, children }: { role: Role; fullN
     { label: "Meu progresso", icon: Compass, href: `${home}#progresso` },
     { label: "Ranking da turma", icon: Trophy, href: `${home}#ranking-turma` },
     { label: "Meu perfil", icon: GraduationCap, href: `${home}#perfil` },
+    ...(mode === "real" ? [{ label: "Boletins", icon: FileText, href: `${home}#boletins` }] : []),
   ] : [
     { label: "Visão geral", icon: LayoutDashboard, href: home },
     { label: role === "responsavel" ? "Atividades do aluno" : "Atividades", icon: BookOpen, href: "/tarefas" },

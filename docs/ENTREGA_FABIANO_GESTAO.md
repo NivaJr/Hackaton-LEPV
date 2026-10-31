@@ -82,7 +82,7 @@ Quatro séries e seis matérias vêm do catálogo. Esta tarefa não envolve ques
 Resultados no commit desta entrega:
 
 - `npm run typecheck`: passou.
-- `npm test`: 327 de 328 testes passaram em 28 arquivos, incluindo `roster-import`, `roster-service`, `roster-directory`, `family-service`, `family-recognitions` e `roster-database`. A falha é `llm-prompts`, somente em checkout Windows, que converte `PROMPTS/04-gallotte-templates-ia.md` para CRLF.
+- `npm test`: 341 de 342 testes passaram em 29 arquivos, incluindo `roster-import`, `roster-service`, `roster-directory`, `family-service`, `family-recognitions` e `roster-database`. A falha é `llm-prompts`, somente em checkout Windows, que converte `PROMPTS/04-gallotte-templates-ia.md` para CRLF.
 - `npm run build`: passou.
 
 ## Percurso realmente executado
@@ -106,9 +106,21 @@ Cadastro por link em produção, em 31/10/2026: Fabiano importou contas, abriu o
 
 ## Decisões em aberto
 
-Registradas em 31/10/2026, sem decisão tomada:
+Nenhuma decisão desta entrega permanece em aberto.
 
-1. **Ativação e rotação de atividades:** hoje só o coordenador pode executá-las pelas APIs, e nenhuma tela as chama. Fabiano entende que a função interessa ao professor e ao aluno; a passagem das APIs ao professor segue por definir com a equipe.
+## Boletins em PDF
+
+Por decisão de Fabiano em 31/10/2026, o histórico escolar vem das provas da escola, em PDF, e não das atividades da plataforma. O coordenador envia, abre e remove boletins por aluno na turma (`#boletins`); o responsável confirmado abre em "Histórico escolar", o aluno vê os próprios em `/aluno#boletins` e o professor vê os dos alunos das suas turmas em `/professor#boletins`. Esses três perfis só consultam.
+
+O módulo `src/features/school-reports` tem rota própria, `/api/school-reports/students/:id` (GET, POST), `/files/:fileId` (GET, DELETE) e `/api/school-reports/classes/:id/students` (GET, professor da turma). Limite de 4 MB, assinatura `%PDF` conferida no servidor. Os arquivos ficam no bucket privado `boletins`, criado no primeiro envio, sem migração: o título fica no nome do objeto e todo acesso passa pelo servidor. Não há registro de quem enviou cada arquivo.
+
+## Cadastro sem email
+
+Fabiano aceitou em 31/10/2026 que o cadastro feito pelo coordenador dispensa email: a escola entrega o link, então o endereço não é confirmado. SMTP próprio deixa de ser necessário para esse fluxo.
+
+## Ativação e rotação de atividades
+
+Por decisão de Fabiano em 31/10/2026, o professor da turma e matéria ativa e rotaciona; o coordenador só atua em matéria sem professor atribuído. A regra é validada no serviço, e `GET /api/learning/catalog` lista as questões sem gabarito. A tela `ActivityManager` fica em `/professor` e, para matérias sem professor, na turma em `/coordenador`. A ativação continua exigindo dez originais de uma vez, e cada semana troca duas.
 
 ## Cadastro por link
 
@@ -138,8 +150,7 @@ A seção de elogios lista motivo, nota, professor, matéria, data e pontos, com
 - Resultados: a visão por aluno e o agregado por turma usam o núcleo real após o handoff de Nivaldo; falhas não geram números de exemplo.
 
 - Dois responsáveis editando o mesmo registro: prevalece a última gravação.
-- O histórico é consultado, mas a edição por coordenador e professor não tem tela nesta tarefa.
 - `docs/CONTRATOS_NIVALDO_CORE.md` foi corrigido para citar Fabiano.
 - `/demo/*` segue com os dados e os menus antigos.
 - Nos menus do coordenador e do responsável, "Visão geral" continua destacada ao navegar pelas âncoras, porque todas ficam na mesma página.
-- Enquanto a migração de reconhecimento não for aplicada, a seção de elogios mostra que ainda não está disponível e o sino informa a falha ao ser aberto. O restante do painel continua funcionando.
+- A migração de reconhecimento e a validação do handoff estão registradas em `docs/ENTREGA_NIVALDO_HANDOFF.md`. Falhas da seção de elogios continuam isoladas dos demais painéis.

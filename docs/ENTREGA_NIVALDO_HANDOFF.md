@@ -41,3 +41,11 @@ O responsável perde a leitura dos avisos quando seu vínculo deixa de estar con
 Os testes com transporte simulado não comprovam o fornecedor. A confirmação de Gemini real, permissões no Supabase hospedado, navegação autenticada, métricas em Production e sobrevivência do rascunho a um redeploy é registrada no PR desta entrega e nos relatórios operacionais locais, sem credenciais. Os relatórios ficam em `.vercel/handoff-*.json`, ignorados pelo Git.
 
 Não há alegação de catálogo curricular completo, BNCC revisada, envio de emails ou armazenamento do PDF/Word original.
+
+## Integração prioritária do PR #17 — 31/10/2026
+
+A branch foi reconciliada com a `main` em `c8d4114`, preservando ativação/rotação pelo professor, cadastro por link, boletins do coordenador e consulta dos próprios boletins pelo aluno e pelo professor da turma. O conflito no registro de Fabiano foi resolvido mantendo a regra atual de boletins em PDF e a correção do nome no contrato.
+
+A factory de aprendizagem passou a fornecer a consulta real de atribuições ao serviço: a coordenação não consegue ativar ou rotacionar uma matéria que já tem professor atribuído. A correção e seu teste já estavam preparados no checkout do núcleo e foram preservados nesta integração. O teste de templates normaliza somente as quebras CRLF/LF, mantendo a comparação integral do conteúdo.
+
+Verificação da integração: `npm run typecheck`, 354 testes TypeScript em 31 arquivos, sete testes Python e `npm run build` passaram. Os checks do GitHub para o commit final ficam no próprio PR.

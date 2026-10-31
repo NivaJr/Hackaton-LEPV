@@ -13,11 +13,11 @@ Cada pessoa usa sua branch e preserva contratos compartilhados. Dependências, l
 
 ## Regras confirmadas
 
-Seis matérias e quatro séries. Professor importa PDF/Word e fornece o gabarito original. Ficha salva/editável pelo aluno. Erro mostra explicação e gera outra questão sobre a habilidade; a mesma instância não pode ser refeita. Recuperação termina após dois acertos consecutivos ou interrupção. Primeira questão adaptativa vale 70% da original. Ranking público exibe somente TOP 10; XP ativo e pontos anuais de patente são separados.
+Seis matérias e quatro séries. Professor importa PDF/Word e fornece o gabarito original. Ficha salva/editável pelo aluno. Erro mostra explicação e gera outra questão sobre a habilidade; a mesma instância não pode ser refeita. Recuperação termina após dois acertos consecutivos ou interrupção. Professor da turma e matéria ativa e rotaciona as atividades; coordenador só em matéria sem professor atribuído. Exercício correto vale 50 pontos de patente. Exercício de recuperação correto vale 35, independentemente dos erros anteriores: errar 10 vezes e acertar a 11ª rende 35. Patentes a cada 1.000 pontos. Regra escolhida por Viegas em 31/10/2026; o código da `main` usa a política anterior até `codex/acessibilidade-aluno` ser integrada. Ranking público exibe somente TOP 10; XP ativo e pontos anuais de patente são separados.
 
-Base de 100 pontos, limites das patentes, referência dos 70% para cadeias e teto de pontuação ainda são propostas. Não ativar teto sugerido como decisão aprovada. O domínio inicial não concede pontos em APIs nem cria persistência de tentativas.
+Teto de pontuação ainda é proposta. Não ativar teto sugerido como decisão aprovada. O domínio inicial não concede pontos em APIs nem cria persistência de tentativas.
 
-Saúde/apoio: perfis vinculados consultam; só responsável confirmado edita. Histórico: coordenador e professor da própria matéria/turma editam. Consulta da ficha por outros perfis ainda está pendente; manter restrição atual até decisão explícita.
+Saúde/apoio: perfis vinculados consultam; só responsável confirmado edita. Histórico escolar vem das provas da escola, não das atividades da plataforma: coordenador envia boletins em PDF por aluno; responsável confirmado, o próprio aluno e professor da turma só consultam. Cadastro por link dispensa email e confirmação do endereço: a escola entrega o link. Ficha: só o próprio aluno consulta e edita, por decisão de 31/10/2026.
 
 ## Segurança e verificação
 
