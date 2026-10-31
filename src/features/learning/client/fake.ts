@@ -82,6 +82,8 @@ export function createFakeStudentLearningClient(): StudentLearningClient {
       const answer = correctOptions[state.question.subjectId];
       const isCorrect = parsed.selectedOptionId === answer;
       const isRecovery = state.question.sourceType === "recuperacao";
+      const activity = activities.activities.find((item) => item.rootQuestionId === state.question.rootQuestionId);
+      const isWeeklyChallenge = activity?.activityType === "weekly_challenge";
       const recoveryId = isCorrect && !isRecovery ? null : `recovery-${state.question.rootQuestionId}`;
       if (isRecovery && recoveryId && closedRecoveries.has(recoveryId)) throw new LearningClientError("A recuperação já foi encerrada.", "RECOVERY_CLOSED", 409);
       let consecutiveCorrect = 0;
@@ -97,8 +99,8 @@ export function createFakeStudentLearningClient(): StudentLearningClient {
         questionInstanceId: parsed.questionInstanceId,
         isCorrect,
         explanation: isCorrect ? "Boa! Você aplicou a habilidade corretamente." : "Ainda não. Observe os dados principais do enunciado e tente a mesma habilidade em um novo desafio.",
-        xpAwarded: isCorrect && !isRecovery ? 100 : 0,
-        rankPointsAwarded: isCorrect ? (isRecovery ? 35 : 100) : 0,
+        xpAwarded: isCorrect && !isRecovery && isWeeklyChallenge ? 100 : 0,
+        rankPointsAwarded: isCorrect ? (isRecovery ? 35 : isWeeklyChallenge ? 100 : 50) : 0,
         consecutiveCorrect: Math.min(consecutiveCorrect, 2),
         recoveryStatus,
       };
@@ -124,7 +126,6 @@ export function createFakeStudentLearningClient(): StudentLearningClient {
           .sort((a, b) => b.xp - a.xp || b.rankPoints - a.rankPoints || a.studentId.localeCompare(b.studentId))
           .map((entry, index) => ({ ...entry, position: index + 1 })),
       };
-      const activity = activities.activities.find((item) => item.rootQuestionId === state.question.rootQuestionId);
       if (activity) {
         activity.status = "answered";
         activity.recoveryId = recoveryId;

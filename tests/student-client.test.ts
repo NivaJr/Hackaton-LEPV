@@ -34,6 +34,17 @@ describe("StudentLearningClient fake", () => {
     expect(saved.version).toBe(2);
   });
 
+  it("diferencia a pontuação da lista do professor e do desafio semanal", async () => {
+    const client = createFakeStudentLearningClient();
+    const list = await client.openActivity("math-list-01");
+    const listResult = await client.submitAttempt({ questionInstanceId: list.question.questionInstanceId, selectedOptionId: "b", idempotencyKey: "teacher-list-correct" });
+    expect(listResult.result).toMatchObject({ isCorrect: true, xpAwarded: 0, rankPointsAwarded: 50 });
+
+    const challenge = await client.openActivity("math-root-01");
+    const challengeResult = await client.submitAttempt({ questionInstanceId: challenge.question.questionInstanceId, selectedOptionId: "b", idempotencyKey: "weekly-challenge-correct" });
+    expect(challengeResult.result).toMatchObject({ isCorrect: true, xpAwarded: 100, rankPointsAwarded: 100 });
+  });
+
   it("reutiliza o resultado da instância e não duplica crédito", async () => {
     const client = createFakeStudentLearningClient();
     const opened = await client.openActivity("math-root-01");

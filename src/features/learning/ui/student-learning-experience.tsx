@@ -22,6 +22,7 @@ import {
   type StudentAccessibilityPreferences,
 } from "./accessibility-preferences";
 import { RankBadge } from "./rank-badge";
+import { playCorrectAnswerSound, prepareCorrectAnswerSound } from "./correct-answer-sound";
 import { ScoringOverview } from "./scoring-overview";
 import { SkillMatrix } from "./skill-matrix";
 import styles from "./student-activities.module.css";
@@ -64,6 +65,7 @@ export function StudentLearningExperience({ fullName, mode, registeredAccessibil
   const [accessibility, setAccessibility] = useState<StudentAccessibilityPreferences>(DEFAULT_ACCESSIBILITY_PREFERENCES);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const pendingSubmissions = useRef(new Map<string, AttemptSubmission>());
+  const playedCorrectFeedback = useRef(new Set<string>());
   const operation = useRef<string | null>("loading");
 
   function begin(name: string) {
@@ -141,11 +143,16 @@ export function StudentLearningExperience({ fullName, mode, registeredAccessibil
 
   async function submitAnswer() {
     if (!question || !selectedOption || questionStatus === "answered" || !begin("answering")) return;
+    const soundContext = prepareCorrectAnswerSound(accessibility.interfaceMode === "standard");
     const submission = pendingSubmissions.current.get(question.questionInstanceId)
       ?? { questionInstanceId: question.questionInstanceId, selectedOptionId: selectedOption, idempotencyKey: crypto.randomUUID() };
     pendingSubmissions.current.set(question.questionInstanceId, submission);
     try {
       const response = await client.submitAttempt(submission);
+      if (response.result.isCorrect && !playedCorrectFeedback.current.has(response.result.attemptId)) {
+        playedCorrectFeedback.current.add(response.result.attemptId);
+        playCorrectAnswerSound(soundContext);
+      }
       setResult(response); setRecoveryId(response.recoveryId); setQuestionStatus("answered");
       setRecoveryStatus(response.result.recoveryStatus); setConsecutiveCorrect(response.result.consecutiveCorrect);
       pendingSubmissions.current.delete(question.questionInstanceId);
