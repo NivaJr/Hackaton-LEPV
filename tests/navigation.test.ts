@@ -22,7 +22,7 @@ describe("sidebar links", () => {
     expect(hrefs.some((href) => href.startsWith("/tarefas"))).toBe(false);
   });
   it("links the role sections", () => {
-    expect(navItems("professor", "real", "/professor").map((item) => item.href)).toEqual(["/professor", "/professor#questoes", "/professor#atividades", "/professor/reconhecer"]);
+    expect(navItems("professor", "real", "/professor").map((item) => item.href)).toEqual(["/professor", "/professor#questoes", "/professor#atividades", "/professor#boletins", "/professor/reconhecer"]);
     expect(navItems("coordenador", "real", "/coordenador").map((item) => item.href)).toContain("/coordenador#atividades");
     expect(navItems("responsavel", "real", "/responsavel").map((item) => item.href)).toContain("/responsavel#elogios");
   });

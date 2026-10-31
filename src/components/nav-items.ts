@@ -1,4 +1,4 @@
-import { Award, BookOpen, Compass, FileUp, GraduationCap, HeartPulse, LayoutDashboard, Medal, ScrollText, ToggleRight, Trophy, Users, type LucideIcon } from "lucide-react";
+import { Award, BookOpen, Compass, FileText, FileUp, GraduationCap, HeartPulse, LayoutDashboard, Medal, ScrollText, ToggleRight, Trophy, Users, type LucideIcon } from "lucide-react";
 import type { Role } from "@/contracts";
 
 export type DashboardMode = "demo" | "real";
@@ -14,6 +14,7 @@ export function navItems(role: Role, mode: DashboardMode, home: string): NavItem
     { label: "Meu progresso", icon: Compass, href: `${home}#progresso` },
     { label: "Ranking da turma", icon: Trophy, href: `${home}#ranking-turma` },
     { label: "Meu perfil", icon: GraduationCap, href: `${home}#perfil` },
+    ...(mode === "real" ? [{ label: "Boletins", icon: FileText, href: `${home}#boletins` }] : []),
   ];
   // The demo dashboards for the other roles are a single page without these sections.
   if (mode === "demo") return [overview];
@@ -21,6 +22,7 @@ export function navItems(role: Role, mode: DashboardMode, home: string): NavItem
     overview,
     { label: "Questões", icon: BookOpen, href: "/professor#questoes" },
     { label: "Ativar e rotacionar", icon: ToggleRight, href: "/professor#atividades" },
+    { label: "Boletins", icon: FileText, href: "/professor#boletins" },
     { label: "Pontos por comportamento", icon: Medal, href: "/professor/reconhecer" },
   ];
   if (role === "coordenador") return [
@@ -28,6 +30,7 @@ export function navItems(role: Role, mode: DashboardMode, home: string): NavItem
     { label: "Turmas e pessoas", icon: Users, href: "/coordenador#turmas" },
     { label: "Atividades sem professor", icon: ToggleRight, href: "/coordenador#atividades" },
     { label: "Acompanhamento", icon: Compass, href: "/coordenador#acompanhamento" },
+    { label: "Boletins", icon: FileText, href: "/coordenador#boletins" },
     { label: "Responsáveis", icon: GraduationCap, href: "/coordenador#vinculos" },
     { label: "Importar alunos", icon: FileUp, href: "/coordenador#importacao" },
   ];
@@ -37,5 +40,6 @@ export function navItems(role: Role, mode: DashboardMode, home: string): NavItem
     { label: "Elogios", icon: Award, href: "/responsavel#elogios" },
     { label: "Saúde e apoio", icon: HeartPulse, href: "/responsavel#saude-apoio" },
     { label: "Histórico escolar", icon: ScrollText, href: "/responsavel#historico" },
+    { label: "Boletins", icon: FileText, href: "/responsavel#boletins" },
   ];
 }
