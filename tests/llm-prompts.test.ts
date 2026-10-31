@@ -19,7 +19,7 @@ const TEMPLATES = [
 describe("templates de IA", () => {
   it("estão registrados em PROMPTS com o texto exato", () => {
     const doc = readFileSync(new URL("../PROMPTS/04-gallotte-templates-ia.md", import.meta.url), "utf8");
-    for (const name of TEMPLATES) expect(doc).toContain(prompts[name]);
+    for (const name of TEMPLATES) expect(doc.replace(/\r\n/g, "\n")).toContain(prompts[name].replace(/\r\n/g, "\n"));
   });
 
   it("não usam travessão e preenchem o escopo pelo catálogo", () => {

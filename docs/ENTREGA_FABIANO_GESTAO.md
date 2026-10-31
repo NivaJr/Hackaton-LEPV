@@ -59,7 +59,7 @@ A prévia devolve `new`, `enroll_existing`, `already_in_class`, `transfer_availa
 
 ## Banco: solicitações a Nivaldo
 
-Nenhuma migração foi criada.
+Na entrega original de Fabiano, nenhuma migração foi criada. Os quatro pedidos abaixo foram implementados no [Handoff de Nivaldo](ENTREGA_NIVALDO_HANDOFF.md), com migrações aplicadas e adaptadores conectados nesta integração; o texto dos pedidos preserva a motivação original.
 
 1. **RPC transacional de transferência.** Hoje a matrícula é encerrada e recriada em duas operações, com restauração se a segunda falhar. Se a restauração também falhar, o aluno fica sem matrícula ativa e a linha retorna `TRANSFER_INCOMPLETE`. Pedido: `transfer_student(enrollment_id, classroom_id)` em uma transação. Ajuste: só `RosterService.transfer`.
 2. **Busca de conta por email.** `profiles` não tem email; o adaptador pagina `auth.admin.listUsers`, o que é lento e consulta todos os usuários. Pedido: RPC `service_role` que receba a lista de emails. Ajuste: só `supabase-directory.ts`.
@@ -68,7 +68,7 @@ Nenhuma migração foi criada.
 
 ## Fixtures/stubs
 
-- `fixtureRosterMetrics` gera números de exemplo por turma, sempre com `source: "fixture"` e aviso visível na tela, porque ainda não há agregado por turma.
+- `fixtureRosterMetrics` preserva exemplos identificados para testes. O runtime do coordenador usa agora o agregado real de turmas do núcleo, com `source: "real"` e o ator da sessão.
 - O painel do responsável usa o resumo real da Tarefa 03, repassando o ator para o núcleo repetir a autorização. Qualquer falha aparece como `source: "unavailable"`, nunca como número de exemplo. `fixtureFamilyMetrics` fica só para testes.
 - Métrica de exemplo nunca é enviada ao fornecedor de IA. Com métricas reais, o gateway recebe só `StudentSummary`, sem saúde ou apoio. Sem IA, a tela mostra mensagem automática identificada.
 - Sem `SUPABASE_SECRET_KEY`, a importação falha com `PROVISIONING_UNAVAILABLE`, sem simular contas.
@@ -82,7 +82,7 @@ Quatro séries e seis matérias vêm do catálogo. Esta tarefa não envolve ques
 Resultados no commit desta entrega:
 
 - `npm run typecheck`: passou.
-- `npm test`: 353 de 354 testes passaram em 31 arquivos, incluindo `roster-import`, `roster-service`, `roster-directory`, `family-service`, `family-recognitions` e `roster-database`. A falha é `llm-prompts`, somente em checkout Windows, que converte `PROMPTS/04-gallotte-templates-ia.md` para CRLF.
+- `npm test`: 367 de 367 testes passaram em 33 arquivos, incluindo `roster-import`, `roster-service`, `roster-directory`, `family-service`, `family-recognitions` e `roster-database`.
 - `npm run build`: passou.
 
 ## Percurso realmente executado
@@ -147,10 +147,10 @@ A seção de elogios lista motivo, nota, professor, matéria, data e pontos, com
 
 ## Limitações e pendências
 
-- Resultados: a visão por aluno usa o resumo real; o agregado por turma ainda é exemplo e depende de Nivaldo.
+- Resultados: a visão por aluno e o agregado por turma usam o núcleo real após o handoff de Nivaldo; falhas não geram números de exemplo.
 
 - Dois responsáveis editando o mesmo registro: prevalece a última gravação.
-- `docs/CONTRATOS_NIVALDO_CORE.md` ainda cita "Fabia" e deve ser ajustado por Nivaldo.
+- `docs/CONTRATOS_NIVALDO_CORE.md` foi corrigido para citar Fabiano.
 - `/demo/*` segue com os dados e os menus antigos.
 - Nos menus do coordenador e do responsável, "Visão geral" continua destacada ao navegar pelas âncoras, porque todas ficam na mesma página.
-- Enquanto a migração de reconhecimento não for aplicada, a seção de elogios mostra que ainda não está disponível e o sino informa a falha ao ser aberto. O restante do painel continua funcionando.
+- A migração de reconhecimento e a validação do handoff estão registradas em `docs/ENTREGA_NIVALDO_HANDOFF.md`. Falhas da seção de elogios continuam isoladas dos demais painéis.

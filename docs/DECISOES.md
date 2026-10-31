@@ -13,7 +13,7 @@ Esta decisão substitui a política provisória de 30/10/2026 para novas instân
 
 A regra é validada no serviço e na função SQL de persistência; valores enviados pelo navegador não são aceitos como autoridade. As variáveis `LEPV_*` deixaram de ser usadas.
 
-Os dez desafios ativos são contados por turma e matéria, e toda questão publicada entra hoje como desafio semanal, porque a publicação ainda não oferece a opção de exercício comum.
+Os dez desafios ativos são contados por turma e matéria, e toda questão publicada entra como desafio semanal, porque a publicação ainda não oferece a opção de exercício comum.
 
 ## Pontuação anterior da demonstração — 30/10/2026
 

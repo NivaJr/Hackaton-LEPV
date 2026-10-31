@@ -1,5 +1,5 @@
-import type { StudentPreferences, StudentPreferencesUpdate } from "@/contracts";
-import type { LearningState, LoadedStudent, RankingRow, VersionedCatalog } from "./model";
+import type { StudentPreferences, StudentPreferencesUpdate, SubjectId } from "@/contracts";
+import type { LearningClassMetrics, LearningState, LoadedStudent, RankingRow, VersionedCatalog } from "./model";
 
 /** All IDs in this port are derived/authorized by the server, never a client-supplied actor. */
 export interface LearningRepository {
@@ -10,4 +10,6 @@ export interface LearningRepository {
   loadCatalog(institutionId: string, classId: string): Promise<VersionedCatalog>;
   commitCatalog(before: VersionedCatalog, after: VersionedCatalog["catalog"]): Promise<boolean>;
   ranking(institutionId: string, classId: string): Promise<RankingRow[]>;
+  recognitionPoints(institutionId: string, studentId: string, schoolYear: number, subjectIds?: SubjectId[]): Promise<number>;
+  classMetrics(institutionId: string, classIds: string[], from: string, to: string, subjectIds?: SubjectId[]): Promise<LearningClassMetrics[]>;
 }

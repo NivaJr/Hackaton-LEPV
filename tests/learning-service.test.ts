@@ -276,6 +276,18 @@ describe("rotação, ranking e métricas autorizadas", () => {
       expect(rotated.outgoingRootIds).toHaveLength(2);
     });
 
+    it("questão publicada entra como desafio semanal e pode ser ativada", async () => {
+      const { service, repository } = setup();
+      const roots = inactive(repository);
+      const body = question(777);
+      await service.registerActivity(teacher(), fixtureIds.classId, { rootQuestionId: "published", body, reviewed: true, contentVersion: 1 });
+      const stored = () => repository.catalogs.get(fixtureIds.classId)!.catalog.activities.find((item) => item.rootQuestionId === "published")!;
+      expect(stored().activityType).toBe("weekly_challenge");
+      expect((await service.activityCatalog(teacher(), fixtureIds.classId, "matematica")).activities.map((item) => item.rootQuestionId)).toContain("published");
+      await service.activate(teacher(), fixtureIds.classId, "matematica", ["published", ...roots.slice(0, 9)]);
+      expect(stored()).toMatchObject({ activityType: "weekly_challenge", active: true });
+    });
+
     it("professor de outra matéria e aluno são recusados", async () => {
       const { service, repository } = setup();
       const roots = inactive(repository);

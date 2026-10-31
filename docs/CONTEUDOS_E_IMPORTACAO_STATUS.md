@@ -26,5 +26,5 @@ O cliente aceita `contentId`, `contentTitle` e `contentDefinedBy`. Enquanto a AP
 - Questões publicadas entram inativas. O professor da turma e matéria as libera em `#atividades`: dez desafios semanais de cada matéria e, depois, duas trocas por semana. O coordenador só atua em matéria sem professor atribuído.
 - `TeacherContentWorkspace`, com a hierarquia disciplina → conteúdo → turma → lista, é usado somente em `/demo/professor`. A prévia fica no navegador e nada é publicado.
 - A área do coordenador importa cadastros e turmas, não listas de exercícios.
-- A publicação ainda não grava `activityType`: toda questão publicada entra como desafio semanal. Exercício comum de 50 pontos depende de uma opção na publicação.
+- Toda questão publicada entra como desafio semanal, e o tipo não muda depois porque o snapshot é imutável. Exercício comum de 50 pontos depende de uma opção na publicação.
 - Conteúdo como agrupamento (`contentId`) e `subjectProgress` ainda dependem de a API real fornecer esses campos.

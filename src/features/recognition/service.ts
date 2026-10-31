@@ -208,7 +208,8 @@ export class RecognitionService {
 
   async listNotifications(actor: SessionContext) {
     const items = sortNotifications((await this.deps.notifications.listForUser(actor.institutionId, actor.userId, NOTIFICATION_LIMIT))
-      .filter((item) => item.userId === actor.userId && item.schoolId === actor.institutionId));
+      .filter((item) => item.userId === actor.userId && item.schoolId === actor.institutionId)
+      .filter((item) => actor.studentId === item.studentId || actor.guardianStudentIds.includes(item.studentId)));
     return {
       unreadCount: items.filter((item) => item.readAt === null).length,
       notifications: items.map(toNotificationView),
@@ -218,7 +219,9 @@ export class RecognitionService {
   async markNotificationRead(actor: SessionContext, notificationId: string) {
     const id = IdSchema.parse(notificationId);
     const updated = await this.deps.notifications.markRead(actor.institutionId, actor.userId, id, this.now().toISOString());
-    if (!updated) throw new RecognitionError("NOTIFICATION_NOT_FOUND", "Notificação não encontrada.", 404);
+    if (!updated || (actor.studentId !== updated.studentId && !actor.guardianStudentIds.includes(updated.studentId))) {
+      throw new RecognitionError("NOTIFICATION_NOT_FOUND", "Notificação não encontrada.", 404);
+    }
     return { notification: toNotificationView(updated) };
   }
 }

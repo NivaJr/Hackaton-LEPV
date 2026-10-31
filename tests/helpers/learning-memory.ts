@@ -43,6 +43,13 @@ export function catalog(): VersionedCatalog {
 
 /** Test adapter only. Production always uses the database adapter. */
 export class MemoryLearningRepository implements LearningRepository {
+  async recognitionPoints(_institutionId: string, _studentId: string, _year: number) { return 0; }
+  async classMetrics(institutionId: string, classIds: string[], _from: string, _to: string) {
+    return classIds.filter((id) => this.catalogs.get(id)?.catalog.institutionId === institutionId).map((classroomId) => ({
+      classroomId, studentsEnrolled: [...this.students.values()].filter((student) => student.catalog.classId === classroomId).length,
+      attempts: 0, correct: 0, accessDays: 0, eligibleDays: 0, correctPercent: 0, frequencyPercent: 0,
+    }));
+  }
   async classroomName(institutionId: string, classId: string) {
     await this.loadCatalog(institutionId, classId);
     return classId === fixtureIds.classId ? "6A fictícia" : "6B fictícia";
