@@ -1,0 +1,32 @@
+{
+  "description": "Auditoria local de prompts; não executa no Work Cloud.",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import json,pathlib,runpy,sys; p=pathlib.Path.cwd(); s=next((a/'scripts'/'archive_prompts.py' for a in [p,*p.parents] if (a/'.codex'/'hooks.json').is_file() and (a/'scripts'/'archive_prompts.py').is_file()),None); (print(json.dumps({'continue':False,'stopReason':'Prompt archiver not found in this directory or its ancestors.'})),sys.exit(0)) if s is None else runpy.run_path(str(s),run_name='__main__')\"",
+            "commandWindows": "python -c \"import json,pathlib,runpy,sys; p=pathlib.Path.cwd(); s=next((a/'scripts'/'archive_prompts.py' for a in [p,*p.parents] if (a/'.codex'/'hooks.json').is_file() and (a/'scripts'/'archive_prompts.py').is_file()),None); (print(json.dumps({'continue':False,'stopReason':'Prompt archiver not found in this directory or its ancestors.'})),sys.exit(0)) if s is None else runpy.run_path(str(s),run_name='__main__')\"",
+            "timeout": 20,
+            "statusMessage": "Registrando prompts em PROMPTS/"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "auto|manual",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import json,pathlib,runpy,sys; p=pathlib.Path.cwd(); s=next((a/'scripts'/'archive_prompts.py' for a in [p,*p.parents] if (a/'.codex'/'hooks.json').is_file() and (a/'scripts'/'archive_prompts.py').is_file()),None); (print(json.dumps({'continue':False,'stopReason':'Prompt archiver not found in this directory or its ancestors.'})),sys.exit(0)) if s is None else runpy.run_path(str(s),run_name='__main__')\"",
+            "commandWindows": "python -c \"import json,pathlib,runpy,sys; p=pathlib.Path.cwd(); s=next((a/'scripts'/'archive_prompts.py' for a in [p,*p.parents] if (a/'.codex'/'hooks.json').is_file() and (a/'scripts'/'archive_prompts.py').is_file()),None); (print(json.dumps({'continue':False,'stopReason':'Prompt archiver not found in this directory or its ancestors.'})),sys.exit(0)) if s is None else runpy.run_path(str(s),run_name='__main__')\"",
+            "timeout": 20,
+            "statusMessage": "Registrando prompts em PROMPTS/"
+          }
+        ]
+      }
+    ]
+  }
+}

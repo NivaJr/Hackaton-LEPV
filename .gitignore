@@ -1,0 +1,15 @@
+node_modules/
+.next/
+out/
+dist/
+coverage/
+*.tsbuildinfo
+.env*
+!.env.example
+*.log
+.DS_Store
+.openai/
+PROMPTS/.archive-lock/
+PROMPTS/.archive-tmp-*
+supabase/.temp/
+supabase/.branches/
