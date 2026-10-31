@@ -41,10 +41,10 @@ export class FamilyService {
     return scope;
   }
 
-  private async metrics(studentId: string) {
+  private async metrics(actor: SessionContext, studentId: string) {
     const end = (this.dependencies.now ?? (() => new Date()))();
     const start = new Date(end.getTime() - (PERIOD_DAYS - 1) * 86_400_000);
-    return this.dependencies.metrics.studentSummary(studentId, start.toISOString().slice(0, 10), end.toISOString().slice(0, 10));
+    return this.dependencies.metrics.studentSummary(actor, studentId, start.toISOString().slice(0, 10), end.toISOString().slice(0, 10));
   }
 
   async listChildren(actor: SessionContext) {
@@ -60,7 +60,7 @@ export class FamilyService {
       repository.getRecord(institutionId, studentId, "health"),
       repository.getRecord(institutionId, studentId, "support"),
       repository.getHistory(institutionId, studentId),
-      this.metrics(studentId),
+      this.metrics(actor, studentId),
     ]);
     const student = children[0];
     if (!student) throw new FamilyError("NOT_FOUND", "Aluno não encontrado entre seus vínculos.", 404);
@@ -76,7 +76,8 @@ export class FamilyService {
   /** Example metrics never reach a provider: text about a real child must come from real data. */
   async feedback(actor: SessionContext, studentId: string): Promise<FeedbackResult> {
     this.guardianScope(actor, studentId);
-    const { source, summary } = await this.metrics(studentId);
+    const { source, summary } = await this.metrics(actor, studentId);
+    if (!summary) return { text: "Os resultados deste período ainda não estão disponíveis.", origin: "automatica", metricsSource: source };
     if (source === "real") {
       try {
         const { text } = await this.dependencies.summarize({ summary });

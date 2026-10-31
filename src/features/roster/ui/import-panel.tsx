@@ -82,7 +82,7 @@ export function ImportPanel({ classroomId, classroomName, onApplied }: { classro
   const failedLines = new Set(result?.rows.filter((row) => row.status === "failed").map((row) => row.line));
   const retryable = actionable.filter((row) => failedLines.has(row.line));
 
-  return <section className="panel">
+  return <section className="panel" id="importacao">
     <div className="panel-heading"><div><span className="eyebrow">IMPORTAÇÃO</span><h2>Importar para {classroomName}</h2></div><UploadCloud size={22} /></div>
     <p className="panel-description">Nada é gravado na prévia. Convites e matrículas só acontecem depois da confirmação.</p>
     <form className={styles.form} onSubmit={submitPreview}>

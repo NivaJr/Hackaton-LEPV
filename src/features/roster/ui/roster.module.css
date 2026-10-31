@@ -1,17 +1,17 @@
 .stack{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;min-width:0}
-.stack h3{margin:20px 0 4px;font-size:15px;color:var(--navy)}
+.stack h3{margin:20px 0 4px;font-size:15px;color:var(--ink)}
 .columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:20px;align-items:start}
 .form{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;align-items:end;margin-top:14px}
 .field{display:grid;gap:6px;font-size:12px;font-weight:700;color:var(--ink);min-width:0}
-.field input,.field select{height:42px;width:100%;min-width:0;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:0 12px;font:inherit;font-weight:400;color:var(--navy)}
+.field input,.field select{height:42px;width:100%;min-width:0;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:0 12px;font:inherit;font-weight:400;color:var(--ink)}
 .field input:focus-visible,.field select:focus-visible{outline:3px solid #6455d944;border-color:var(--indigo)}
 .list{display:grid;gap:8px;margin:14px 0 0;padding:0;list-style:none}
-.classButton{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--navy);text-align:left;cursor:pointer;font:inherit}
+.classButton{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);text-align:left;cursor:pointer;font:inherit}
 .classButton:hover{border-color:var(--indigo)}
 .classButton[aria-pressed=true]{border-color:var(--indigo);background:#6455d90f}
 .classButton small{color:var(--muted);font-size:12px}
 .metrics{grid-column:1/-1;color:var(--muted);font-size:12px}
-.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px;color:var(--navy);min-width:0}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px;color:var(--ink);min-width:0}
 .row:last-child{border-bottom:0}
 .row>span{min-width:0;overflow-wrap:anywhere}
 .row small{display:block;color:var(--muted);font-size:12px}
@@ -19,10 +19,10 @@
 .danger{color:#a53a2c}
 .actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px}
 .tableWrap{overflow-x:auto;margin-top:14px;border:1px solid var(--line);border-radius:12px}
-.table{width:100%;min-width:620px;border-collapse:collapse;font-size:13px;color:var(--navy)}
+.table{width:100%;min-width:620px;border-collapse:collapse;font-size:13px;color:var(--ink)}
 .table th{text-align:left;padding:10px 12px;background:var(--background);color:var(--muted);font-size:11px;letter-spacing:.4px;text-transform:uppercase}
 .table td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere}
-.table select{height:34px;width:100%;max-width:150px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font:inherit;color:var(--navy)}
+.table select{height:34px;width:100%;max-width:150px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font:inherit;color:var(--ink)}
 .badge{display:inline-block;padding:3px 9px;border-radius:30px;background:var(--mint);color:#1f6a53;font-size:12px;font-weight:700;white-space:nowrap}
 .badgeWarn{background:#fff3de;color:#73521f}
 .badgeError{background:#fff0ed;color:#9a4036}
@@ -30,6 +30,11 @@
 .notice svg{display:inline;vertical-align:-2px;margin-right:4px}
 .error{background:#fff0ed;color:#9a4036}
 .success{background:var(--mint);color:#1f6a53}
+.results{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin:14px 0 0}
+.results div{padding:12px 14px;border:1px solid var(--line);border-radius:12px;min-width:0}
+.results dt{color:var(--muted);font-size:12px}
+.results dd{margin:4px 0 0;color:var(--ink);font-size:20px;font-weight:700;overflow-wrap:anywhere}
 .hint{color:var(--muted);font-size:12px;line-height:1.5;margin:8px 0 0}
 .empty{color:var(--muted);font-size:14px;margin:14px 0 0}
+:global([data-theme="dark"]) .success,:global([data-theme="dark"]) .badge:not(.badgeWarn):not(.badgeError){color:#a8ecd2}
 @media(max-width:900px){.columns{grid-template-columns:minmax(0,1fr)}}

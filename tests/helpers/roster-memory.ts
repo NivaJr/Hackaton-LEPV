@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { Role } from "@/contracts";
-import { RosterError, type AccountRecord, type AssignmentRecord, type ClassroomRecord, type EnrollmentRecord, type PersonRecord } from "@/features/roster/model";
+import { RosterError, type AccountRecord, type AssignmentRecord, type ClassroomRecord, type EnrollmentRecord, type GuardianLinkRecord, type PersonRecord } from "@/features/roster/model";
 import type { AccountDirectory, RosterRepository } from "@/features/roster/ports";
 
 export const SCHOOL = "11111111-1111-4111-8111-111111111111";
@@ -11,7 +11,8 @@ export class MemoryRoster implements RosterRepository {
   classrooms: (ClassroomRecord & { schoolId: string })[] = [];
   enrollments: (EnrollmentRecord & { schoolId: string; status: string })[] = [];
   assignments: (AssignmentRecord & { schoolId: string })[] = [];
-  people: (PersonRecord & { schoolId: string; role: "aluno" | "professor" })[] = [];
+  people: (PersonRecord & { schoolId: string; role: "aluno" | "professor" | "responsavel" })[] = [];
+  links: (GuardianLinkRecord & { schoolId: string })[] = [];
   failEnrollFor = new Set<string>();
 
   addClassroom(name: string, schoolId = SCHOOL) {
@@ -41,7 +42,7 @@ export class MemoryRoster implements RosterRepository {
     this.classrooms = this.classrooms.filter((item) => !(item.id === id && item.schoolId === schoolId));
     return this.classrooms.length < before;
   }
-  async listPeople(schoolId: string, role: "aluno" | "professor") { return this.people.filter((item) => item.schoolId === schoolId && item.role === role); }
+  async listPeople(schoolId: string, role: "aluno" | "professor" | "responsavel") { return this.people.filter((item) => item.schoolId === schoolId && item.role === role); }
   async listEnrollments(schoolId: string) { return this.active(schoolId); }
   async activeEnrollment(schoolId: string, studentId: string) { return this.active(schoolId).find((item) => item.studentId === studentId) ?? null; }
   async enroll(schoolId: string, classroomId: string, studentId: string) {
@@ -72,6 +73,18 @@ export class MemoryRoster implements RosterRepository {
     const before = this.assignments.length;
     this.assignments = this.assignments.filter((item) => !(item.id === id && item.schoolId === schoolId));
     return this.assignments.length < before;
+  }
+  async listGuardianLinks(schoolId: string) { return this.links.filter((item) => item.schoolId === schoolId); }
+  async createGuardianLink(schoolId: string, guardianId: string, studentId: string) {
+    const existing = this.links.find((item) => item.guardianId === guardianId && item.studentId === studentId);
+    if (existing) return existing;
+    const link = { id: randomUUID(), schoolId, guardianId, studentId, status: "pending" as GuardianLinkRecord["status"] };
+    this.links.push(link);
+    return link;
+  }
+  async setGuardianLinkStatus(schoolId: string, id: string, status: "confirmed" | "revoked") {
+    const link = this.links.find((item) => item.id === id && item.schoolId === schoolId);
+    return link ? Object.assign(link, { status }) : null;
   }
 }
 

@@ -1,9 +1,11 @@
 import "server-only";
+import { createLearningService } from "@/features/learning/server/runtime";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { fixtureRosterMetrics } from "../fixtures";
 import { RosterError } from "../model";
 import { RosterService } from "../service";
+import { createLearningStudentResults } from "./learning-results";
 import { createSupabaseAccountDirectory } from "./supabase-directory";
 import { createSupabaseRosterRepository } from "./supabase-repository";
 
@@ -15,5 +17,6 @@ export async function createRosterService(): Promise<RosterService> {
     repository: createSupabaseRosterRepository(client),
     directory: admin ? createSupabaseAccountDirectory(admin, process.env.NEXT_PUBLIC_APP_URL) : null,
     metrics: fixtureRosterMetrics,
+    results: createLearningStudentResults(createLearningService),
   });
 }

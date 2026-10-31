@@ -5,7 +5,9 @@ import { Flag, GraduationCap, TrendingUp, Users } from "lucide-react";
 import { GRADES, SUBJECTS, getSubject } from "@/config/catalog";
 import type { SubjectId } from "@/contracts";
 import { rosterApi, type RosterOverview } from "./api";
+import { GuardianPanel } from "./guardian-panel";
 import { ImportPanel } from "./import-panel";
+import { StudentResultsPanel } from "./student-results-panel";
 import styles from "./roster.module.css";
 
 export function CoordinatorWorkspace({ fullName, schoolYear }: { fullName: string; schoolYear: number }) {
@@ -53,6 +55,13 @@ export function CoordinatorWorkspace({ fullName, schoolYear }: { fullName: strin
   const staff = data?.assignments.filter((item) => item.classroomId === selectedId) ?? [];
   const available = data?.students.filter((student) => !roster.some((item) => item.studentId === student.id)) ?? [];
 
+  function editClassroom(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selected) return;
+    const fields = new FormData(event.currentTarget);
+    void act(() => rosterApi.updateClassroom(selected.id, { name: String(fields.get("name")), grade: Number(fields.get("grade")), schoolYear: Number(fields.get("schoolYear")) }), "Turma atualizada.");
+  }
+
   function allocate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const studentId = String(new FormData(event.currentTarget).get("studentId"));
@@ -78,7 +87,7 @@ export function CoordinatorWorkspace({ fullName, schoolYear }: { fullName: strin
     </div>
     {message && <p role={message.tone === "error" ? "alert" : "status"} className={`${styles.notice} ${styles[message.tone]}`}>{message.text}</p>}
     <div className={styles.columns}>
-      <section className="panel">
+      <section className="panel" id="turmas">
         <div className="panel-heading"><div><span className="eyebrow">TURMAS</span><h2>Turmas da escola</h2></div></div>
         {isFixture && <p className={styles.notice}><Flag size={13} /> Frequência e acertos abaixo são dados de exemplo, não medidos. Engajamento considera frequência, não cliques.</p>}
         {data && !classrooms.length && <p className={styles.empty}>Nenhuma turma cadastrada ainda.</p>}
@@ -102,6 +111,12 @@ export function CoordinatorWorkspace({ fullName, schoolYear }: { fullName: strin
           <div className="panel-heading"><div><span className="eyebrow">TURMA</span><h2>{selected.name}</h2></div>
             <button type="button" className={`${styles.link} ${styles.danger}`} disabled={busy} onClick={() => { if (window.confirm(`Excluir a turma ${selected.name}?`)) void act(async () => { await rosterApi.deleteClassroom(selected.id); setSelectedId(null); }, "Turma excluída."); }}>Excluir turma</button>
           </div>
+          <form key={`${selected.id}-${selected.name}-${selected.grade}-${selected.schoolYear}`} className={styles.form} onSubmit={editClassroom}>
+            <label className={styles.field}>Nome<input name="name" required maxLength={100} defaultValue={selected.name} /></label>
+            <label className={styles.field}>Série<select name="grade" defaultValue={selected.grade}>{GRADES.map((grade) => <option key={grade} value={grade}>{grade}º ano</option>)}</select></label>
+            <label className={styles.field}>Ano letivo<input name="schoolYear" type="number" min={2000} max={2200} defaultValue={selected.schoolYear} required /></label>
+            <button type="submit" className="button button-outline" disabled={busy}>Salvar turma</button>
+          </form>
           <h3>Alunos ({roster.length})</h3>
           {roster.map((item) => <div className={styles.row} key={item.id}><span>{nameOf(item.studentId)}</span><button type="button" className={styles.link} disabled={busy} onClick={() => { if (window.confirm("Encerrar esta matrícula?")) void act(() => rosterApi.removeEnrollment(item.id), "Matrícula encerrada."); }}>Remover</button></div>)}
           <form className={styles.form} onSubmit={allocate}>
@@ -116,6 +131,8 @@ export function CoordinatorWorkspace({ fullName, schoolYear }: { fullName: strin
             <button type="submit" className="button button-outline" disabled={busy}>Atribuir</button>
           </form>
         </section>}
+        {selected && data && <StudentResultsPanel key={`resultados-${selected.id}`} students={data.students.filter((student) => roster.some((item) => item.studentId === student.id))} />}
+        {selected && data && <GuardianPanel key={`vinculos-${selected.id}`} students={data.students.filter((student) => roster.some((item) => item.studentId === student.id))} guardians={data.guardians} links={data.guardianLinks} busy={busy} act={act} />}
         {selected && <ImportPanel key={selected.id} classroomId={selected.id} classroomName={selected.name} onApplied={() => void refresh()} />}
       </div>
     </div>

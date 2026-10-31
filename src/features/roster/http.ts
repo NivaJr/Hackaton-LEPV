@@ -15,7 +15,10 @@ interface RosterHttpDependencies {
 
 function assertSameOrigin(request: Request, url: URL) {
   const origin = request.headers.get("origin");
-  if (origin && origin !== url.origin) throw new RosterError("INVALID_ORIGIN", "A origem desta operação não é permitida.", 403);
+  // Next may expose an internal listen address in request.url; Host is what the browser requested.
+  const host = request.headers.get("host");
+  const expected = host ? `${url.protocol}//${host}` : url.origin;
+  if (origin && origin !== expected) throw new RosterError("INVALID_ORIGIN", "A origem desta operação não é permitida.", 403);
 }
 
 async function readJson(request: Request): Promise<unknown> {
@@ -76,6 +79,13 @@ export function createRosterHttpHandler(dependencies: RosterHttpDependencies) {
       if (first === "enrollments") {
         if (path.length === 1 && method === "POST") return respond(await service.allocateStudent(actor, await readJson(request)));
         if (path.length === 2 && method === "DELETE") return respond(await service.removeEnrollment(actor, uuid.parse(id)));
+      }
+      if (method === "GET" && path.length === 3 && first === "students" && path[2] === "results") {
+        return respond(await service.studentResults(actor, uuid.parse(id)));
+      }
+      if (first === "guardian-links") {
+        if (path.length === 1 && method === "POST") return respond(await service.createGuardianLink(actor, await readJson(request)), 201);
+        if (path.length === 2 && method === "PATCH") return respond(await service.setGuardianLinkStatus(actor, uuid.parse(id), await readJson(request)));
       }
       if (first === "imports" && path.length === 2 && method === "POST") {
         if (id === "preview") {

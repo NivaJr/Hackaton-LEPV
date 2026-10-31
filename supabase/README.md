@@ -1,12 +1,14 @@
 # Supabase — fundação de identidade e permissões
 
-Esta pasta contém uma migração para um projeto Supabase vazio, configuração de desenvolvimento e um seed sem contas. Ela prepara os quatro papéis e os vínculos usados para autorizar acesso aos alunos. A aplicação ainda precisa receber a URL/chave pública do projeto e as contas de demonstração.
+Esta pasta contém migrações para um projeto Supabase vazio, configuração de desenvolvimento e um seed sem contas. Ela prepara os quatro papéis, vínculos e a persistência da aprendizagem. O projeto LEPV já foi configurado; ver [Configuração do Supabase](../docs/CONFIGURACAO_SUPABASE_LEPV.md). Em outro ambiente, fornecer URL/chaves e provisionar contas próprias.
 
 ## Arquivos e aplicação
 
 - `migrations/20261030220000_foundation.sql`: esquema, chaves, índices, triggers, grants e RLS.
+- `migrations/20261031030000_learning.sql`: snapshots privados, tentativas, livro de pontos e persistência por RPC.
+- `migrations/20261031050000_learning_classroom_name.sql`: leitura administrativa do nome atual da turma para a lista de atividades, sem alterar os payloads das RPCs existentes.
 - `seed.sql`: uma escola fictícia e as seis matérias; não cria usuários Auth, senhas, notas ou dados de saúde.
-- `config.toml`: configuração local, PostgreSQL 15, autenticação por contas provisionadas e cadastro público desativado.
+- `config.toml`: configuração local, PostgreSQL 17, autenticação por contas provisionadas e cadastro público desativado.
 
 Em uma instalação local com Supabase CLI e Docker disponíveis:
 
@@ -17,7 +19,7 @@ supabase db reset
 
 `db reset` é destrutivo para o banco local: usar apenas no ambiente de desenvolvimento. Em um projeto remoto vazio, aplicar a migração pelo fluxo de migrações da equipe ou executar seu conteúdo no SQL Editor como administrador e, depois, o `seed.sql`. Não reaplicar manualmente a migração em um banco onde ela já foi executada; ela não é um script de atualização idempotente. O seed pode ser reexecutado.
 
-Para banco existente, revisar colisões de tabelas/tipos e produzir uma migração de adaptação antes de aplicar. Os arquivos não foram executados contra uma instância Supabase nesta entrega.
+Para banco existente, revisar colisões de tabelas/tipos e produzir uma migração de adaptação antes de aplicar. No projeto `alkvhjnqfjyjflaswdmi` os arquivos já foram aplicados e registrados; não reaplicar as migrações como instalação inicial.
 
 ## Contratos das tabelas
 
@@ -188,4 +190,4 @@ As próximas migrações devem adicionar catálogo BNCC, arquivos privados/lista
 
 `updated_by` e `updated_at` registram o último autor da alteração; não constituem um histórico completo de versões. O armazenamento das versões antigas da ficha e a trilha completa de auditoria são extensões futuras.
 
-A migração e o seed reais são executados em `tests/database.test.ts` no PostgreSQL/WASM PGlite, com esquema Auth mínimo emulado. Os testes verificam permissões, vínculos, isolamento, grants, auditoria e versão da ficha sob papéis não proprietários. Não há validação contra Supabase hospedado: PostgREST, autenticação real, envio de convites e as verificações de integração acima continuam necessários no projeto da equipe. O seed usa as abreviações de componente BNCC `MA`, `LP`, `LI`, `HI`, `GE`, `CI`, alinhadas ao catálogo TypeScript.
+A migração e o seed reais são executados em `tests/database.test.ts` no PostgreSQL/WASM PGlite, com esquema Auth mínimo emulado. Os testes verificam permissões, vínculos, isolamento, grants, auditoria e versão da ficha sob papéis não proprietários. A validação posterior no Supabase hospedado exerceu PostgREST, login real dos perfis, RLS, auditoria e APIs com cookies reais; evidências em [Configuração do Supabase](../docs/CONFIGURACAO_SUPABASE_LEPV.md). Envio de convites e IA real permanecem pendentes. O seed usa as abreviações de componente BNCC `MA`, `LP`, `LI`, `HI`, `GE`, `CI`, alinhadas ao catálogo TypeScript.

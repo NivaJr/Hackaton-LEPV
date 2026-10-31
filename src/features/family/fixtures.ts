@@ -1,11 +1,8 @@
 import type { FamilyMetricsGateway } from "./ports";
 
-/**
- * Example summary, always tagged source: "fixture" and shown as such by the panel.
- * Replace with an adapter over GET /api/learning/summary (Task 03) once it is merged.
- */
+/** Example summary for tests and demos, always tagged source: "fixture". Production uses the learning core. */
 export const fixtureFamilyMetrics: FamilyMetricsGateway = {
-  async studentSummary(studentId, from, to) {
+  async studentSummary(_actor, studentId, from, to) {
     return {
       source: "fixture",
       summary: {

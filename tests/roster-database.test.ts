@@ -134,6 +134,32 @@ describe.sequential("gestão sobre a migração real", () => {
     await expect(as(ids.coordinator, () => assign(ids.teacher, ids.otherClass))).rejects.toMatchObject({ code: "23503" });
   });
 
+  it("coordenador vincula e confirma; aluno e outra escola não alteram vínculos", async () => {
+    const newGuardian = "00000000-0000-4000-8000-000000000006";
+    await db.exec(`
+      insert into auth.users (id) values ('${newGuardian}');
+      insert into public.profiles (id, school_id, full_name) values ('${newGuardian}', '${ids.school}', 'Responsável novo');
+      insert into public.user_roles (user_id, school_id, role) values ('${newGuardian}', '${ids.school}', 'responsavel');
+    `);
+    const insertLink = () => db.query<{ id: string; status: string }>(
+      "insert into public.guardian_links (school_id, guardian_id, student_id) values ($1, $2, $3) returning id, status", [ids.school, newGuardian, ids.student],
+    );
+    await as(ids.coordinator, async () => {
+      const created = await insertLink();
+      expect(created.rows[0].status).toBe("pending");
+      const confirmed = await db.query("update public.guardian_links set status = 'confirmed' where school_id = $1 and id = $2 returning id", [ids.school, created.rows[0].id]);
+      expect(confirmed.rows).toHaveLength(1);
+      await db.query("savepoint s");
+      await expect(insertLink()).rejects.toMatchObject({ code: "23505" });
+      await db.query("rollback to savepoint s");
+    });
+    await expect(as(ids.student, insertLink)).rejects.toMatchObject({ code: "42501" });
+    await as(ids.otherCoordinator, async () => {
+      const other = await db.query("update public.guardian_links set status = 'revoked' where student_id = $1 returning id", [ids.student]);
+      expect(other.rows).toEqual([]);
+    });
+  });
+
   it("coordenador não provisiona identidade pelo próprio cliente", async () => {
     await expect(as(ids.coordinator, () => db.query(
       "insert into public.user_roles (user_id, school_id, role) values ($1, $2, 'professor')", [ids.student, ids.school],

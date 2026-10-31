@@ -22,7 +22,7 @@ export interface HistoryEntry {
   grade: number | null;
   notes: string;
 }
-export interface MetricsResult { source: "fixture" | "real"; summary: StudentSummary; }
+export type MetricsResult = { source: "fixture" | "real"; summary: StudentSummary } | { source: "unavailable"; summary: null };
 export interface StudentOverview {
   student: ChildRecord;
   health: FamilyRecord;

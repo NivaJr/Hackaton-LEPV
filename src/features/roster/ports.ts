@@ -1,5 +1,5 @@
-import type { Role } from "@/contracts";
-import type { AccountRecord, AssignmentRecord, ClassMetrics, ClassroomInput, ClassroomPatch, ClassroomRecord, EnrollmentRecord, PersonRecord } from "./model";
+import type { Role, SessionContext } from "@/contracts";
+import type { AccountRecord, AssignmentRecord, ClassMetrics, GuardianLinkRecord, ClassroomInput, ClassroomPatch, ClassroomRecord, EnrollmentRecord, PersonRecord, StudentResults } from "./model";
 
 /** Every method is scoped by a schoolId taken from the session, never from the request. */
 export interface RosterRepository {
@@ -8,7 +8,7 @@ export interface RosterRepository {
   createClassroom(schoolId: string, input: ClassroomInput): Promise<ClassroomRecord>;
   updateClassroom(schoolId: string, classroomId: string, patch: ClassroomPatch): Promise<ClassroomRecord | null>;
   deleteClassroom(schoolId: string, classroomId: string): Promise<boolean>;
-  listPeople(schoolId: string, role: "aluno" | "professor"): Promise<PersonRecord[]>;
+  listPeople(schoolId: string, role: "aluno" | "professor" | "responsavel"): Promise<PersonRecord[]>;
   listEnrollments(schoolId: string): Promise<EnrollmentRecord[]>;
   activeEnrollment(schoolId: string, studentId: string): Promise<EnrollmentRecord | null>;
   /** Throws RosterError DUPLICATE_ENROLLMENT when the student already has an active enrollment. */
@@ -19,6 +19,10 @@ export interface RosterRepository {
   listAssignments(schoolId: string): Promise<AssignmentRecord[]>;
   createAssignment(schoolId: string, input: Omit<AssignmentRecord, "id">): Promise<AssignmentRecord>;
   deleteAssignment(schoolId: string, assignmentId: string): Promise<boolean>;
+  listGuardianLinks(schoolId: string): Promise<GuardianLinkRecord[]>;
+  /** Idempotent: returns the existing link for the same guardian and student. */
+  createGuardianLink(schoolId: string, guardianId: string, studentId: string): Promise<GuardianLinkRecord>;
+  setGuardianLinkStatus(schoolId: string, linkId: string, status: "confirmed" | "revoked"): Promise<GuardianLinkRecord | null>;
 }
 
 /**
@@ -29,6 +33,11 @@ export interface AccountDirectory {
   findByEmails(emails: string[]): Promise<Map<string, AccountRecord>>;
   /** Idempotent: resumes a partial provisioning instead of creating a second identity. */
   ensureAccount(input: { email: string; fullName: string; role: Role; schoolId: string; userId?: string }): Promise<string>;
+}
+
+/** The actor travels with the call so the learning core repeats its own authorization. */
+export interface StudentResultsGateway {
+  studentResults(actor: SessionContext, studentId: string, from: string, to: string): Promise<StudentResults>;
 }
 
 export interface RosterMetricsGateway {

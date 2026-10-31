@@ -1,0 +1,20 @@
+.experience :global(.student-subject-button) strong,
+.experience :global(.student-question-empty) h3,
+.experience :global(.student-context) p,
+.experience :global(.ranking-person) b,
+.experience :global(.student-profile-form) label { color: var(--ink); }
+.experience :global(.student-subject-button) small,
+.experience :global(.student-question-empty) p,
+.experience :global(.profile-version) { color: var(--muted); }
+.experience :global(.student-profile-form) label small { color: var(--muted); }
+.experience :global(.interest-tags) span { color: var(--indigo); }
+.activities { display: grid; gap: 10px; list-style: none; padding: 0; margin: 16px 0; }
+.activities button { display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%; min-height: 60px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); text-align: left; }
+.activities button:hover:not(:disabled) { border-color: var(--indigo); background: var(--surface-soft); }
+.activities button:focus-visible { outline: 3px solid var(--indigo); outline-offset: 3px; }
+.activities button:disabled { opacity: .6; cursor: wait; }
+.activities button > span { display: grid; gap: 5px; }
+.activities button > span:last-child { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.activities small, .readOnly { color: var(--muted); font-size: 13px; line-height: 1.6; }
+@media (max-width: 560px) { .activities button { align-items: flex-start; flex-direction: column; } }
+@media (prefers-reduced-motion: reduce) { .experience :global(.spin) { animation: none; } }

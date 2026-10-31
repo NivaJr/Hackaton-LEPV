@@ -1,12 +1,13 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, ShieldCheck, Sparkles } from "lucide-react";
 import styles from "./login.module.css";
 
 export function AuthFrame({ children }: { children: ReactNode }) {
   return <main className={styles.page}>
     <section className={styles.story}>
-      <Link href="/" className={styles.brand}><span>✦</span> LEPV</Link>
+      <Link href="/" className={styles.brand} aria-label="EAI, página inicial"><Image src="/brand/eai-logo.png" alt="EAI — Educational Artificial Intelligence" width={224} height={112} /></Link>
       <div><div className={styles.tag}><Sparkles size={14} /> Cada aluno, uma jornada.</div><h1>Aprender pode ser uma <em>grande conquista.</em></h1><p>Interesses que viram desafios. Dificuldades que viram oportunidades. Uma escola que acompanha cada passo.</p></div>
       <div className={styles.note}><ShieldCheck size={17} /> Acesso por perfil e vínculo com a escola.</div>
     </section>
