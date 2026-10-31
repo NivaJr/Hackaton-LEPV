@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { Check, Flag, Flame, HeartPulse, MessageSquareText, TrendingUp } from "lucide-react";
 import { SUBJECTS } from "@/config/catalog";
+import { NotificationBell } from "@/features/recognition/ui/notification-bell";
 import type { ChildRecord, FamilyRecord, FamilyRecordCategory, FeedbackResult, StudentOverview } from "../model";
+import { RecognitionsPanel } from "./recognitions-panel";
 import styles from "./family.module.css";
 
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
@@ -83,6 +85,7 @@ function ChildPanel({ studentId }: { studentId: string }) {
       <p className={styles.feedback}>{feedback.text}</p>
       <span className={styles.meta}>{feedback.origin === "ia" ? "Gerado por IA a partir dos resultados, sem dados de saúde ou apoio." : "Mensagem automática, sem IA."}{feedback.metricsSource === "fixture" ? " Baseada em dados de exemplo." : ""}</span>
     </section>}
+    <RecognitionsPanel studentId={studentId} />
     <div className={styles.columns} id="saude-apoio">
       <RecordEditor studentId={studentId} category="health" title="Saúde" initial={overview.health} />
       <RecordEditor studentId={studentId} category="support" title="Necessidades de apoio" initial={overview.support} />
@@ -110,7 +113,7 @@ export function FamilyWorkspace({ fullName }: { fullName: string }) {
 
   const selected = children?.find((child) => child.id === selectedId);
   return <div className={styles.stack}>
-    <div className="page-heading"><div><span className="eyebrow">PRESENTE EM CADA DESCOBERTA</span><h1>Olá, {fullName.split(" ")[0]}<span className="greeting-dot">.</span></h1><p>Acompanhe a jornada dos estudantes vinculados à sua conta.</p></div></div>
+    <div className="page-heading"><div><span className="eyebrow">PRESENTE EM CADA DESCOBERTA</span><h1>Olá, {fullName.split(" ")[0]}<span className="greeting-dot">.</span></h1><p>Acompanhe a jornada dos estudantes vinculados à sua conta.</p></div><NotificationBell /></div>
     {error && <p role="alert" className={`${styles.notice} ${styles.error}`}>{error}</p>}
     {children?.length === 0 && <section className="panel"><p className={styles.empty}>Nenhum estudante com vínculo confirmado. Fale com a coordenação da escola.</p></section>}
     {children && children.length > 0 && <label className={styles.field}>Estudante
