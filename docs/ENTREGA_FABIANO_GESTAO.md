@@ -16,7 +16,7 @@ Pessoa: Fabiano. Tarefa: 02, gestão escolar e família. Branch: `feat/fabiano-g
 
 ## Contratos consumidos / mudanças combinadas
 
-Consome sem alterar: `SessionContext`, `StudentSummary`, `canViewStudentData`, `canEditStudentData`, `getSessionContext`, `requireRole`, `LearningAiGateway.summarizeStudent`, `SUBJECTS`, `GRADES`. Nenhum schema central, SQL, `package.json` ou lockfile foi alterado.
+Consome também `GET /api/recognition?studentId=` e `NotificationBell`, da Tarefa 04, no painel do responsável. Consome sem alterar: `SessionContext`, `StudentSummary`, `canViewStudentData`, `canEditStudentData`, `getSessionContext`, `requireRole`, `LearningAiGateway.summarizeStudent`, `SUBJECTS`, `GRADES`. Nenhum schema central, SQL, `package.json` ou lockfile foi alterado.
 
 XLSX não usa pacote novo: há um leitor próprio sobre `node:zlib`. Ele lê valores da primeira aba, nunca avalia fórmulas, descarta o resultado em cache, recusa macros e DOCTYPE e limita a descompressão a 16 MB por parte interna.
 
@@ -82,8 +82,8 @@ Quatro séries e seis matérias vêm do catálogo. Esta tarefa não envolve ques
 Resultados no commit desta entrega:
 
 - `npm run typecheck`: passou.
-- `npm test`: passou, 12 arquivos e 164 testes da `main` integrada, incluindo `roster-import`, `roster-service`, `family-service` e `roster-database`.
-- `npm run build`: passou, com `/api/roster/[...path]` e `/api/family/[...path]`.
+- `npm test`: 327 de 328 testes passaram em 28 arquivos, incluindo `roster-import`, `roster-service`, `roster-directory`, `family-service`, `family-recognitions` e `roster-database`. A falha é `llm-prompts`, somente em checkout Windows, que converte `PROMPTS/04-gallotte-templates-ia.md` para CRLF.
+- `npm run build`: passou.
 
 ## Percurso realmente executado
 
@@ -96,7 +96,9 @@ Resultados no commit desta entrega:
 
 Importação real em produção com `inviteUserByEmail`, em 31/10/2026: a planilha foi lida e todas as linhas falharam no envio do convite, inclusive com dois endereços Gmail. A causa exata não foi lida no log do Auth; a documentação do Supabase restringe o email padrão aos membros da organização e a cerca de 2 envios por hora.
 
-**Não executado:** `generateLink`, `/convite` com token real e o restante do cadastro por link contra o Supabase hospedado, PostgREST, adaptadores Supabase contra servidor real, arquivo salvo pelo Excel e fornecedor de IA.
+Cadastro por link em produção, em 31/10/2026: Fabiano importou contas, abriu o link, concluiu o cadastro e confirmou as contas salvas no banco. Isso exercita `generateLink`, `/convite`, a definição de senha e os adaptadores de gestão contra o Supabase hospedado.
+
+**Não executado:** cadastro por link de professor e de responsável, se não fizeram parte desse percurso; validade do link no projeto; bloqueio de "Novo link" para conta ativada contra o Supabase real; elogios com dados reais, pois a migração de reconhecimento não existe; arquivo salvo pelo Excel.
 
 ## Configuração externa necessária
 
@@ -125,6 +127,12 @@ Falhas do Supabase Auth registram apenas código e status no log do servidor, se
 
 Painel real, em `src/components/app-shell.tsx`: "Visão geral", "Acompanhamento" (`#acompanhamento`), "Turmas e pessoas" (`#turmas`), "Importação" (`#importacao`) e "Responsáveis" (`#vinculos`). Por decisão de Fabiano em 31/10/2026, "Atividades" e "Meu espaço" saíram; "Meu espaço" pode voltar se a equipe sentir falta. Sem turma selecionada, os links que dependem dela levam ao aviso para selecionar uma. A demonstração `/demo/coordenador` mantém o menu antigo. Esta mudança vai por PR para a equipe ver antes do merge.
 
+## Menu e elogios do responsável
+
+Painel real: "Visão geral", "Resultados" (`#resultados`), "Elogios" (`#elogios`), "Saúde e apoio" (`#saude-apoio`) e "Histórico" (`#historico`). A demonstração `/demo/responsavel` mantém o menu antigo.
+
+A seção de elogios lista motivo, nota, professor, matéria, data e pontos, com o total de pontos de patente do ano. O vínculo confirmado é conferido no servidor, e a falha dessa seção não afeta as demais.
+
 ## Limitações e pendências
 
 - Resultados: a visão por aluno usa o resumo real; o agregado por turma ainda é exemplo e depende de Nivaldo.
@@ -132,5 +140,6 @@ Painel real, em `src/components/app-shell.tsx`: "Visão geral", "Acompanhamento"
 - Dois responsáveis editando o mesmo registro: prevalece a última gravação.
 - O histórico é consultado, mas a edição por coordenador e professor não tem tela nesta tarefa.
 - `docs/CONTRATOS_NIVALDO_CORE.md` ainda cita "Fabia" e deve ser ajustado por Nivaldo.
-- O menu do responsável ainda aponta para `/tarefas`, e `/demo/*` segue com os dados antigos. O painel tem âncoras prontas: `/responsavel#resultados`, `#saude-apoio`, `#historico`.
-- No menu do coordenador, "Visão geral" continua destacada ao navegar pelas âncoras, porque todas ficam na mesma página.
+- `/demo/*` segue com os dados e os menus antigos.
+- Nos menus do coordenador e do responsável, "Visão geral" continua destacada ao navegar pelas âncoras, porque todas ficam na mesma página.
+- Enquanto a migração de reconhecimento não for aplicada, a seção de elogios mostra que ainda não está disponível e o sino informa a falha ao ser aberto. O restante do painel continua funcionando.
