@@ -323,7 +323,9 @@ export class LearningService {
     const active = new Set(loaded.catalog.activities.filter((item) => item.active).map((item) => item.rootQuestionId));
     const xp = sum(ledger.filter((entry) => entry.kind === "xp" && entry.classId === loaded.catalog.classId
       && (entry.keepAfterRotation || active.has(entry.rootQuestionId))).map((entry) => entry.points));
-    const rankPoints = sum(ledger.filter((entry) => entry.kind === "annual" && entry.schoolYear === loaded.catalog.schoolYear).map((entry) => entry.points));
+    const recognitionPoints = await this.repository.recognitionPoints(loaded.institutionId, studentId, loaded.catalog.schoolYear,
+      wholeStudent ? undefined : [...allowedSubjects]);
+    const rankPoints = sum([...ledger.filter((entry) => entry.kind === "annual" && entry.schoolYear === loaded.catalog.schoolYear).map((entry) => entry.points), recognitionPoints]);
     const summary = StudentSummarySchema.parse({
       studentId, periodStart: from, periodEnd: to,
       accessDays: wholeStudent ? loaded.state.accessDays.filter((day) => day >= from && day <= to).length : 0,
@@ -339,6 +341,25 @@ export class LearningService {
       originalAttempts: attempts.filter((item) => item.source === "original").length,
       recoveryAttempts: attempts.filter((item) => item.source === "recovery").length,
     };
+  }
+
+  async classMetrics(actor: SessionContext, classIds: string[], from: string, to: string) {
+    const ids = [...new Set(classIds)];
+    if (actor.roles.includes("coordenador") && actor.coordinatorInstitutionIds.includes(actor.institutionId)) {
+      const rows = await this.repository.classMetrics(actor.institutionId, ids, from, to);
+      if (rows.length !== ids.length) notFound();
+      return rows;
+    }
+    if (!actor.roles.includes("professor")) throw new LearningError("FORBIDDEN", "Métricas de turma são exclusivas da equipe vinculada.", 403);
+    const rows = await Promise.all(ids.map(async (classId) => {
+      const subjects = actor.teacherAssignments.filter((item) => item.classId === classId && item.institutionId === actor.institutionId)
+        .map((item) => item.subjectId);
+      if (!subjects.length) notFound();
+      const result = await this.repository.classMetrics(actor.institutionId, [classId], from, to, subjects);
+      if (result.length !== 1) notFound();
+      return result[0];
+    }));
+    return rows;
   }
 
   private async authorizeClass(actor: SessionContext, classId: string) {

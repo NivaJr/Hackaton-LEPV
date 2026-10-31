@@ -112,7 +112,7 @@ export class RosterService {
       this.repository.listPeople(schoolId, "aluno"), this.repository.listPeople(schoolId, "professor"),
       this.repository.listPeople(schoolId, "responsavel"), this.repository.listGuardianLinks(schoolId),
     ]);
-    const metrics = await this.dependencies.metrics.classMetrics(schoolId, classrooms.map((classroom) => classroom.id));
+    const metrics = await this.dependencies.metrics.classMetrics(actor, classrooms.map((classroom) => classroom.id));
     return { classrooms, enrollments, assignments, students, teachers, guardians, guardianLinks, metrics };
   }
 
@@ -238,18 +238,13 @@ export class RosterService {
     return { removed: true };
   }
 
-  /** Closes then recreates, restoring the old enrollment on failure until the transactional RPC exists. */
+  /** The repository/RPC owns atomicity; no close/reopen compensation can lose the enrollment. */
   private async transfer(schoolId: string, enrollmentId: string, classroomId: string, studentId: string): Promise<RowIssue | null> {
-    if (!await this.repository.closeEnrollment(schoolId, enrollmentId, "transferred")) return STALE;
     try {
-      await this.repository.enroll(schoolId, classroomId, studentId);
+      await this.repository.transferEnrollment(schoolId, enrollmentId, classroomId, studentId);
       return null;
-    } catch {
-      try {
-        await this.repository.reopenEnrollment(schoolId, enrollmentId);
-      } catch {
-        return { code: "TRANSFER_INCOMPLETE", message: "A transferência falhou e a matrícula anterior não foi restaurada. Verifique este aluno." };
-      }
+    } catch (error) {
+      if (error instanceof RosterError && error.code === "STALE_PREVIEW") return STALE;
       return { code: "TRANSFER_FAILED", message: "A transferência falhou; a matrícula anterior foi mantida." };
     }
   }
@@ -289,6 +284,7 @@ export class RosterService {
     const classroom = await this.classroom(schoolId, classroomId);
     const parsed = markDuplicates(kind, rows.map((row) => validateRow(kind, row)));
     const snapshot = await this.snapshot(kind, schoolId, parsed.filter((row) => !row.issues.length).map((row) => row.email));
+    const auditId = await this.repository.startImportAudit(schoolId, actor.userId, classroom.id, kind, rows);
     const results: ConfirmRowResult[] = [];
     for (const [index, row] of parsed.entries()) {
       const decided = rows[index];
@@ -305,7 +301,12 @@ export class RosterService {
         results.push({ line: row.line, email: row.email, status: "failed", issue });
       }
     }
+    await this.repository.finishImportAudit(schoolId, actor.userId, auditId, results.map(({ accessLink: _credential, ...row }) => row));
     return { rows: results, counts: countBy(CONFIRM_STATUSES, results.map((row) => row.status)) };
+  }
+
+  async importAudits(actor: SessionContext) {
+    return this.repository.listImportAudits(this.schoolOf(actor));
   }
 
   private async applyStudent(schoolId: string, classroomId: string, row: PreviewRow, decided: ImportConfirmRow, snapshot: Snapshot): Promise<RowOutcome> {

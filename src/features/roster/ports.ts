@@ -1,5 +1,5 @@
 import type { Role, SessionContext } from "@/contracts";
-import type { AccountRecord, AssignmentRecord, ClassMetrics, GuardianLinkRecord, ClassroomInput, ClassroomPatch, ClassroomRecord, EnrollmentRecord, PendingAccessLink, PersonRecord, ProvisionedAccount, StudentResults } from "./model";
+import type { AccountRecord, AssignmentRecord, ClassMetrics, ConfirmRowResult, GuardianLinkRecord, ClassroomInput, ClassroomPatch, ClassroomRecord, EnrollmentRecord, ImportConfirmRow, ImportKind, PendingAccessLink, PersonRecord, ProvisionedAccount, StudentResults } from "./model";
 
 /** Every method is scoped by a schoolId taken from the session, never from the request. */
 export interface RosterRepository {
@@ -16,6 +16,11 @@ export interface RosterRepository {
   /** Returns false when the enrollment is no longer active. */
   closeEnrollment(schoolId: string, enrollmentId: string, status: "transferred" | "inactive"): Promise<boolean>;
   reopenEnrollment(schoolId: string, enrollmentId: string): Promise<void>;
+  /** Both enrollment changes are one database transaction; failure preserves the old enrollment. */
+  transferEnrollment(schoolId: string, enrollmentId: string, classroomId: string, studentId: string): Promise<EnrollmentRecord>;
+  startImportAudit(schoolId: string, actorId: string, classroomId: string, kind: ImportKind, rows: ImportConfirmRow[]): Promise<string>;
+  finishImportAudit(schoolId: string, actorId: string, auditId: string, results: Omit<ConfirmRowResult, "accessLink">[]): Promise<void>;
+  listImportAudits(schoolId: string): Promise<unknown[]>;
   listAssignments(schoolId: string): Promise<AssignmentRecord[]>;
   createAssignment(schoolId: string, input: Omit<AssignmentRecord, "id">): Promise<AssignmentRecord>;
   deleteAssignment(schoolId: string, assignmentId: string): Promise<boolean>;
@@ -45,5 +50,5 @@ export interface StudentResultsGateway {
 }
 
 export interface RosterMetricsGateway {
-  classMetrics(schoolId: string, classroomIds: string[]): Promise<{ source: "fixture" | "real"; classes: ClassMetrics[] }>;
+  classMetrics(actor: SessionContext, classroomIds: string[]): Promise<{ source: "fixture" | "real"; classes: ClassMetrics[] }>;
 }

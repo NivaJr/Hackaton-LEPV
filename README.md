@@ -88,11 +88,11 @@ O workflow `.github/workflows/checks.yml` executa esses comandos com Node 24. A 
 
 ## O que falta implementar
 
-As demais frentes ainda cobrem CRUD/importação de alunos, convites administrativos, listas PDF/Word e armazenamento, banco de conteúdo, catálogo BNCC, interfaces, amizades e feedback da IA. Integrar essas frentes às APIs de aprendizagem e ao registro explícito de acesso. A base não contém 240 questões curriculares prontas nem uma LLM integrada. A Tarefa 03 validou Supabase e APIs hospedadas na Vercel com dados sintéticos; IA real e integração das telas continuam pendentes.
+O catálogo curricular completo, a revisão BNCC, o armazenamento dos arquivos originais, amizades e os demais itens ainda abertos nas entregas individuais continuam pendentes. A aplicação não contém 240 questões curriculares revisadas. Gestão e aluno já consomem APIs reais; o gateway Gemini possui extração e recuperação, com validação hospedada registrada separadamente dos testes simulados. Persistência de conteúdo, reconhecimentos, auditoria e métricas agregadas estão descritas no [Handoff de Nivaldo](docs/ENTREGA_NIVALDO_HANDOFF.md).
 
 ## Configuração de IA
 
-O contrato está em `src/lib/llm/gateway.ts`. O adaptador inicial rejeita as operações com `AiNotConfiguredError`. Gallotte implementará os fornecedores usando configuração no servidor: `LLM_PROVIDER`, `LLM_MODEL`, `LLM_API_KEY`, `LLM_BASE_URL` quando aplicável e `LLM_TIMEOUT_MS`.
+O contrato está em `src/lib/llm/gateway.ts`. O driver Gemini usa configuração somente no servidor: `LLM_PROVIDER=gemini`, `LLM_MODEL`, `LLM_API_KEY`, `LLM_BASE_URL` quando aplicável e `LLM_TIMEOUT_MS`. `LLM_PROVIDER=disabled` e configuração ausente/inválida recusam a geração explicitamente. Production usa um modelo definido no ambiente; veja [Configuração da Vercel](docs/CONFIGURACAO_VERCEL_LEPV.md). A existência da configuração não substitui a chamada real ao fornecedor.
 
 Escolher um fornecedor cujas condições atendam ao público-alvo antes de uso real. Não enviar automaticamente nome, email ou informações de saúde; o contexto de adaptação usa interesses pertinentes e a habilidade trabalhada. Não colocar chave no cliente, em prompts públicos ou em commits.
 

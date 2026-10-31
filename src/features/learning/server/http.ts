@@ -7,6 +7,8 @@ const empty = z.object({}).strict();
 const classQuery = z.object({ classId: z.uuid() }).strict();
 const activateInput = z.object({ classId: z.uuid(), subjectId: SubjectIdSchema, rootQuestionIds: z.array(IdSchema).length(10) }).strict();
 const rotationInput = z.object({ classId: z.uuid(), subjectId: SubjectIdSchema, weekStart: z.string().date(), incomingRootIds: z.array(IdSchema).length(2) }).strict();
+const metricsPeriod = z.object({ from: z.string().date(), to: z.string().date() }).strict()
+  .refine((input) => input.from <= input.to && Date.parse(input.to) - Date.parse(input.from) <= 365 * 86_400_000);
 const summaryQuery = z.object({ studentId: z.uuid().optional(), from: z.string().date(), to: z.string().date() }).strict()
   .refine((input) => input.from <= input.to, { message: "O fim do período deve ser posterior ao início." });
 
@@ -41,6 +43,11 @@ export function createLearningHttpHandler(dependencies: LearningHttpDependencies
       }
       const service = dependencies.createService();
       const [first, id, operation] = path;
+      if (method === "GET" && path.length === 3 && first === "classes" && operation === "metrics") {
+        const period = metricsPeriod.parse(Object.fromEntries(url.searchParams));
+        const metrics = await service.classMetrics(actor, [z.uuid().parse(id)], period.from, period.to);
+        return respond({ source: "real", ...period, metrics: metrics[0] });
+      }
       if (path.length === 1 && first === "preferences") {
         if (method === "GET") return respond(await service.getPreferences(actor));
         if (method === "PUT") return respond(await service.savePreferences(actor, body));

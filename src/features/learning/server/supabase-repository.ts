@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { StudentPreferencesSchema, type StudentPreferencesUpdate } from "@/contracts";
+import { StudentPreferencesSchema, type StudentPreferencesUpdate, type SubjectId } from "@/contracts";
 import {
-  LearningError, LearningStateSchema, LoadedStudentSchema, RankingRowSchema, VersionedCatalogSchema,
+  LearningClassMetricsSchema, LearningError, LearningStateSchema, LoadedStudentSchema, RankingRowSchema, VersionedCatalogSchema,
   type LearningState, type LoadedStudent, type VersionedCatalog,
 } from "./model";
 import type { LearningRepository } from "./repository";
@@ -58,5 +58,15 @@ export class SupabaseLearningRepository implements LearningRepository {
   }
   ranking(institutionId: string, classId: string) {
     return this.rpc("learning_class_ranking", { p_school: institutionId, p_class: classId }, z.array(RankingRowSchema).max(10));
+  }
+  recognitionPoints(institutionId: string, studentId: string, schoolYear: number, subjectIds?: SubjectId[]) {
+    return this.rpc("learning_recognition_points", {
+      p_school: institutionId, p_student: studentId, p_year: schoolYear, p_subjects: subjectIds ?? null,
+    }, z.union([z.number(), z.string().regex(/^\d+(?:\.\d+)?$/)]).transform(Number).pipe(z.number().finite().nonnegative()));
+  }
+  classMetrics(institutionId: string, classIds: string[], from: string, to: string, subjectIds?: SubjectId[]) {
+    return this.rpc("learning_class_metrics", {
+      p_school: institutionId, p_classes: classIds, p_from: from, p_to: to, p_subjects: subjectIds ?? null,
+    }, z.array(LearningClassMetricsSchema).max(1000));
   }
 }

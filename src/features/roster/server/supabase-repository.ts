@@ -33,7 +33,13 @@ const toEnrollment = (row: EnrollmentRow): EnrollmentRecord => {
 };
 
 /** Runs with the coordinator's own session, so RLS and grants still apply to every operation. */
-export function createSupabaseRosterRepository(client: SupabaseClient): RosterRepository {
+export function createSupabaseRosterRepository(client: SupabaseClient, admin?: SupabaseClient | null): RosterRepository {
+  async function auditRpc(name: string, args: Record<string, unknown>) {
+    if (!admin) throw new RosterError("AUDIT_UNAVAILABLE", "Configure a auditoria de importação no servidor.", 503);
+    const result = await admin.rpc(name, args);
+    if (result.error) throw new RosterError("AUDIT_UNAVAILABLE", "Não foi possível registrar a auditoria da importação.", 503);
+    return result.data;
+  }
   return {
     async listClassrooms(schoolId) {
       const { data, error } = await client.from("classrooms").select(CLASSROOM_COLUMNS).eq("school_id", schoolId)
@@ -103,6 +109,38 @@ export function createSupabaseRosterRepository(client: SupabaseClient): RosterRe
       const { error } = await client.from("enrollments").update({ status: "active", ended_at: null })
         .eq("school_id", schoolId).eq("id", enrollmentId);
       if (error) fail(error);
+    },
+    async transferEnrollment(_schoolId, enrollmentId, classroomId, studentId) {
+      const { data, error } = await client.rpc("transfer_student", { p_enrollment_id: enrollmentId, p_classroom_id: classroomId });
+      if (error?.message.includes("ROSTER_STALE_PREVIEW")) throw new RosterError("STALE_PREVIEW", "A matrícula mudou desde a prévia.", 409);
+      if (error) fail(error);
+      const row = data as EnrollmentRecord;
+      if (row?.studentId !== studentId || row.classroomId !== classroomId || typeof row.id !== "string") {
+        throw new RosterError("DATABASE_ERROR", "A transferência devolveu um registro inválido.", 503);
+      }
+      return row;
+    },
+    async startImportAudit(schoolId, actorId, classroomId, kind, rows) {
+      const data = await auditRpc("roster_start_import_audit", {
+        p_school: schoolId, p_actor: actorId, p_class: classroomId, p_kind: kind,
+        p_rows: rows.map(({ line, email, subject, decision }) => ({ line, email, subject, decision })),
+      });
+      if (typeof data !== "string") throw new RosterError("AUDIT_UNAVAILABLE", "A auditoria não foi iniciada.", 503);
+      return data;
+    },
+    async finishImportAudit(schoolId, actorId, auditId, results) {
+      const data = await auditRpc("roster_finish_import_audit", {
+        p_school: schoolId, p_actor: actorId, p_id: auditId,
+        p_results: results.map(({ line, email, status, issue }) => ({ line, email, status, ...(issue ? { issue: { code: issue.code } } : {}) })),
+      });
+      if (data !== true) throw new RosterError("AUDIT_UNAVAILABLE", "A importação foi processada, mas a auditoria ainda está pendente.", 503);
+    },
+    async listImportAudits(schoolId) {
+      const { data, error } = await client.from("roster_import_audits")
+        .select("id, actor_id, classroom_id, kind, status, rows, results, created_at, finished_at")
+        .eq("school_id", schoolId).order("created_at", { ascending: false }).limit(50);
+      if (error) fail(error);
+      return data ?? [];
     },
     async listAssignments(schoolId) {
       const { data, error } = await client.from("teacher_assignments").select("id, classroom_id, teacher_id, subject_id").eq("school_id", schoolId);
