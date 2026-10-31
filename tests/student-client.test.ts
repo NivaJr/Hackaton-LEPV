@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createFakeStudentLearningClient, createHttpStudentLearningClient } from "@/features/learning/client";
-import { demoActivities, demoPreferences, demoRanking, demoSummary } from "@/features/learning/fixtures/student-demo";
+import { demoActivities, demoPreferences, demoRanking, demoSubjectProgress, demoSummary } from "@/features/learning/fixtures/student-demo";
+import { progressPercent } from "@/features/learning/ui/skill-matrix";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -11,8 +12,15 @@ describe("StudentLearningClient fake", () => {
 
     expect(snapshot.activities.grade).toBe(7);
     expect(snapshot.activities.activities).toHaveLength(10);
+    expect(snapshot.activities.activities.every((item) => !!item.contentTitle)).toBe(true);
     expect(new Set(snapshot.activities.activities.map((item) => item.grade))).toEqual(new Set([7]));
     expect(new Set(snapshot.activities.activities.map((item) => item.subjectId)).size).toBe(6);
+  });
+
+  it("calcula o mapa por pontos conquistados sobre pontos disponíveis", () => {
+    const history = demoSubjectProgress.find((entry) => entry.subjectId === "historia")!;
+    expect(history).toMatchObject({ earnedRankPoints: 200, availableRankPoints: 2_000 });
+    expect(progressPercent(history)).toBe(10);
   });
 
   it("salva interesses e contexto sem aceitar campos de identidade", async () => {

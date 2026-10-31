@@ -63,6 +63,8 @@ Tarefa 02: escopo, validação e limites em [Entrega da Tarefa 02](docs/ENTREGA_
 
 Tarefa 01: `/aluno` integrado às APIs e ao Supabase real; `/demo/aluno` preserva o cliente fake. Fluxos, migração e validação no navegador em [Área do aluno integrada](docs/ENTREGA_ALUNO_INTEGRADO.md).
 
+O estado atual da hierarquia disciplina → conteúdo → exercício, do mapa percentual e da importação por professor/coordenador está em [Conteúdos e importação](docs/CONTEUDOS_E_IMPORTACAO_STATUS.md).
+
 ## Validação
 
 ```sh

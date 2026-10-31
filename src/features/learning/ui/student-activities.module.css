@@ -19,6 +19,19 @@
 @media (max-width: 560px) { .activities button { align-items: flex-start; flex-direction: column; } }
 @media (prefers-reduced-motion: reduce) { .experience :global(.spin) { animation: none; } }
 
+.contentSection { display: grid; gap: 14px; scroll-margin-top: 90px; }
+.contentGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.contentGrid button { position: relative; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 5px 11px; min-height: 88px; padding: 15px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.contentGrid button > span:first-child { grid-row: 1 / 3; display: grid; width: 40px; height: 40px; place-items: center; border-radius: 11px; background: color-mix(in srgb, var(--indigo) 10%, var(--surface-soft)); color: var(--indigo); }
+.contentGrid button > svg { position: absolute; top: 12px; right: 12px; color: #24795a; }
+.contentGrid button strong { padding-right: 22px; font-size: .98rem; line-height: 1.35; }
+.contentGrid button small { color: var(--muted); font-size: .78rem; line-height: 1.45; }
+.contentGrid button:hover:not(:disabled) { border-color: var(--indigo); background: var(--surface-soft); }
+.contentGrid button:focus-visible { outline: 3px solid #1746a2; outline-offset: 3px; }
+.contentGrid button:disabled { opacity: .6; cursor: wait; }
+.contentGrid .contentSelected { border: 2px solid var(--indigo); background: color-mix(in srgb, var(--indigo) 6%, var(--surface)); }
+.contentEmpty { margin: 0; padding: 16px; border: 1px dashed var(--line); border-radius: 11px; color: var(--muted); background: var(--surface-soft); }
+
 .accessibilityTop { display: flex; justify-content: flex-end; margin: 0 0 14px; }
 .accessibilityTop button {
   display: inline-flex;
@@ -83,9 +96,11 @@
 .accessibleMode :global(.text-button) { font-size: .98rem; letter-spacing: 0; }
 .accessibleMode :global(.student-subject-button strong),
 .accessibleMode :global(.student-answer strong),
-.accessibleMode .activities strong { font-size: 1.05rem; line-height: 1.5; }
+.accessibleMode .activities strong,
+.accessibleMode .contentGrid strong { font-size: 1.05rem; line-height: 1.5; }
 .accessibleMode :global(.student-subject-button small),
-.accessibleMode .activities small { font-size: .9rem; line-height: 1.55; }
+.accessibleMode .activities small,
+.accessibleMode .contentGrid small { font-size: .9rem; line-height: 1.55; }
 .accessibleMode :global(button:focus-visible),
 .accessibleMode :global(a:focus-visible),
 .accessibleMode :global(input:focus-visible),
